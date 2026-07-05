@@ -257,7 +257,10 @@ if (isset($_POST['add_year'])) {
 				popupWindow.document.write(content);
 				popupWindow.document.write('</body></html>');
 				popupWindow.document.close();
-				popupWindow.print();
+				setTimeout(function() {
+				    popupWindow.focus();
+				    popupWindow.print();
+				}, 1000);
 			}
 		</script>
 		<script>

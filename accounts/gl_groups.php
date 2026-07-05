@@ -218,7 +218,10 @@ if(isset($_POST['group_name_add'])){
                 popupWindow.document.write(content);
                 popupWindow.document.write('</body></html>');
                 popupWindow.document.close();
-                popupWindow.print();
+                setTimeout(function() {
+                    popupWindow.focus();
+                    popupWindow.print();
+                }, 1000);
             }
         </script>
 

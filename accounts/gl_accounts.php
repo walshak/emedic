@@ -280,7 +280,10 @@ if(isset($_POST['account_name_add'])){
                 popupWindow.document.write(content);
                 popupWindow.document.write('</body></html>');
                 popupWindow.document.close();
-                popupWindow.print();
+                setTimeout(function() {
+                    popupWindow.focus();
+                    popupWindow.print();
+                }, 1000);
             }
         </script>
 <script src="../js/idle.js"></script>

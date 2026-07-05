@@ -530,7 +530,10 @@ $invoices_p = $invoices_p->fetchAll(PDO::FETCH_ASSOC);
                 popupWindow.document.write(content);
                 popupWindow.document.write('</body></html>');
                 popupWindow.document.close();
-                popupWindow.print();
+                setTimeout(function() {
+                    popupWindow.focus();
+                    popupWindow.print();
+                }, 1000);
             }
         </script>
 

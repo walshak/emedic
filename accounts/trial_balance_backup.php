@@ -1246,6 +1246,8 @@ if (isset($_SESSION['h_code']) && $_SESSION['h_code'] == 'mluth') {
                         .btn, .fa-print, a[onclick*="printTrialDiv"], a[onclick*="printDiv"] {
                             display: none !important;
                         }
+                                                /* Hide original headings in the print popup to prevent duplication */
+                        body > h1, body > h3, .text-center.mb-4 { display: none !important; }
                         @media print {
                             a[href]:after { content: none !important; }
                         }
@@ -1255,7 +1257,10 @@ if (isset($_SESSION['h_code']) && $_SESSION['h_code'] == 'mluth') {
 				popupWindow.document.write(content);
 				popupWindow.document.write('</body></html>');
 				popupWindow.document.close();
-				popupWindow.print();
+				setTimeout(function() {
+				    popupWindow.focus();
+				    popupWindow.print();
+				}, 1000);
 			}
 
 			function exportTrialBalanceToCSV() {

@@ -642,7 +642,10 @@ $period_text = 'PERIOD: [' . date('d M, Y', strtotime($_GET['start'])) . ' - ' .
 
 				// Wait for the document to fully load, then print
 				popupWindow.onload = function() {
-					popupWindow.print();
+					setTimeout(function() {
+					    popupWindow.focus();
+					    popupWindow.print();
+					}, 1000);
 				};
 			}
 		</script>

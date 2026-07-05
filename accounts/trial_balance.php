@@ -342,6 +342,9 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 														<button type="button" class="btn btn-success btn-sm" onclick="exportDiagnosticTrialBalanceToCSV()" title="Export current data to CSV file">
 															<i class="fa fa-download"></i> Export CSV
 														</button>
+																<button type="button" class="btn btn-primary" onclick="printTrialDiv('diagnostics-trial-balance')" title="Print Report">
+																	<i class="fa fa-print"></i> Print
+																</button>
 													</div>
 												</div>
 											</div>
@@ -670,9 +673,9 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 							</div>
 
 							<div style="margin-top: 20px;" id="print-buttons-section">
-								<button class="btn btn-success" onclick="printTrialDiv('diagnostics-trial-balance')"><i class="fa fa-print">&nbsp; Print Trial Balance</i></button>
+								
 								&nbsp;&nbsp;
-								<button class="btn btn-info" onclick="exportDiagnosticTrialBalanceToCSV()"><i class="fa fa-file-text-o">&nbsp; Export to CSV</i></button>
+								
 							</div>
 
 						</div>
@@ -706,6 +709,7 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 				const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
 				document.getElementById('end_date').value = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
 				document.getElementById('year').value = year;
+				document.getElementById('start_date').closest('form').submit();
 			}
 
 			function setCurrentQuarter() {
@@ -718,6 +722,7 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 				const lastDay = new Date(year, quarter * 3 + 3, 0).getDate();
 				document.getElementById('end_date').value = `${year}-${endMonth}-${String(lastDay).padStart(2, '0')}`;
 				document.getElementById('year').value = year;
+				document.getElementById('start_date').closest('form').submit();
 			}
 
 			function setCurrentYear() {
@@ -725,6 +730,7 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 				document.getElementById('start_date').value = `${year}-01-01`;
 				document.getElementById('end_date').value = `${year}-12-31`;
 				document.getElementById('year').value = year;
+				document.getElementById('start_date').closest('form').submit();
 			}
 
 			function setLastMonth() {
@@ -736,6 +742,7 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 				const lastDay = new Date(year, lastMonth.getMonth() + 1, 0).getDate();
 				document.getElementById('end_date').value = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
 				document.getElementById('year').value = year;
+				document.getElementById('start_date').closest('form').submit();
 			}
 
 			function setLastQuarter() {
@@ -749,6 +756,7 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 				const lastDay = new Date(year, lastQuarter * 3 + 3, 0).getDate();
 				document.getElementById('end_date').value = `${year}-${endMonth}-${String(lastDay).padStart(2, '0')}`;
 				document.getElementById('year').value = year;
+				document.getElementById('start_date').closest('form').submit();
 			}
 
 			// Initialize Select2 for account dropdown
@@ -833,6 +841,15 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 				var title = 'Trial Balance Report (' + period + ') - ' + year;
 
 				var content = document.getElementById(divId).innerHTML;
+                var startDate = document.getElementById('start_date') ? document.getElementById('start_date').value : '';
+                var endDate = document.getElementById('end_date') ? document.getElementById('end_date').value : '';
+                
+                var filterSummary = '<div style="text-align:center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; font-family: arial;">' +
+                    '<h2 style="margin:0; padding:0; color: #333;">' + title + '</h2>' +
+                    '<p style="margin:5px 0 0 0; font-size: 14px; color: #555;">' +
+                    '<strong>Date Range:</strong> ' + startDate + ' to ' + endDate +
+                    '</p></div>';
+
 				var popupWindow = window.open('', '_blank', 'width=900,height=900');
 				popupWindow.document.open();
 				popupWindow.document.write('<html><head><title>' + title + '</title>');
@@ -879,6 +896,8 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
                         .btn, .fa-print, .print-icon, a[onclick*="printTrialDiv"], a[onclick*="printDiv"] {
                             display: none !important;
                         }
+                                                /* Hide original headings in the print popup to prevent duplication */
+                        body > h1, body > h3, .text-center.mb-4 { display: none !important; }
                         @media print {
                             a[href]:after { content: none !important; }
                             a { color: inherit !important; text-decoration: none !important; }
@@ -887,10 +906,14 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
                 `);
 				popupWindow.document.write('</head><body>');
 				popupWindow.document.write(hospitalHeader);
+                popupWindow.document.write(filterSummary);
 				popupWindow.document.write(content);
 				popupWindow.document.write('</body></html>');
 				popupWindow.document.close();
-				popupWindow.print();
+				setTimeout(function() {
+				    popupWindow.focus();
+				    popupWindow.print();
+				}, 1000);
 			}
 
 			// Print specific class section
@@ -999,6 +1022,15 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 
 			// Helper function for printing content
 			function printContent(content, title) {
+                var startDate = document.getElementById('start_date') ? document.getElementById('start_date').value : '';
+                var endDate = document.getElementById('end_date') ? document.getElementById('end_date').value : '';
+                
+                var filterSummary = '<div style="text-align:center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; font-family: arial;">' +
+                    '<h2 style="margin:0; padding:0; color: #333;">Trial Balance - ' + title + '</h2>' +
+                    '<p style="margin:5px 0 0 0; font-size: 14px; color: #555;">' +
+                    '<strong>Date Range:</strong> ' + startDate + ' to ' + endDate +
+                    '</p></div>';
+
 				var popupWindow = window.open('', '_blank', 'width=800,height=600');
 				popupWindow.document.open();
 				popupWindow.document.write('<html><head><title>' + title + '</title>');
@@ -1019,6 +1051,8 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
                         .toggle-link, .fa-print, .print-icon { display: none !important; }
                         a { text-decoration: none !important; color: inherit !important; }
                         a:hover { text-decoration: none !important; color: inherit !important; }
+                                                /* Hide original headings in the print popup to prevent duplication */
+                        body > h1, body > h3, .text-center.mb-4 { display: none !important; }
                         @media print {
                             a[href]:after { content: none !important; }
                             a { color: inherit !important; text-decoration: none !important; }
@@ -1027,11 +1061,14 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
                 `);
 				popupWindow.document.write('</head><body>');
 				popupWindow.document.write(hospitalHeader);
-				popupWindow.document.write('<h3>' + title + '</h3>');
+				popupWindow.document.write(filterSummary);
 				popupWindow.document.write(content);
 				popupWindow.document.write('</body></html>');
 				popupWindow.document.close();
-				popupWindow.print();
+				setTimeout(function() {
+				    popupWindow.focus();
+				    popupWindow.print();
+				}, 1000);
 			}
 		</script>
 

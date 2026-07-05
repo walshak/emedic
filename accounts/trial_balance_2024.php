@@ -1067,7 +1067,10 @@ $class_mapping = [
             popupWindow.document.write(content);
             popupWindow.document.write('</body></html>');
             popupWindow.document.close();
-            popupWindow.print();
+            setTimeout(function() {
+                popupWindow.focus();
+                popupWindow.print();
+            }, 1000);
         }
 
         <?php

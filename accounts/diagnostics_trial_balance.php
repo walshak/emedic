@@ -889,6 +889,8 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
                         .btn, .fa-print, .print-icon, a[onclick*="printTrialDiv"], a[onclick*="printDiv"] {
                             display: none !important;
                         }
+                                                /* Hide original headings in the print popup to prevent duplication */
+                        body > h1, body > h3, .text-center.mb-4 { display: none !important; }
                         @media print {
                             a[href]:after { content: none !important; }
                             a { color: inherit !important; text-decoration: none !important; }
@@ -900,7 +902,10 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 				popupWindow.document.write(content);
 				popupWindow.document.write('</body></html>');
 				popupWindow.document.close();
-				popupWindow.print();
+				setTimeout(function() {
+				    popupWindow.focus();
+				    popupWindow.print();
+				}, 1000);
 			}
 
 			// Print specific class section
@@ -1029,6 +1034,8 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
                         .toggle-link, .fa-print, .print-icon { display: none !important; }
                         a { text-decoration: none !important; color: inherit !important; }
                         a:hover { text-decoration: none !important; color: inherit !important; }
+                                                /* Hide original headings in the print popup to prevent duplication */
+                        body > h1, body > h3, .text-center.mb-4 { display: none !important; }
                         @media print {
                             a[href]:after { content: none !important; }
                             a { color: inherit !important; text-decoration: none !important; }
@@ -1041,7 +1048,10 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 				popupWindow.document.write(content);
 				popupWindow.document.write('</body></html>');
 				popupWindow.document.close();
-				popupWindow.print();
+				setTimeout(function() {
+				    popupWindow.focus();
+				    popupWindow.print();
+				}, 1000);
 			}
 		</script>
 
