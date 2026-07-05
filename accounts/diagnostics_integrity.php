@@ -3,14 +3,21 @@
 <?php
 session_start();
 include('../inc/header.php');
+include_once('inc/functions.php');
 
 // Get chart classes for account hierarchy
 $classes = $db->query('SELECT * FROM chart_class WHERE inactive = 0');
 $classes = $classes->fetchAll(PDO::FETCH_ASSOC);
 
 // Get date filters
-$start_date = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
-$end_date = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-t');
+$active_fy = get_active_year();
+$default_start = $active_fy ? $active_fy['begin'] : date('Y-01-01');
+$default_end = $active_fy ? $active_fy['end'] : date('Y-12-31');
+$default_fy_id = $active_fy ? $active_fy['id'] : null;
+
+$fiscal_year_id = isset($_GET['fiscal_year']) && $_GET['fiscal_year'] != '' ? $_GET['fiscal_year'] : $default_fy_id;
+$start_date = isset($_GET['start']) ? $_GET['start'] : (isset($_GET['start_date']) ? $_GET['start_date'] : $default_start);
+$end_date = isset($_GET['end']) ? $_GET['end'] : (isset($_GET['end_date']) ? $_GET['end_date'] : $default_end);
 $check_type = isset($_GET['check_type']) ? $_GET['check_type'] : 'all';
 $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 
@@ -51,59 +58,83 @@ function buildAccountFilter($account_filter, $base_params)
                                 <!-- Filter Form -->
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <form method="GET" class="form-inline" style="margin-bottom: 20px;">
-                                            <div class="form-group">
-                                                <label for="start_date">Start Date:</label>
-                                                <input type="date" id="start_date" name="start_date" class="form-control" value="<?php echo $start_date; ?>">
+                                        <form method="GET" class="well" style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; border-radius: 8px;">
+                                            <div class="row mb-3">
+                                                <div class="col-md-3">
+                                                    <?php echo render_fiscal_year_filter($fiscal_year_id); ?>
+                                                </div>
+
+                                                <div class="col-md-3">
+                                                    <div class="form-group">
+                                                        <label for="start" class="control-label"><strong>Start Date</strong></label>
+                                                        <input type="date" id="start" name="start" class="form-control" value="<?php echo $start_date; ?>" required>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-3">
+                                                    <div class="form-group">
+                                                        <label for="end" class="control-label"><strong>End Date</strong></label>
+                                                        <input type="date" id="end" name="end" class="form-control" value="<?php echo $end_date; ?>" required>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-3">
+                                                    <div class="form-group">
+                                                        <label for="check_type" class="control-label"><strong>Check Type</strong></label>
+                                                        <select name="check_type" id="check_type" class="form-control">
+                                                            <option value="all" <?php echo ($check_type == 'all') ? 'selected' : ''; ?>>All Checks</option>
+                                                            <option value="duplicates" <?php echo ($check_type == 'duplicates') ? 'selected' : ''; ?>>Duplicate Entries</option>
+                                                            <option value="orphaned" <?php echo ($check_type == 'orphaned') ? 'selected' : ''; ?>>Orphaned Records</option>
+                                                            <option value="invalid_accounts" <?php echo ($check_type == 'invalid_accounts') ? 'selected' : ''; ?>>Invalid Accounts</option>
+                                                            <option value="missing_refs" <?php echo ($check_type == 'missing_refs') ? 'selected' : ''; ?>>Missing References</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="form-group" style="margin-left: 10px;">
-                                                <label for="end_date">End Date:</label>
-                                                <input type="date" id="end_date" name="end_date" class="form-control" value="<?php echo $end_date; ?>">
-                                            </div>
-                                            <div class="form-group" style="margin-left: 10px;">
-                                                <label for="check_type">Check Type:</label>
-                                                <select name="check_type" id="check_type" class="form-control">
-                                                    <option value="all" <?php echo ($check_type == 'all') ? 'selected' : ''; ?>>All Checks</option>
-                                                    <option value="duplicates" <?php echo ($check_type == 'duplicates') ? 'selected' : ''; ?>>Duplicate Entries</option>
-                                                    <option value="orphaned" <?php echo ($check_type == 'orphaned') ? 'selected' : ''; ?>>Orphaned Records</option>
-                                                    <option value="invalid_accounts" <?php echo ($check_type == 'invalid_accounts') ? 'selected' : ''; ?>>Invalid Accounts</option>
-                                                    <option value="missing_refs" <?php echo ($check_type == 'missing_refs') ? 'selected' : ''; ?>>Missing References</option>
-                                                </select>
-                                            </div>
-                                            <div class="form-group" style="margin-left: 10px;">
-                                                <label for="account_filter">Account:</label>
-                                                <select name="account_filter" id="account_filter" class="form-control select2" style="width: 300px;">
-                                                    <option value="">-- All Accounts --</option>
-                                                    <?php foreach ($classes as $class) { ?>
-                                                        <optgroup label="<?php echo $class['class_name']; ?>">
-                                                            <?php
-                                                            $cid = $class['cid'];
-                                                            $groups = $db->prepare('SELECT * FROM chart_groups WHERE class_id = ? AND inactive = ?');
-                                                            $groups->execute([$cid, 0]);
-                                                            $groups = $groups->fetchAll(PDO::FETCH_ASSOC);
-                                                            ?>
-                                                            <?php foreach ($groups as $group) { ?>
-                                                        <optgroup label="<?php echo $group['name']; ?>">
-                                                            <?php
-                                                                $group_id = $group['id'];
-                                                                $accounts = $db->prepare('SELECT * FROM chart_accounts WHERE account_group = ? AND inactive = ?');
-                                                                $accounts->execute([$group_id, 0]);
-                                                                $accounts = $accounts->fetchAll(PDO::FETCH_ASSOC);
-                                                            ?>
-                                                            <?php foreach ($accounts as $account) { ?>
-                                                                <option value="<?php echo $account['account_code']; ?>" <?php echo ($account_filter == $account['account_code']) ? 'selected' : ''; ?>>
-                                                                    [<?php echo $account['account_code']; ?>] <?php echo $account['account_name']; ?>
-                                                                </option>
+                                            
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="account_filter" class="control-label"><strong>Account</strong></label>
+                                                        <select name="account_filter" id="account_filter" class="form-control select2">
+                                                            <option value="">-- All Accounts --</option>
+                                                            <?php foreach ($classes as $class) { ?>
+                                                                <optgroup label="<?php echo $class['class_name']; ?>">
+                                                                    <?php
+                                                                    $cid = $class['cid'];
+                                                                    $groups = $db->prepare('SELECT * FROM chart_groups WHERE class_id = ? AND inactive = ?');
+                                                                    $groups->execute([$cid, 0]);
+                                                                    $groups = $groups->fetchAll(PDO::FETCH_ASSOC);
+                                                                    ?>
+                                                                    <?php foreach ($groups as $group) { ?>
+                                                                <optgroup label="<?php echo $group['name']; ?>">
+                                                                    <?php
+                                                                        $group_id = $group['id'];
+                                                                        $accounts = $db->prepare('SELECT * FROM chart_accounts WHERE account_group = ? AND inactive = ?');
+                                                                        $accounts->execute([$group_id, 0]);
+                                                                        $accounts = $accounts->fetchAll(PDO::FETCH_ASSOC);
+                                                                    ?>
+                                                                    <?php foreach ($accounts as $account) { ?>
+                                                                        <option value="<?php echo $account['account_code']; ?>" <?php echo ($account_filter == $account['account_code']) ? 'selected' : ''; ?>>
+                                                                            [<?php echo $account['account_code']; ?>] <?php echo $account['account_name']; ?>
+                                                                        </option>
+                                                                    <?php } ?>
+                                                                </optgroup>
                                                             <?php } ?>
-                                                        </optgroup>
-                                                    <?php } ?>
-                                                    </optgroup>
-                                                <?php } ?>
-                                                </select>
+                                                            </optgroup>
+                                                        <?php } ?>
+                                                        </select>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <button type="submit" class="btn btn-primary" style="margin-left: 10px;">
-                                                <i class="fa fa-check"></i> Run Check
-                                            </button>
+
+                                            <div class="row">
+                                                <div class="col-md-12 text-right">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="fa fa-check"></i> <strong>RUN CHECK</strong>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </form>
                                     </div>
                                 </div>

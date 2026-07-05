@@ -19,6 +19,7 @@ $hospital_table .= '</table><br>';
 
 // Get parameters
 $year = isset($_GET['year']) ? $_GET['year'] : date('Y');
+$fiscal_year_id = isset($_GET['fiscal_year']) && $_GET['fiscal_year'] != '' ? $_GET['fiscal_year'] : null;
 $start_date = isset($_GET['start']) ? $_GET['start'] : date('Y-01-01');
 $end_date = isset($_GET['end']) ? $_GET['end'] : date('Y-12-31');
 
@@ -280,59 +281,66 @@ $invoices_p = $invoices_p->fetchAll(PDO::FETCH_ASSOC);
 
 												<!-- Date Selection Row -->
 												<div class="row mb-3">
-													<div class="col-md-3">
-														<div class="form-group">
-															<label for="year" class="control-label"><strong>Year</strong></label>
-															<select name="year" id="year_select" class="form-control">
-																<?php for ($y = 2020; $y <= date('Y') + 1; $y++) : ?>
-																	<option value="<?php echo $y; ?>" <?php echo ($y == $year) ? 'selected' : ''; ?>><?php echo $y; ?></option>
-																<?php endfor; ?>
-															</select>
-														</div>
-													</div>
+					<?php
+						$active_fy = get_active_year();
+					?>
+					<?php if ($active_fy): ?>
+					<div class="col-md-12" style="margin-bottom: 10px;">
+						<div class="alert alert-info" style="padding: 8px 14px; margin-bottom: 0;">
+							<i class="fa fa-info-circle"></i>
+							<strong>Active Fiscal Year:</strong>
+							<?= date('M d, Y', strtotime($active_fy['begin'])) ?> &ndash; <?= date('M d, Y', strtotime($active_fy['end'])) ?>
+							&nbsp;&mdash;&nbsp;<small class="text-muted">Select a fiscal year below to scope this report to that accounting period.</small>
+						</div>
+					</div>
+					<?php endif; ?>
 
-													<div class="col-md-3">
-														<div class="form-group">
-															<label for="start" class="control-label"><strong>Start Date</strong></label>
-															<input type="date" id="start" name="start" class="form-control" value="<?php echo $start_date; ?>" required>
-														</div>
-													</div>
+					<div class="col-md-3">
+						<?php echo render_fiscal_year_filter($fiscal_year_id); ?>
+					</div>
 
-													<div class="col-md-3">
-														<div class="form-group">
-															<label for="end" class="control-label"><strong>End Date</strong></label>
-															<input type="date" id="end" name="end" class="form-control" value="<?php echo $end_date; ?>" required>
-														</div>
-													</div>
+					<div class="col-md-3">
+						<div class="form-group">
+							<label for="start" class="control-label"><strong>Start Date</strong></label>
+							<input type="date" id="start" name="start" class="form-control" value="<?php echo $start_date; ?>" required>
+						</div>
+					</div>
 
-													<div class="col-md-3">
-														<div class="form-group">
-															<label for="invoice_no" class="control-label"><strong>Invoice/Reference</strong></label>
-															<select name="invoice_no" id="invoice_no" class="form-control chosen-select">
-																<option value="">--All--</option>
+					<div class="col-md-3">
+						<div class="form-group">
+							<label for="end" class="control-label"><strong>End Date</strong></label>
+							<input type="date" id="end" name="end" class="form-control" value="<?php echo $end_date; ?>" required>
+						</div>
+					</div>
 
-																<optgroup label="Suppliers">
-																	<?php foreach ($invoices as $iv) : ?>
-																		<?php if ($iv['invoice_no']) : ?>
-																			<option value="<?= $iv['invoice_no'] ?>" <?= (isset($_GET['invoice_no']) && $_GET['invoice_no'] == $iv['invoice_no']) ? 'selected' : '' ?>>
-																				<?= $iv['invoice_no'] ?> - <?= $iv['name'] ?>
-																			</option>
-																		<?php endif; ?>
-																	<?php endforeach; ?>
-																</optgroup>
+					<div class="col-md-3">
+						<div class="form-group">
+							<label for="invoice_no" class="control-label"><strong>Invoice/Reference</strong></label>
+							<select name="invoice_no" id="invoice_no" class="form-control chosen-select">
+								<option value="">--All--</option>
 
-																<optgroup label="Patients">
-																	<?php foreach ($invoices_p as $iv) : ?>
-																		<?php if ($iv['invoice_no']) : ?>
-																			<option value="<?= $iv['invoice_no'] ?>" <?= (isset($_GET['invoice_no']) && $_GET['invoice_no'] == $iv['invoice_no']) ? 'selected' : '' ?>>
-																				<?= $iv['invoice_no'] ?> - <?= $iv['name'] ?>
-																			</option>
-																		<?php endif; ?>
-																	<?php endforeach; ?>
-																</optgroup>
-															</select>
-														</div>
-													</div>
+								<optgroup label="Suppliers">
+									<?php foreach ($invoices as $iv) : ?>
+										<?php if ($iv['invoice_no']) : ?>
+											<option value="<?= $iv['invoice_no'] ?>" <?= (isset($_GET['invoice_no']) && $_GET['invoice_no'] == $iv['invoice_no']) ? 'selected' : '' ?>>
+												<?= $iv['invoice_no'] ?> - <?= $iv['name'] ?>
+											</option>
+										<?php endif; ?>
+									<?php endforeach; ?>
+								</optgroup>
+
+								<optgroup label="Patients">
+									<?php foreach ($invoices_p as $iv) : ?>
+										<?php if ($iv['invoice_no']) : ?>
+											<option value="<?= $iv['invoice_no'] ?>" <?= (isset($_GET['invoice_no']) && $_GET['invoice_no'] == $iv['invoice_no']) ? 'selected' : '' ?>>
+												<?= $iv['invoice_no'] ?> - <?= $iv['name'] ?>
+											</option>
+										<?php endif; ?>
+									<?php endforeach; ?>
+								</optgroup>
+							</select>
+						</div>
+					</div>
 
 												</div>
 

@@ -23,13 +23,33 @@ $classes = $db->query("SELECT * FROM chart_class WHERE cid = 4 OR cid = 5");
 $classes = $classes->fetchAll(PDO::FETCH_ASSOC);
 
 // Get parameters
-$year = isset($_GET['year']) ? $_GET['year'] : date('Y');
-$start_date = isset($_GET['start']) ? $_GET['start'] : date('Y-01-01');
-$end_date = isset($_GET['end']) ? $_GET['end'] : date('Y-12-31');
+$fiscal_year_id = isset($_GET['fiscal_year']) && $_GET['fiscal_year'] != '' ? $_GET['fiscal_year'] : null;
 
-if (isset($_GET['start']) && isset($_GET['end'])) {
-    $the_stetment = 1;
+if ($fiscal_year_id) {
+    $stmt = $db->prepare("SELECT begin, end FROM chart_fiscal_year WHERE id = ?");
+    $stmt->execute([$fiscal_year_id]);
+    $fy = $stmt->fetch(PDO::FETCH_ASSOC);
+} else {
+    $stmt = $db->query("SELECT id, begin, end FROM chart_fiscal_year WHERE closed = 0 LIMIT 1");
+    $fy = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($fy) {
+        $fiscal_year_id = $fy['id'];
+    }
 }
+
+if (isset($fy) && $fy) {
+    $start_date = $fy['begin'];
+    $end_date = $fy['end'];
+    $_GET['start'] = $start_date;
+    $_GET['end'] = $end_date;
+} else {
+    $start_date = date('Y-01-01');
+    $end_date = date('Y-12-31');
+    $_GET['start'] = $start_date;
+    $_GET['end'] = $end_date;
+}
+
+$the_stetment = 1;
 include_once('inc/functions.php');
 redirect_to_active_year();
 ?>
@@ -62,82 +82,52 @@ redirect_to_active_year();
 											<form method="GET" class="well" style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; border-radius: 8px;">
 
 												<!-- Date Selection Row -->
-												<div class="row mb-3">
-													<div class="col-md-3">
-														<div class="form-group">
-															<label for="year" class="control-label"><strong>Year</strong></label>
-															<select name="year" id="year" class="form-control">
-																<?php for ($y = 2020; $y <= date('Y') + 1; $y++) : ?>
-																	<option value="<?php echo $y; ?>" <?php echo ($y == $year) ? 'selected' : ''; ?>><?php echo $y; ?></option>
-																<?php endfor; ?>
-															</select>
-														</div>
-													</div>
+				<div class="row mb-3">
+					<?php
+						$active_fy = get_active_year();
+					?>
+					<?php if ($active_fy): ?>
+					<div class="col-md-12" style="margin-bottom: 10px;">
+						<div class="alert alert-info" style="padding: 8px 14px; margin-bottom: 0;">
+							<i class="fa fa-info-circle"></i>
+							<strong>Active Fiscal Year:</strong>
+							<?= date('M d, Y', strtotime($active_fy['begin'])) ?> &ndash; <?= date('M d, Y', strtotime($active_fy['end'])) ?>
+							&nbsp;&mdash;&nbsp;<small class="text-muted">Select a fiscal year below to scope this report to that accounting period.</small>
+						</div>
+					</div>
+					<?php endif; ?>
 
-													<div class="col-md-3">
-														<div class="form-group">
-															<label for="start" class="control-label"><strong>Start Date</strong></label>
-															<input type="date" id="start" name="start" class="form-control" value="<?php echo $start_date; ?>">
-														</div>
-													</div>
+					<div class="col-md-6">
+						<?php echo render_fiscal_year_filter($fiscal_year_id); ?>
+						<input type="hidden" id="start" name="start" value="<?php echo $start_date; ?>">
+						<input type="hidden" id="end" name="end" value="<?php echo $end_date; ?>">
+					</div>
 
-													<div class="col-md-3">
-														<div class="form-group">
-															<label for="end" class="control-label"><strong>End Date</strong></label>
-															<input type="date" id="end" name="end" class="form-control" value="<?php echo $end_date; ?>">
-														</div>
-													</div>
-
-													<div class="col-md-3">
-														<div class="form-group">
-															<label class="control-label"><strong>Actions</strong></label>
-															<div style="margin-top: 8px;">
-																<button type="submit" class="btn btn-primary" title="Click to fetch data">
-																	<i class="fa fa-search"></i> <strong>DISPLAY</strong>
-																</button>
-																<button type="button" class="btn btn-success" onclick="exportToCSV()" title="Export to CSV">
-																	<i class="fa fa-download"></i> Export CSV
-																</button>
-																<button type="button" class="btn btn-primary" onclick="printDiv('chart_groups')" title="Print Report">
-																	<i class="fa fa-print"></i> Print
-																</button>
-															</div>
-														</div>
-													</div>
-												</div>
-
-												<!-- Quick Date Shortcuts -->
-												<div class="row">
-													<div class="col-md-12">
-														<div class="form-group" style="margin-bottom: 0;">
-															<label class="control-label"><strong>Quick Date Shortcuts</strong></label>
-															<div style="margin-top: 5px;">
-																<button type="button" class="btn btn-xs btn-info" onclick="setCurrentMonth()">
-																	<i class="fa fa-calendar"></i> Current Month
-																</button>
-																<button type="button" class="btn btn-xs btn-info" onclick="setCurrentQuarter()">
-																	<i class="fa fa-calendar-alt"></i> Current Quarter
-																</button>
-																<button type="button" class="btn btn-xs btn-info" onclick="setCurrentYear()">
-																	<i class="fa fa-calendar-year"></i> Current Year
-																</button>
-																<button type="button" class="btn btn-xs btn-warning" onclick="setLastMonth()">
-																	<i class="fa fa-backward"></i> Last Month
-																</button>
-																<button type="button" class="btn btn-xs btn-warning" onclick="setLastQuarter()">
-																	<i class="fa fa-step-backward"></i> Last Quarter
-																</button>
-															</div>
-														</div>
-													</div>
-												</div>
+					<div class="col-md-6">
+						<div class="form-group">
+							<label class="control-label"><strong>Actions</strong></label>
+							<div style="margin-top: 8px;">
+								<button type="submit" class="btn btn-primary" title="Click to fetch data">
+									<i class="fa fa-search"></i> <strong>DISPLAY</strong>
+								</button>
+								<button type="button" class="btn btn-success" onclick="exportToCSV()" title="Export to CSV">
+									<i class="fa fa-download"></i> Export CSV
+								</button>
+								<button type="button" class="btn btn-primary" onclick="printDiv('chart_groups')" title="Print Report">
+									<i class="fa fa-print"></i> Print
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
 
 											</form>
 										</div>
 									</div>
 								
 								
-<div class="table-responsive" id="chart_groups">
+								<?php if (isset($the_stetment)) : ?>
+								<div class="table-responsive" id="chart_groups">
 	
 											<h1>Balance Sheet</h1>
 											<h3>For the period starting <?php echo date('d M Y', strtotime($_GET['start'])); ?> and ending 
@@ -148,7 +138,7 @@ redirect_to_active_year();
                                     <hr>
 									
 									
-                                    <?php if (isset($the_stetment)) : ?>
+                                    
 									
 									
 									<table width="100%" style="font-size: 14px; " >
@@ -169,7 +159,7 @@ redirect_to_active_year();
 															?>										
 											
 												
-													<?php if($gTotal > 0){ ?>
+													<?php if($gTotal != 0){ ?>
 															<tr>
 																<td>&nbsp;&nbsp;</td>
 																<td><?= $group['name'] ?></td>
@@ -384,71 +374,7 @@ $net = (makePositive(getClassTotal('1', $_GET['start'], $_GET['end'])['bal']) -
 			// Hospital header HTML for printouts
 			var hospitalHeader = `<?php echo addslashes($hospital_table); ?>`;
 
-			// Auto-update date range when year changes
-			document.getElementById('year').addEventListener('change', function() {
-				const year = this.value;
-				document.getElementById('start').value = `${year}-01-01`;
-				document.getElementById('end').value = `${year}-12-31`;
-			});
-
-			// Quick date shortcut functions
-			function setCurrentMonth() {
-				const now = new Date();
-				const year = now.getFullYear();
-				const month = String(now.getMonth() + 1).padStart(2, '0');
-				document.getElementById('start').value = `${year}-${month}-01`;
-				const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
-				document.getElementById('end').value = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
-				document.getElementById('year').value = year;
-				document.getElementById('start').closest('form').submit();
-			}
-
-			function setCurrentQuarter() {
-				const now = new Date();
-				const year = now.getFullYear();
-				const quarter = Math.floor(now.getMonth() / 3);
-				const startMonth = String(quarter * 3 + 1).padStart(2, '0');
-				const endMonth = String(quarter * 3 + 3).padStart(2, '0');
-				document.getElementById('start').value = `${year}-${startMonth}-01`;
-				const lastDay = new Date(year, quarter * 3 + 3, 0).getDate();
-				document.getElementById('end').value = `${year}-${endMonth}-${String(lastDay).padStart(2, '0')}`;
-				document.getElementById('year').value = year;
-				document.getElementById('start').closest('form').submit();
-			}
-
-			function setCurrentYear() {
-				const year = new Date().getFullYear();
-				document.getElementById('start').value = `${year}-01-01`;
-				document.getElementById('end').value = `${year}-12-31`;
-				document.getElementById('year').value = year;
-				document.getElementById('start').closest('form').submit();
-			}
-
-			function setLastMonth() {
-				const now = new Date();
-				const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-				const year = lastMonth.getFullYear();
-				const month = String(lastMonth.getMonth() + 1).padStart(2, '0');
-				document.getElementById('start').value = `${year}-${month}-01`;
-				const lastDay = new Date(year, lastMonth.getMonth() + 1, 0).getDate();
-				document.getElementById('end').value = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
-				document.getElementById('year').value = year;
-				document.getElementById('start').closest('form').submit();
-			}
-
-			function setLastQuarter() {
-				const now = new Date();
-				const currentQuarter = Math.floor(now.getMonth() / 3);
-				const lastQuarter = currentQuarter === 0 ? 3 : currentQuarter - 1;
-				const year = currentQuarter === 0 ? now.getFullYear() - 1 : now.getFullYear();
-				const startMonth = String(lastQuarter * 3 + 1).padStart(2, '0');
-				const endMonth = String(lastQuarter * 3 + 3).padStart(2, '0');
-				document.getElementById('start').value = `${year}-${startMonth}-01`;
-				const lastDay = new Date(year, lastQuarter * 3 + 3, 0).getDate();
-				document.getElementById('end').value = `${year}-${endMonth}-${String(lastDay).padStart(2, '0')}`;
-				document.getElementById('year').value = year;
-				document.getElementById('start').closest('form').submit();
-			}
+			// Quick date shortcut functions removed as Balance Sheet uses Fiscal Bounds
 
 			function exportToCSV() {
 				var startDate = document.querySelector('input[name="start"]').value;

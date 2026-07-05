@@ -3,6 +3,7 @@
 <?php
 session_start();
 include('../inc/header.php');
+include_once('inc/functions.php');
 
 // Fetch hospital details from the database
 $hospital_details_query = 'SELECT * FROM hospital_details LIMIT 1';
@@ -22,10 +23,17 @@ $classes = $db->query('SELECT * FROM chart_class WHERE inactive = 0');
 $classes = $classes->fetchAll(PDO::FETCH_ASSOC);
 
 // Get parameters
+// Get parameters
+$active_fy = get_active_year();
+$default_start = $active_fy ? $active_fy['begin'] : date('Y-01-01');
+$default_end = $active_fy ? $active_fy['end'] : date('Y-12-31');
+$default_fy_id = $active_fy ? $active_fy['id'] : null;
+
+$fiscal_year_id = isset($_GET['fiscal_year']) && $_GET['fiscal_year'] != '' ? $_GET['fiscal_year'] : $default_fy_id;
 $year = isset($_GET['year']) ? $_GET['year'] : date('Y');
 $period = isset($_GET['period']) ? $_GET['period'] : 'monthly';
-$start_date = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-01-01');
-$end_date = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-12-31');
+$start_date = isset($_GET['start']) ? $_GET['start'] : (isset($_GET['start_date']) ? $_GET['start_date'] : $default_start);
+$end_date = isset($_GET['end']) ? $_GET['end'] : (isset($_GET['end_date']) ? $_GET['end_date'] : $default_end);
 $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 ?>
 
@@ -235,32 +243,25 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 
 											<!-- Date & Period Selection Row -->
 											<div class="row mb-3">
-												<div class="col-md-2">
+                                                <div class="col-md-3">
+                                                    <?php echo render_fiscal_year_filter($fiscal_year_id); ?>
+                                                </div>
+
+												<div class="col-md-3">
 													<div class="form-group">
-														<label for="year" class="control-label"><strong>Year</strong></label>
-														<select name="year" id="year" class="form-control">
-															<?php for ($y = 2020; $y <= date('Y') + 1; $y++) : ?>
-																<option value="<?php echo $y; ?>" <?php echo ($y == $year) ? 'selected' : ''; ?>><?php echo $y; ?></option>
-															<?php endfor; ?>
-														</select>
+														<label for="start" class="control-label"><strong>Start Date</strong></label>
+														<input type="date" id="start" name="start" class="form-control" value="<?php echo $start_date; ?>" required>
 													</div>
 												</div>
 
 												<div class="col-md-3">
 													<div class="form-group">
-														<label for="start_date" class="control-label"><strong>Start Date</strong></label>
-														<input type="date" id="start_date" name="start_date" class="form-control" value="<?php echo $start_date; ?>">
+														<label for="end" class="control-label"><strong>End Date</strong></label>
+														<input type="date" id="end" name="end" class="form-control" value="<?php echo $end_date; ?>" required>
 													</div>
 												</div>
 
 												<div class="col-md-3">
-													<div class="form-group">
-														<label for="end_date" class="control-label"><strong>End Date</strong></label>
-														<input type="date" id="end_date" name="end_date" class="form-control" value="<?php echo $end_date; ?>">
-													</div>
-												</div>
-
-												<div class="col-md-4">
 													<div class="form-group">
 														<label for="account_filter" class="control-label" title="Filter data by specific account - leave blank to show all accounts"><strong><i class="fa fa-filter"></i> Account Filter</strong></label>
 														<select name="account_filter" id="account_filter" class="form-control select2">
@@ -700,22 +701,14 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 			// Hospital header HTML for printouts
 			var hospitalHeader = `<?php echo addslashes($hospital_table); ?>`;
 
-			// Auto-update date range when year changes
-			document.getElementById('year').addEventListener('change', function() {
-				const year = this.value;
-				document.getElementById('start_date').value = `${year}-01-01`;
-				document.getElementById('end_date').value = `${year}-12-31`;
-			});
-
 			// Quick date shortcut functions
 			function setCurrentMonth() {
 				const now = new Date();
 				const year = now.getFullYear();
 				const month = String(now.getMonth() + 1).padStart(2, '0');
-				document.getElementById('start_date').value = `${year}-${month}-01`;
+				document.getElementById('start').value = `${year}-${month}-01`;
 				const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
-				document.getElementById('end_date').value = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
-				document.getElementById('year').value = year;
+				document.getElementById('end').value = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
 			}
 
 			function setCurrentQuarter() {
@@ -724,17 +717,15 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 				const quarter = Math.floor(now.getMonth() / 3);
 				const startMonth = String(quarter * 3 + 1).padStart(2, '0');
 				const endMonth = String(quarter * 3 + 3).padStart(2, '0');
-				document.getElementById('start_date').value = `${year}-${startMonth}-01`;
+				document.getElementById('start').value = `${year}-${startMonth}-01`;
 				const lastDay = new Date(year, quarter * 3 + 3, 0).getDate();
-				document.getElementById('end_date').value = `${year}-${endMonth}-${String(lastDay).padStart(2, '0')}`;
-				document.getElementById('year').value = year;
+				document.getElementById('end').value = `${year}-${endMonth}-${String(lastDay).padStart(2, '0')}`;
 			}
 
 			function setCurrentYear() {
 				const year = new Date().getFullYear();
-				document.getElementById('start_date').value = `${year}-01-01`;
-				document.getElementById('end_date').value = `${year}-12-31`;
-				document.getElementById('year').value = year;
+				document.getElementById('start').value = `${year}-01-01`;
+				document.getElementById('end').value = `${year}-12-31`;
 			}
 
 			function setLastMonth() {
@@ -742,10 +733,9 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 				const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 				const year = lastMonth.getFullYear();
 				const month = String(lastMonth.getMonth() + 1).padStart(2, '0');
-				document.getElementById('start_date').value = `${year}-${month}-01`;
+				document.getElementById('start').value = `${year}-${month}-01`;
 				const lastDay = new Date(year, lastMonth.getMonth() + 1, 0).getDate();
-				document.getElementById('end_date').value = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
-				document.getElementById('year').value = year;
+				document.getElementById('end').value = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
 			}
 
 			function setLastQuarter() {
@@ -755,10 +745,9 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 				const year = currentQuarter === 0 ? now.getFullYear() - 1 : now.getFullYear();
 				const startMonth = String(lastQuarter * 3 + 1).padStart(2, '0');
 				const endMonth = String(lastQuarter * 3 + 3).padStart(2, '0');
-				document.getElementById('start_date').value = `${year}-${startMonth}-01`;
+				document.getElementById('start').value = `${year}-${startMonth}-01`;
 				const lastDay = new Date(year, lastQuarter * 3 + 3, 0).getDate();
-				document.getElementById('end_date').value = `${year}-${endMonth}-${String(lastDay).padStart(2, '0')}`;
-				document.getElementById('year').value = year;
+				document.getElementById('end').value = `${year}-${endMonth}-${String(lastDay).padStart(2, '0')}`;
 			}
 
 			// Initialize Select2 for account dropdown

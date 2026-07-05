@@ -114,7 +114,7 @@ class FiscalYearClosing
                 "Total expenses for year: " . number_format($expense_total, 2)
             );
 
-            $retained_earnings = $income_total - $expense_total;
+            $retained_earnings = $income_total + $expense_total;
             $this->logAction(
                 'CALCULATION',
                 'Calculated retained earnings',
@@ -287,28 +287,6 @@ class FiscalYearClosing
                 $this->current_year_id
             ));
 
-            // Create corresponding Retained Earnings entry - using first day of new year
-            $reAccount = '2204'; // Retained Earnings account
-            $reTransType = ($transType == 'DEBIT') ? 'CREDIT' : 'DEBIT';
-
-            // Set the retained earnings entry to the first day of the new fiscal year at 00:00:01
-            $reTimestamp = date('Y-m-d H:i:s', strtotime($firstDayOfNewYear . ' 00:00:01'));
-            $reDate = $firstDayOfNewYear;
-
-            $stmt = $this->db->prepare($insertSql);
-            $stmt->execute(array(
-                $description,
-                $reTransType,
-                ($reTransType == 'DEBIT') ? abs($balance) : 0,
-                ($reTransType == 'CREDIT') ? abs($balance) : 0,
-                $reTimestamp,    // date_entry
-                $reDate,         // date_entry2
-                $reTimestamp,    // post_stamp
-                $reAccount,
-                'FY_OPEN_' . $this->new_year_id,  // Different reference for opening entries
-                $this->new_year_id  // Note: This entry goes into the new fiscal year
-            ));
-
             $this->logAction(
                 'CLOSE_ACCOUNT',
                 ($class_id == 4 ? 'Income account closing' : 'Expense account closing'),
@@ -317,7 +295,7 @@ class FiscalYearClosing
                 $crAmt,
                 'SUCCESS',
                 "Account: {$account['account_name']} - Balance zeroed: " . number_format(abs($balance), 2) .
-                    " (Closed on: $closingDate, RE Entry on: $reDate)"
+                    " (Closed on: $closingDate)"
             );
         }
 
@@ -350,6 +328,12 @@ class FiscalYearClosing
             return;
         }
 
+        // Get fiscal year dates
+        $stmt = $this->db->prepare("SELECT end FROM chart_fiscal_year WHERE id = ?");
+        $stmt->execute(array($this->current_year_id));
+        $lastDayOfYear = $stmt->fetch(PDO::FETCH_ASSOC)['end'];
+        $closingTimestamp = date('Y-m-d H:i:s', strtotime($lastDayOfYear . ' 23:59:59'));
+
         $sql = "
             INSERT INTO chart_ledger (
                 app_no, ref_value, item_services, transc_type, 
@@ -365,9 +349,9 @@ class FiscalYearClosing
                 ?,
                 ?,
                 'SYSTEM',
-                NOW(),
-                CURDATE(),
-                NOW(),
+                ?,
+                ?,
+                ?,
                 '2204',
                 ?,
                 ?
@@ -382,8 +366,11 @@ class FiscalYearClosing
             $transType,
             $drAmt,
             $crAmt,
-            $amount,
-            'FY_CLOSE_RE_' . $this->current_year_id,
+            abs($amount),
+            $closingTimestamp,
+            $lastDayOfYear,
+            $closingTimestamp,
+            'FY_CLOSE_' . $this->current_year_id,
             $this->current_year_id
         ));
 

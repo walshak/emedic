@@ -3,6 +3,7 @@
 <?php
 session_start();
 include('../inc/header.php');
+include_once('inc/functions.php');
 
 
 // --- START OF FORM PROCESSOR ---
@@ -22,9 +23,15 @@ if (isset($_POST['fix_unbalanced'])) {
         $setdate = date("Y-m-d H:i:s");
         
         // Find active fiscal year
-        $fy_stmt = $db->query("SELECT id FROM chart_fiscal_year WHERE is_active = 1 LIMIT 1");
-        $fy_row = $fy_stmt->fetch(PDO::FETCH_ASSOC);
-        $fical_year = $fy_row ? $fy_row['id'] : 2;
+        $active_year = get_active_year();
+        $fical_year = $active_year['id'];
+
+        // Validation: Ensure the selected date falls within the active fiscal year bounds
+        if (strtotime($latest_date) < strtotime($active_year['begin']) || strtotime($latest_date) > strtotime($active_year['end'])) {
+            $error_status = 1;
+            $error_msg = "Error: Adjusting date ({$latest_date}) falls outside the active fiscal year (" . date('M d, Y', strtotime($active_year['begin'])) . " to " . date('M d, Y', strtotime($active_year['end'])) . ").";
+            throw new Exception($error_msg);
+        }
 
         $err = 0;
         for ($i = 0; $i < count($accounts); ++$i) {
@@ -85,9 +92,14 @@ foreach ($classes as $class) {
 
 
 // Get date filters from form submission
-$start_date = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
-$end_date = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-t');
-$selected_month = isset($_GET['selected_month']) ? $_GET['selected_month'] : '';
+$active_fy = get_active_year();
+$default_start = $active_fy ? $active_fy['begin'] : date('Y-01-01');
+$default_end = $active_fy ? $active_fy['end'] : date('Y-12-31');
+$default_fy_id = $active_fy ? $active_fy['id'] : null;
+
+$fiscal_year_id = isset($_GET['fiscal_year']) && $_GET['fiscal_year'] != '' ? $_GET['fiscal_year'] : $default_fy_id;
+$start_date = isset($_GET['start']) ? $_GET['start'] : (isset($_GET['start_date']) ? $_GET['start_date'] : $default_start);
+$end_date = isset($_GET['end']) ? $_GET['end'] : (isset($_GET['end_date']) ? $_GET['end_date'] : $default_end);
 $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 ?>
 
@@ -115,53 +127,68 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
                                 <!-- Date Filter Form -->
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <form method="GET" class="form-inline" style="margin-bottom: 20px;">
-                                            <div class="form-group">
-                                                <label for="start_date">Start Date:</label>
-                                                <input type="date" id="start_date" name="start_date" class="form-control" value="<?php echo $start_date; ?>">
-                                            </div>
-                                            <div class="form-group" style="margin-left: 10px;">
-                                                <label for="end_date">End Date:</label>
-                                                <input type="date" id="end_date" name="end_date" class="form-control" value="<?php echo $end_date; ?>">
-                                            </div>
-                                            <div class="form-group" style="margin-left: 10px;">
-                                                <label for="selected_month">Quick Month:</label>
-                                                <input type="month" id="selected_month" name="selected_month" class="form-control" value="<?php echo $selected_month; ?>">
-                                            </div>
-                                            <div class="form-group" style="margin-left: 10px;">
-                                                <label for="account_filter">Account:</label>
-                                                <select name="account_filter" id="account_filter" class="form-control select2" style="width: 300px;">
-                                                    <option value="">-- All Accounts --</option>
-                                                    <?php foreach ($classes as $class) { ?>
-                                                        <optgroup label="<?php echo $class['class_name']; ?>">
-                                                            <?php
-                                                            $cid = $class['cid'];
-                                                            $groups = $db->prepare('SELECT * FROM chart_groups WHERE class_id = ? AND inactive = ?');
-                                                            $groups->execute([$cid, 0]);
-                                                            $groups = $groups->fetchAll(PDO::FETCH_ASSOC);
-                                                            ?>
-                                                            <?php foreach ($groups as $group) { ?>
-                                                        <optgroup label="<?php echo $group['name']; ?>">
-                                                            <?php
-                                                                $group_id = $group['id'];
-                                                                $accounts = $db->prepare('SELECT * FROM chart_accounts WHERE account_group = ? AND inactive = ?');
-                                                                $accounts->execute([$group_id, 0]);
-                                                                $accounts = $accounts->fetchAll(PDO::FETCH_ASSOC);
-                                                            ?>
-                                                            <?php foreach ($accounts as $account) { ?>
-                                                                <option value="<?php echo $account['account_code']; ?>" <?php echo ($account_filter == $account['account_code']) ? 'selected' : ''; ?>>
-                                                                    [<?php echo $account['account_code']; ?>] <?php echo $account['account_name']; ?>
-                                                                </option>
+                                        <form method="GET" class="well" style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; border-radius: 8px;">
+                                            <div class="row mb-3">
+                                                <div class="col-md-3">
+                                                    <?php echo render_fiscal_year_filter($fiscal_year_id); ?>
+                                                </div>
+
+                                                <div class="col-md-3">
+                                                    <div class="form-group">
+                                                        <label for="start" class="control-label"><strong>Start Date</strong></label>
+                                                        <input type="date" id="start" name="start" class="form-control" value="<?php echo $start_date; ?>" required>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-3">
+                                                    <div class="form-group">
+                                                        <label for="end" class="control-label"><strong>End Date</strong></label>
+                                                        <input type="date" id="end" name="end" class="form-control" value="<?php echo $end_date; ?>" required>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-3">
+                                                    <div class="form-group">
+                                                        <label for="account_filter" class="control-label"><strong>Account</strong></label>
+                                                        <select name="account_filter" id="account_filter" class="form-control select2">
+                                                            <option value="">-- All Accounts --</option>
+                                                            <?php foreach ($classes as $class) { ?>
+                                                                <optgroup label="<?php echo $class['class_name']; ?>">
+                                                                    <?php
+                                                                    $cid = $class['cid'];
+                                                                    $groups = $db->prepare('SELECT * FROM chart_groups WHERE class_id = ? AND inactive = ?');
+                                                                    $groups->execute([$cid, 0]);
+                                                                    $groups = $groups->fetchAll(PDO::FETCH_ASSOC);
+                                                                    ?>
+                                                                    <?php foreach ($groups as $group) { ?>
+                                                                <optgroup label="<?php echo $group['name']; ?>">
+                                                                    <?php
+                                                                        $group_id = $group['id'];
+                                                                        $accounts = $db->prepare('SELECT * FROM chart_accounts WHERE account_group = ? AND inactive = ?');
+                                                                        $accounts->execute([$group_id, 0]);
+                                                                        $accounts = $accounts->fetchAll(PDO::FETCH_ASSOC);
+                                                                    ?>
+                                                                    <?php foreach ($accounts as $account) { ?>
+                                                                        <option value="<?php echo $account['account_code']; ?>" <?php echo ($account_filter == $account['account_code']) ? 'selected' : ''; ?>>
+                                                                            [<?php echo $account['account_code']; ?>] <?php echo $account['account_name']; ?>
+                                                                        </option>
+                                                                    <?php } ?>
+                                                                </optgroup>
                                                             <?php } ?>
-                                                        </optgroup>
-                                                    <?php } ?>
-                                                    </optgroup>
-                                                <?php } ?>
-                                                </select>
+                                                            </optgroup>
+                                                        <?php } ?>
+                                                        </select>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <button type="submit" class="btn btn-primary" style="margin-left: 10px;">
-                                                <i class="fa fa-search"></i> Filter
-                                            </button>
+
+                                            <div class="row">
+                                                <div class="col-md-12 text-right">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="fa fa-search"></i> <strong>FILTER</strong>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </form>
                                     </div>
                                 </div>
@@ -380,19 +407,7 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
         <?php include("../inc/footer_scripts.php"); ?>
 
         <script>
-            // Auto-populate start and end dates when month is selected
-            document.getElementById('selected_month').addEventListener('change', function() {
-                const monthValue = this.value;
-                if (monthValue) {
-                    const year = monthValue.split('-')[0];
-                    const month = monthValue.split('-')[1];
-                    const startDate = `${year}-${month}-01`;
-                    const endDate = new Date(year, month, 0).toISOString().split('T')[0];
 
-                    document.getElementById('start_date').value = startDate;
-                    document.getElementById('end_date').value = endDate;
-                }
-            });
 
 
             // Initialize Select2 for account dropdown

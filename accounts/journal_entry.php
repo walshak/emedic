@@ -37,7 +37,17 @@ if (isset($_POST['account'])) {
 		$ref_val = $_POST['ref_val'];
 		$setdate = date("Y-m-d H:i:s");
 
-		$fical_year = get_active_year()['id'];
+		$active_year_data = get_active_year();
+		$fical_year = $active_year_data['id'];
+		
+		// Validation: Ensure the selected date falls within the active fiscal year bounds
+		if ($date < $active_year_data['begin'] || $date > $active_year_data['end']) {
+			$db->rollBack();
+			set_flash_message('<h2>FAILED: Event date must be within the active fiscal year (' . date('M d, Y', strtotime($active_year_data['begin'])) . ' to ' . date('M d, Y', strtotime($active_year_data['end'])) . ').</h2>', 'danger');
+			header('Location:' . $_SERVER['REQUEST_URI']);
+			exit;
+		}
+		
 		$err = 0;
 		$first_narration = '';
 
@@ -197,10 +207,11 @@ $invoices = $invoices->fetchAll(PDO::FETCH_ASSOC);
 								?>
 								<form action="" method="post" onsubmit="do_submit(event,this)">
 									<div class="form_sep" style="width:260px; ">
-										<?php /*?>	 min="<?=date('Y-m-d', strtotime($active_yaer['begin'])) ?>" max="<?=date('Y-m-d', strtotime($active_yaer['end'])) ?>"<?php */ ?>
-
 										<label for="date"><strong style="color: red; ">Event Date</strong></label>
-										<input type="date" id="entry_date" name="date" class="form-control" style="font-size: 17px; ">
+										<input type="date" id="entry_date" name="date" class="form-control" style="font-size: 17px; "
+											min="<?= date('Y-m-d', strtotime($active_yaer['begin'])) ?>"
+											max="<?= date('Y-m-d', strtotime($active_yaer['end'])) ?>" required>
+										<small class="text-muted">Active fiscal year: <?= date('M d, Y', strtotime($active_yaer['begin'])) ?> &ndash; <?= date('M d, Y', strtotime($active_yaer['end'])) ?></small>
 									</div>
 									<br>
 									<!-- If we are dealing with account payble, we give anoptio to specify invoice no -->

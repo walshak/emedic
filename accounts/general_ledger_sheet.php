@@ -47,8 +47,14 @@ function getAccountTotals($db, $account_code, $start, $end)
 }
 
 // Default to today
-$start_date = isset($_GET['start']) ? $_GET['start'] : date('Y-m-01');
-$end_date = isset($_GET['end']) ? $_GET['end'] : date('Y-m-d');
+$active_fy = get_active_year();
+$default_start = $active_fy ? $active_fy['begin'] : date('Y-01-01');
+$default_end = $active_fy ? $active_fy['end'] : date('Y-12-31');
+$default_fy_id = $active_fy ? $active_fy['id'] : null;
+
+$fiscal_year_id = isset($_GET['fiscal_year']) && $_GET['fiscal_year'] != '' ? $_GET['fiscal_year'] : $default_fy_id;
+$start_date = isset($_GET['start']) ? $_GET['start'] : $default_start;
+$end_date = isset($_GET['end']) ? $_GET['end'] : $default_end;
 
 // Fetch all classes
 $classes = $db->query('SELECT * FROM chart_class')->fetchAll(PDO::FETCH_ASSOC);
@@ -373,14 +379,7 @@ function getGroupTotals($db, $group_id, $start, $end)
 												<!-- Date Selection Row -->
 												<div class="row mb-3">
 													<div class="col-md-4">
-														<div class="form-group">
-															<label for="year" class="control-label"><strong>Year</strong></label>
-															<select name="year" id="year_select" class="form-control">
-																<?php for ($y = 2020; $y <= date('Y') + 1; $y++) : ?>
-																	<option value="<?php echo $y; ?>" <?php echo ($y == $year) ? 'selected' : ''; ?>><?php echo $y; ?></option>
-																<?php endfor; ?>
-															</select>
-														</div>
+														<?php echo render_fiscal_year_filter($fiscal_year_id); ?>
 													</div>
 
 													<div class="col-md-4">
@@ -446,6 +445,8 @@ function getGroupTotals($db, $group_id, $start, $end)
 											</form>
 										</div>
 									</div>
+                            <?php if (isset($_GET['start']) && isset($_GET['end'])) : ?>
+                                <hr>
                             <?php
                             // OPTIMIZED: Calculate main totals with a single query instead of nested loops
                             $main_totals_query = $db->prepare('
@@ -694,6 +695,7 @@ function getGroupTotals($db, $group_id, $start, $end)
                                 echo format_accounting(abs($main_net)) . ($main_net >= 0 ? ' DR' : ' CR');
                                 ?>
                             </div>
+                            <?php endif; ?>
                             
                             
                         </div>
@@ -707,14 +709,7 @@ function getGroupTotals($db, $group_id, $start, $end)
         <script>
             // Hospital header HTML for printouts
             var hospitalHeader = `<?php echo addslashes($hospital_table); ?>`;
-            // Auto-update date range when year changes
-            if (document.getElementById('year_select')) {
-                document.getElementById('year_select').addEventListener('change', function() {
-                    const year = this.value;
-                    document.getElementById('start').value = `${year}-01-01`;
-                    document.getElementById('end').value = `${year}-12-31`;
-                });
-            }
+
 
             // Quick date shortcut functions
             function setCurrentMonth() {
@@ -724,7 +719,6 @@ function getGroupTotals($db, $group_id, $start, $end)
                 document.getElementById('start').value = `${year}-${month}-01`;
                 const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
                 document.getElementById('end').value = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
-                document.getElementById('year_select').value = year;
                 document.getElementById('start').closest('form').submit();
             }
 
@@ -737,7 +731,6 @@ function getGroupTotals($db, $group_id, $start, $end)
                 document.getElementById('start').value = `${year}-${startMonth}-01`;
                 const lastDay = new Date(year, quarter * 3 + 3, 0).getDate();
                 document.getElementById('end').value = `${year}-${endMonth}-${String(lastDay).padStart(2, '0')}`;
-                document.getElementById('year_select').value = year;
                 document.getElementById('start').closest('form').submit();
             }
 
@@ -745,7 +738,6 @@ function getGroupTotals($db, $group_id, $start, $end)
                 const year = new Date().getFullYear();
                 document.getElementById('start').value = `${year}-01-01`;
                 document.getElementById('end').value = `${year}-12-31`;
-                document.getElementById('year_select').value = year;
                 document.getElementById('start').closest('form').submit();
             }
 
@@ -757,7 +749,6 @@ function getGroupTotals($db, $group_id, $start, $end)
                 document.getElementById('start').value = `${year}-${month}-01`;
                 const lastDay = new Date(year, lastMonth.getMonth() + 1, 0).getDate();
                 document.getElementById('end').value = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
-                document.getElementById('year_select').value = year;
                 document.getElementById('start').closest('form').submit();
             }
 
@@ -771,7 +762,6 @@ function getGroupTotals($db, $group_id, $start, $end)
                 document.getElementById('start').value = `${year}-${startMonth}-01`;
                 const lastDay = new Date(year, lastQuarter * 3 + 3, 0).getDate();
                 document.getElementById('end').value = `${year}-${endMonth}-${String(lastDay).padStart(2, '0')}`;
-                document.getElementById('year_select').value = year;
                 document.getElementById('start').closest('form').submit();
             }
 

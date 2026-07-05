@@ -49,7 +49,12 @@ if (isset($_POST['account'])) {
 		$date = $_POST['date'];
 		$line_ids = $_POST['line_ids'];
 
-
+		// Validate: date must fall within the active fiscal year
+		if ($date < $fiscal_year['begin'] || $date > $fiscal_year['end']) {
+			set_flash_message('<h2>FAILED: Event date must be within the active fiscal year (' . date('M d, Y', strtotime($fiscal_year['begin'])) . ' to ' . date('M d, Y', strtotime($fiscal_year['end'])) . ').</h2>', 'danger');
+			header('Location:' . $_SERVER['REQUEST_URI']);
+			exit;
+		}
 
 		$err = 0;
 		$db->beginTransaction();
@@ -387,7 +392,10 @@ $period_text = 'PERIOD: [' . date('d M, Y', strtotime($_GET['start'])) . ' - ' .
 											<div class="form_sep" style="width:260px; ">
 												<div class="form-group">
 													<label for="date"><strong style="color: red; ">Event Date</strong></label>
-													<input type="date" id="entry_date" name="date" value="<?php echo $gl_lines[0]['date_entry2']; ?>" class="form-control" style="font-size: 17px;">
+													<input type="date" id="entry_date" name="date" value="<?php echo $gl_lines[0]['date_entry2']; ?>" class="form-control" style="font-size: 17px;"
+														min="<?= date('Y-m-d', strtotime($fiscal_year['begin'])) ?>"
+														max="<?= date('Y-m-d', strtotime($fiscal_year['end'])) ?>">
+													<small class="text-muted">Active fiscal year: <?= date('M d, Y', strtotime($fiscal_year['begin'])) ?> &ndash; <?= date('M d, Y', strtotime($fiscal_year['end'])) ?></small>
 												</div>
 											</div>
 

@@ -23,13 +23,36 @@ $classes = $db->query("SELECT * FROM chart_class WHERE cid = 4 OR cid = 5");
 $classes = $classes->fetchAll(PDO::FETCH_ASSOC);
 
 // Get parameters
-$year = isset($_GET['year']) ? $_GET['year'] : date('Y');
-$start_date = isset($_GET['start']) ? $_GET['start'] : date('Y-01-01');
-$end_date = isset($_GET['end']) ? $_GET['end'] : date('Y-12-31');
+$fiscal_year_id = isset($_GET['fiscal_year']) && $_GET['fiscal_year'] != '' ? $_GET['fiscal_year'] : null;
 
-if (isset($_GET['start']) && isset($_GET['end'])) {
-    $the_stetment = 1;
+// Determine default dates from fiscal year
+if ($fiscal_year_id) {
+    $stmt = $db->prepare("SELECT begin, end FROM chart_fiscal_year WHERE id = ?");
+    $stmt->execute([$fiscal_year_id]);
+    $fy = $stmt->fetch(PDO::FETCH_ASSOC);
+} else {
+    $stmt = $db->query("SELECT id, begin, end FROM chart_fiscal_year WHERE closed = 0 LIMIT 1");
+    $fy = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($fy) {
+        $fiscal_year_id = $fy['id'];
+    }
 }
+
+if (isset($fy) && $fy) {
+    $default_start = $fy['begin'];
+    $default_end = $fy['end'];
+} else {
+    $default_start = date('Y-01-01');
+    $default_end = date('Y-12-31');
+}
+
+$start_date = isset($_GET['start']) ? $_GET['start'] : $default_start;
+$end_date = isset($_GET['end']) ? $_GET['end'] : $default_end;
+
+$_GET['start'] = $start_date;
+$_GET['end'] = $end_date;
+
+$the_stetment = 1;
 include('inc/functions.php');
 redirect_to_active_year();
 ?>
@@ -70,14 +93,7 @@ redirect_to_active_year();
 												<!-- Date Selection Row -->
 												<div class="row mb-3">
 													<div class="col-md-3">
-														<div class="form-group">
-															<label for="year" class="control-label"><strong>Year</strong></label>
-															<select name="year" id="year" class="form-control">
-																<?php for ($y = 2020; $y <= date('Y') + 1; $y++) : ?>
-																	<option value="<?php echo $y; ?>" <?php echo ($y == $year) ? 'selected' : ''; ?>><?php echo $y; ?></option>
-																<?php endfor; ?>
-															</select>
-														</div>
+														<?php echo render_fiscal_year_filter($fiscal_year_id); ?>
 													</div>
 
 													<div class="col-md-3">
@@ -313,13 +329,6 @@ redirect_to_active_year();
 			// Hospital header HTML for printouts
 			var hospitalHeader = `<?php echo addslashes($hospital_table); ?>`;
 
-			// Auto-update date range when year changes
-			document.getElementById('year').addEventListener('change', function() {
-				const year = this.value;
-				document.getElementById('start').value = `${year}-01-01`;
-				document.getElementById('end').value = `${year}-12-31`;
-			});
-
 			// Quick date shortcut functions
 			function setCurrentMonth() {
 				const now = new Date();
@@ -328,7 +337,6 @@ redirect_to_active_year();
 				document.getElementById('start').value = `${year}-${month}-01`;
 				const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
 				document.getElementById('end').value = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
-				document.getElementById('year').value = year;
 				document.getElementById('start').closest('form').submit();
 			}
 
@@ -341,7 +349,6 @@ redirect_to_active_year();
 				document.getElementById('start').value = `${year}-${startMonth}-01`;
 				const lastDay = new Date(year, quarter * 3 + 3, 0).getDate();
 				document.getElementById('end').value = `${year}-${endMonth}-${String(lastDay).padStart(2, '0')}`;
-				document.getElementById('year').value = year;
 				document.getElementById('start').closest('form').submit();
 			}
 
@@ -349,7 +356,6 @@ redirect_to_active_year();
 				const year = new Date().getFullYear();
 				document.getElementById('start').value = `${year}-01-01`;
 				document.getElementById('end').value = `${year}-12-31`;
-				document.getElementById('year').value = year;
 				document.getElementById('start').closest('form').submit();
 			}
 
@@ -361,7 +367,6 @@ redirect_to_active_year();
 				document.getElementById('start').value = `${year}-${month}-01`;
 				const lastDay = new Date(year, lastMonth.getMonth() + 1, 0).getDate();
 				document.getElementById('end').value = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
-				document.getElementById('year').value = year;
 				document.getElementById('start').closest('form').submit();
 			}
 

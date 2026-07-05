@@ -3,6 +3,7 @@
 <?php
 session_start();
 include('../inc/header.php');
+include_once('inc/functions.php');
 
 // Fetch hospital details from the database
 $hospital_details_query = 'SELECT * FROM hospital_details LIMIT 1';
@@ -27,7 +28,9 @@ $period = isset($_GET['period']) ? $_GET['period'] : 'monthly';
 $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-01-01');
 $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-12-31');
 $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
+$fiscal_year_id = isset($_GET['fiscal_year']) && $_GET['fiscal_year'] != '' ? (int)$_GET['fiscal_year'] : null;
 ?>
+
 
 <style>
 	.trial-table {
@@ -227,6 +230,10 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 
 										<!-- Date & Period Selection Row -->
 										<div class="row mb-3">
+											<div class="col-md-2">
+												<?php echo render_fiscal_year_filter($fiscal_year_id); ?>
+											</div>
+
 											<div class="col-md-2">
 												<div class="form-group">
 													<label for="year" class="control-label"><strong>Year</strong></label>
