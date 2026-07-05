@@ -1,0 +1,258 @@
+
+
+body {
+  padding-top: 56px;
+  background-color: #EEEEEE;
+}
+
+.container-fluid>.sidebar {
+  width: 165px;
+}
+
+.container-fluid > .content {
+  margin-left: 180px;
+}
+
+.well {
+  border: 0px;
+  background-color: #FFFFFF;
+  padding-bottom: 12px;
+  padding-left: 12px;
+  padding-right: 12px;
+  padding-top: 12px;
+  box-shadow: none;
+}
+
+.content {
+  background-color: #FFFFFF;
+  margin-left: -20px;
+  margin-right: -20px;
+  padding-bottom: 16px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 16px;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+}
+
+.container {
+  width: 730px;
+}
+
+.container2 {
+  width: 700px;
+}
+
+h2 {
+  margin-bottom: 12px;
+}
+
+.breadcrumb {
+  margin-left: 20px;
+  margin-right: 20px;
+  margin-bottom: 14px;
+  padding-left: 20px;
+  padding-right: 20px;
+  width: 940px;
+  background-color: #FFFFFF;
+  background-image: None;
+  border: 0px;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+
+
+select {
+  width: 310px;
+  padding: 4px;
+}
+
+h1 {
+  font-size: 22px;
+}
+h2 {
+  font-size: 18px;
+}
+h3 {
+  font-size: 16px;
+}
+h4 {
+  font-size: 14px;
+}
+h5 {
+  font-size: 13px;
+  line-height: 18px;
+  padding-bottom: 9px;
+  padding-top: 9px;
+}
+h6 {
+  font-size: 12px;
+}
+
+.btn {
+  padding-bottom: 4px;
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-top: 4px;
+  text-align: center;
+}
+
+.btn.small {
+    font-size: 11px;
+    padding: 3px 0px;
+    width: 60px;
+}
+
+.breadcrumb .divider {
+  padding: 0 3px;
+  color: #bfbfbf;
+}
+
+textarea {
+  font-family: Courier, "Courier New", monospace;
+}
+
+ /* IE doesn't like the footer tag*/
+.footer {
+  padding-top: 17px;
+  border-top: 1px solid #eee;
+  margin-top: 50px;
+}
+
+ /* dataTables stuff */
+
+.dataTables_wrapper {
+  min-height: 50px;
+  margin-bottom: 50px;
+}
+
+.dataTables_filter {
+  margin-bottom: 20px;
+}
+
+
+
+.sorting_asc, .sorting_desc, .sorting {
+  background: None;
+}
+
+
+
+div.actionbar {
+  margin-top: -24px;
+  margin-left: -15px;
+  margin-bottom: 6px;
+}
+
+a.actionbar {
+  margin-bottom: 6px;
+}
+
+.error {
+  color: red;
+}
+
+.form-table {
+  width: 100%;
+}
+
+.input-table {
+  width: 50%;
+}
+
+.form-table td, .input-table td {
+  padding: 5px 0px 5px 4px;
+  border-top: none;
+}
+
+.fieldname {
+  width: 25%;
+}
+
+.workflow {
+  border:1px solid #1fdf00;
+  background-color:#bbffb6;
+  font-family: courier;
+  font-size: 100%;
+  padding: 4px;
+  margin-bottom: 8px;
+  line-height: 16px;
+}
+
+.student-info-bar{
+  padding: 7px 14px;
+  margin-left: -20px;
+  margin-right: -20px;
+  margin-bottom: 14px;
+  padding-left: 20px;
+  padding-right: 20px;
+  width: 700px;
+  background-color: #FFFFFF;
+  background-image: None;
+  border: 0px;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+
+.student-info-bar li {
+  display: inline;
+  text-shadow: 0 1px 0 #ffffff;
+}
+.student-info-bar .divider {
+  padding: 0 0px;
+  color: #bfbfbf;
+}
+.student-info-bar .active a {
+  color: #404040;
+}
+.wfstatus {
+  float: right;
+  line-height: 18px;
+}
+
+.language {
+  color: #BFBFBF;
+  position:relative;
+  top:10px;
+  right:-60px;
+}
+
+.language a {
+  color: #BFBFBF;
+}
+
+.language a:hover {
+  color: #ffffff;
+}
+
+.hint {
+  padding: 0px 0px 5px 0px;
+  color: #bfbfbf;
+}
+
+.separator {
+  font-size: 16px;
+  color: #404040;
+  font-weight: bold;
+  line-height: 36px;
+}
+
+table .ordered-selection-field select {
+  width: 250px;
+}
+
+.alert-message.error ul {
+    margin: 0 0 0px 25px
+}
+
+.alert-message.error, .alert-message.error error, .alert-message.error li {
+    color: white;
+}
+
+#alert-error .error{
+    color: white;
+}

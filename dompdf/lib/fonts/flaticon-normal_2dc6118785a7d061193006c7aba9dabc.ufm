@@ -1,0 +1,72 @@
+StartFontMetrics 4.1
+Notice Converted by PHP-font-lib
+Comment https://github.com/PhenX/php-font-lib
+EncodingScheme FontSpecific
+Copyright Created by Apache with FontForge 2.0 (http://fontforge.sf.net)
+FontName Flaticon
+FontSubfamily Medium
+UniqueID FontForge 2.0 : Flaticon : 26-9-2016
+FullName Flaticon
+Version Version 001.000 
+PostScriptName Flaticon
+Weight Bold
+ItalicAngle 0
+IsFixedPitch false
+UnderlineThickness 49
+UnderlinePosition -125
+FontHeightOffset 90
+Ascender 875
+Descender -127
+FontBBox 0 -127 1002 875
+StartCharMetrics 52
+U 32 ; WX 391 ; N space ; G 3
+U 61696 ; WX 1000 ; N uniF100 ; G 4
+U 61697 ; WX 1000 ; N uniF101 ; G 5
+U 61698 ; WX 1000 ; N uniF102 ; G 6
+U 61699 ; WX 1000 ; N uniF103 ; G 7
+U 61700 ; WX 1000 ; N uniF104 ; G 8
+U 61701 ; WX 1000 ; N uniF105 ; G 9
+U 61702 ; WX 1000 ; N uniF106 ; G 10
+U 61703 ; WX 1000 ; N uniF107 ; G 11
+U 61704 ; WX 1000 ; N uniF108 ; G 12
+U 61705 ; WX 1000 ; N uniF109 ; G 13
+U 61706 ; WX 1000 ; N uniF10A ; G 14
+U 61707 ; WX 1000 ; N uniF10B ; G 15
+U 61708 ; WX 1000 ; N uniF10C ; G 16
+U 61709 ; WX 1000 ; N uniF10D ; G 17
+U 61710 ; WX 1000 ; N uniF10E ; G 18
+U 61711 ; WX 1000 ; N uniF10F ; G 19
+U 61712 ; WX 1000 ; N uniF110 ; G 20
+U 61713 ; WX 1000 ; N uniF111 ; G 21
+U 61714 ; WX 1000 ; N uniF112 ; G 22
+U 61715 ; WX 1000 ; N uniF113 ; G 23
+U 61716 ; WX 1000 ; N uniF114 ; G 24
+U 61717 ; WX 1000 ; N uniF115 ; G 25
+U 61718 ; WX 1000 ; N uniF116 ; G 26
+U 61719 ; WX 1000 ; N uniF117 ; G 27
+U 61720 ; WX 1000 ; N uniF118 ; G 28
+U 61721 ; WX 1000 ; N uniF119 ; G 29
+U 61722 ; WX 1000 ; N uniF11A ; G 30
+U 61723 ; WX 1000 ; N uniF11B ; G 31
+U 61724 ; WX 1000 ; N uniF11C ; G 32
+U 61725 ; WX 1000 ; N uniF11D ; G 33
+U 61726 ; WX 1000 ; N uniF11E ; G 34
+U 61727 ; WX 1000 ; N uniF11F ; G 35
+U 61728 ; WX 1000 ; N uniF120 ; G 36
+U 61729 ; WX 1000 ; N uniF121 ; G 37
+U 61730 ; WX 1000 ; N uniF122 ; G 38
+U 61731 ; WX 1000 ; N uniF123 ; G 39
+U 61732 ; WX 1000 ; N uniF124 ; G 40
+U 61733 ; WX 1000 ; N uniF125 ; G 41
+U 61734 ; WX 1000 ; N uniF126 ; G 42
+U 61735 ; WX 1000 ; N uniF127 ; G 43
+U 61736 ; WX 1000 ; N uniF128 ; G 44
+U 61737 ; WX 1000 ; N uniF129 ; G 45
+U 61738 ; WX 1000 ; N uniF12A ; G 46
+U 61739 ; WX 1000 ; N uniF12B ; G 47
+U 61740 ; WX 1000 ; N uniF12C ; G 48
+U 61741 ; WX 1000 ; N uniF12D ; G 49
+U 61742 ; WX 1000 ; N uniF12E ; G 50
+U 61743 ; WX 1000 ; N uniF12F ; G 51
+EndCharMetrics
+EndFontMetrics

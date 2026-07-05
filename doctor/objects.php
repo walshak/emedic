@@ -1,0 +1,62 @@
+<?php
+include_once('Models/Patient.php');
+///include_once('Models/Index.php');
+include_once('Models/Appointment.php');
+include_once('Models/Admission.php');
+include_once('Models/Record.php');
+include_once('Models/Diagnosis.php');
+include_once('Models/Investigation.php');
+include_once('Models/DrugStock.php');
+include_once('Models/ProcedureOpt.php');
+include_once('Models/AdminUser.php');
+include_once('Models/PatientApService.php');
+include_once('Models/Immunization.php');
+include_once('Models/Vaccine.php');
+include_once('Models/Paediatric.php');
+include_once('Models/Note.php');
+include_once('Models/CdRemark.php');
+include_once('Models/Opthalmology.php');
+include_once('Models/CustomGroup.php');
+include_once('Models/LabGroup.php');
+include_once('Models/DrugGroup.php');
+include_once('Models/Dialysis.php');
+include_once('Models/DialysisData.php');
+include_once('Models/Transplant.php');
+include_once('Models/Document.php');
+include_once('Models/PriceTable.php');
+include_once('Models/Specialist.php');
+include_once('Models/Insurance.php');
+include_once('Models/Hospital.php');
+include_once('Models/PatientAlert.php');
+
+
+
+
+$Patient = new Patient($db);
+$Appointment = new Appointment($db);
+$Admission = new Admission($db);
+$Record = new Record($db);
+$Diagnosis = new Diagnosis($db);
+$Investigation = new Investigation($db);
+$DrugStock = new DrugStock($db);
+$AdminUser = new AdminUser($db);
+$Procedure = new ProcedureOpt($db);
+$PatientApService = new PatientApService($db);
+$Immunization = new Immunization($db);
+$Vaccine = new Vaccine($db);
+$Paediatric = new Paediatric($db);
+$Note = new Note($db);
+$CdRemark = new CdRemark($db);
+$Opthalmology = new Opthalmology($db);
+$CustomGroup = new CustomGroup($db);
+$LabGroup = new LabGroup($db);
+$DrugGroup = new DrugGroup($db);
+$Dialysis = new Dialysis($db);
+$DialysisData = new DialysisData($db);
+$Transplant = new Transplant($db);
+$Document = new Document($db);
+$PriceTable = new PriceTable($db);
+$Specialist = new Specialist($db);
+$Insurance = new Insurance($db);
+$Hospital = new Hospital($db);
+$PatientAlert = new PatientAlert($db);

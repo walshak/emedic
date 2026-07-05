@@ -1,0 +1,22 @@
+# Logs
+error_log
+error_log.log
+php-error.log
+*.log
+
+# Database Dumps
+*.sql
+
+# Backups and Archives
+*.zip
+
+# Data Exports
+*.csv
+
+# Sensitive Configs
+.my.cnf
+
+# Specific Text / Debug Files
+device_info.txt
+mac_address.txt
+last_notification_cleanup.txt

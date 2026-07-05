@@ -1,0 +1,35 @@
+<?php
+
+$shw_side = null;
+$final_pay_err = null;
+$bal2 = null;
+$print_afterpay = null;
+$hos_no = null;
+$total_credit = null;
+$from_date = null;
+$inv_count = null;
+$error = null;
+$sv = null;
+$error_status = null;
+$voucher_type = null;
+$flat_cent = null;
+$outstanding_balance = null;
+$debt_post = null;
+$search_again_cancel = null;
+$paying_outstanding = null;
+$amt_paying = null;
+$voucher_center = null;
+$auth_code = null;
+$sn_service = null;
+$print = null;
+$paymethod = null;
+$target = null;
+$emr = null;
+$wallet_amount = null;
+$insurance_type = null;
+$current_balance = null;
+$insurance_no  = null;
+$patient_name = null;
+$shw_side = null;
+$interest = null;
+$total_credit = null;

@@ -1,0 +1,607 @@
+<?php
+// Quick way of getting full URIs and paths to images
+
+	$imgurl = $xtc->templateUrl.'images';
+	$imgpath = $xtc->templatePath.DS.'images';
+
+// CSS is based on actual image dimensions, this is where those dimensions are obtained to be used later in the css code
+
+// Header Image Height/Width   
+if ($params->headerimg != "-1") {
+	$headerimg_path = $imgpath.DS.'headerbgs'.DS.$params->headerimg;
+	$headerimg_size = getimagesize($headerimg_path);
+	$headerimg_width = $headerimg_size[0];
+	$headerimg_height = $headerimg_size[1]; 
+}
+
+// Logo Image Height/Width   
+if ($params->logoimg != "-1") {
+	$logoimg_path = $imgpath.DS.'logos'.DS.$params->logoimg;
+	$logoimg_size = getimagesize($logoimg_path);
+	$logoimg_width = $logoimg_size[0];
+	$logoimg_height = $logoimg_size[1]; 
+}  
+// icontop Image Height/Width   
+if ($params->icontopimg != "-1") {
+	$icontopimg_path = $imgpath.DS.'icons'.DS.$params->icontopimg;
+	$icontopimg_size = getimagesize($icontopimg_path);
+	$icontopimg_width = $icontopimg_size[0];
+	$icontopimg_height = $icontopimg_size[1]; 
+}  
+// MainBottom Image Height/Width   
+if ($params->mainbottomimg != "-1") {
+	$mainbottomimg_path = $imgpath.DS.'mainbottombgs'.DS.$params->mainbottomimg;
+	$mainbottomimg_size = getimagesize($mainbottomimg_path);
+	$mainbottomimg_width = $mainbottomimg_size[0];
+	$mainbottomimg_height = $mainbottomimg_size[1]; 
+} 
+// footer Image Height/Width   
+if ($params->footerimg != "-1") {
+	$footerimg_path = $imgpath.DS.'footerbgs'.DS.$params->footerimg;
+	$footerimg_size = getimagesize($footerimg_path);
+	$footerimg_width = $footerimg_size[0];
+	$footerimg_height = $footerimg_size[1]; 
+}
+// iconbottom Image Height/Width   
+if ($params->iconbottomimg != "-1") {
+	$iconbottomimg_path = $imgpath.DS.'icons'.DS.$params->iconbottomimg;
+	$iconbottomimg_size = getimagesize($iconbottomimg_path);
+	$iconbottomimg_width = $iconbottomimg_size[0];
+	$iconbottomimg_height = $iconbottomimg_size[1]; 
+}
+?>
+
+#mainOuterBG{background:#452040 url(<?php echo $imgurl; ?>/mainbottombgs/bottomBG-blue.jpg) repeat-x scroll center bottom}
+#mainBG{background:#452040 url(<?php echo $imgurl; ?>/mainbgs/blueflag.jpg) no-repeat scroll center top}
+#mainTopBG{background:transparent url(<?php echo $imgurl; ?>/mainTopBG.png) no-repeat scroll 0 0}
+#mainwrap{background:#fff url(<?php echo $imgurl; ?>/mainwrapBG.png) repeat-x scroll 0 0}
+#showcasewrap{background:transparent url(<?php echo $imgurl; ?>/bannerwrapBG.jpg) repeat scroll 0 0}
+#showcasemods{background:transparent url(<?php echo $imgurl; ?>/banner1bg-blue.jpg) repeat scroll 0 0}
+#userFouruserFiveuserSixBG {
+background:transparent url(<?php echo $imgurl; ?>/banner2bg.jpg) repeat-x top center;
+	width:100%;
+	float:left;
+}
+#userSevenuserEight{border-top:1px solid #444}
+#bottomModsBG{background:url(<?php echo $imgurl; ?>/bottomModsBG-grey.jpg) top center no-repeat}
+#footerBG{background:#111111}
+ul.columns li.parent.even{background:#222}
+span.menucolor,p.menucolor,.blogsContainer .entryContent h2,h2.pagetitle a,.blogsContainer .entryContent h2 a,.entryContent .pub-month{color:#a5509c}
+a,div.componentheading,.contentheading,.cufonIt,.module .leftArrow .modtitle .inner,.componentTitlewrap .leftArrow .componentTitle .inner,.contentTitlewrap .leftArrow .contentTitle .inner,.module .tick .leftArrow .modtitle .inner,.newsItem h4,.event .date .day{
+	color:#a5509d
+}
+a.textcolor,span.textcolor,#textcolor{color:#a5509d}
+.module .leftArrow .modtitle .inner .first,.componentTitlewrap .leftArrow .componentTitle .inner .first,.contentTitlewrap .leftArrow .contentTitle .inner .first,.module .tick .leftArrow .modtitle .inner .first{color:#8a8a8a}
+.newsItem .textWrap .text{color:#838383;}
+.event .date .month{color:#808080}
+.event .eventText .title{color:#444}
+.event .eventText .text{color:#b9bdb8}
+.join h4.title span,a.readbio{color:#d2c482}
+.join h4.title span.splitTop,.join h4.title span.splitBottom{color:#ebebeb}
+#artforms-text,.affieldname,body #community-wrap .appsBoxTitle,#community-wrap .app-box-title{color:#999}
+
+
+
+/* XTC */
+
+body {
+	background-color:#F0F0F0;
+	
+
+}
+
+#topareaBG  {
+	background:url(<?php echo $imgurl; ?>/topareabgs/<?php echo $params->topimg; ?>)  repeat-x;     
+}   
+
+#mainBG {
+	background:#F0F0F0 url(<?php echo $imgurl; ?>/mainbgs/<?php echo $params->mainimg; ?>) repeat-x center top;
+	
+} 
+
+#headerBG {
+	background:url(<?php echo $imgurl; ?>/headerbgs/<?php echo $params->headerimg; ?>) no-repeat; 
+	height:<?php echo $headerimg_height; ?>px;
+}
+
+#logo a {
+	background:url(<?php echo $imgurl; ?>/logos/<?php echo $params->logoimg; ?>) no-repeat; 
+	width:<?php echo $logoimg_width; ?>px; 
+	height:<?php echo $logoimg_height; ?>px;    
+}    
+
+#iconOne a {
+	background:url(<?php echo $imgurl; ?>/icons/<?php echo $params->icontopimg; ?>) no-repeat; 
+	width:<?php echo $icontopimg_width; ?>px; 
+	height:<?php echo $icontopimg_height; ?>px;   
+	display:block;
+	text-indent:-9999px;  
+	margin:20px auto 0;
+}    
+
+#iconTwoWrap {
+	width:<?php echo $iconbottomimg_width; ?>px; 
+	height:<?php echo $iconbottomimg_height; ?>px;
+	<?php $iconbottomimg_height2 = $iconbottomimg_height + 10; ?> 
+	margin:15px auto -<?php echo $iconbottomimg_height2; ?>px; 
+}
+
+#mainOuterBG {
+	background:#452040 url(<?php echo $imgurl; ?>/mainbottombgs/<?php echo $params->mainbottomimg; ?>) repeat-x scroll center bottom; 
+}  
+
+#footerBG {
+	background:#111111;
+	<?php if ($params->footerimg != "-1") { ?>
+		background:transparent url(<?php echo $imgurl; ?>/footerbgs/<?php echo $params->footerimg;?>) repeat-x;    
+		margin-top:-<?php echo $footerimg_height; ?>px;
+		padding-top:<?php echo $footerimg_height; ?>px;
+	<?php } ?>
+}
+
+
+
+
+#mainBody {
+	margin:0 auto;
+	background:#FFFFFF;
+	
+}
+
+/** Icons **/
+
+
+#iconOneWrap {
+	background:transparent url(<?php echo $imgurl; ?>/icon1Wrap2.png) no-repeat scroll 0 0;
+	float:left;
+	height:198px;
+	left:auto;
+	margin:-78px auto 0 414px;
+	padding-top:15px;
+	position:absolute;
+	width:162px;
+	z-index: 225;
+}
+
+	#iconTwo {
+		height:58px;
+		position:relative;
+		width:58px;
+	}
+	
+#furtherWrap { 
+
+	margin-bottom:-<?php echo $mainbottomimg_height ;?>px;
+
+}
+
+
+#iconTwo {
+width:<?php echo $iconbottomimg_width; ?>px; 
+height:<?php echo $iconbottomimg_height; ?>px;
+}   
+
+#iconTwo a {
+	background:url(<?php echo $imgurl; ?>/icons/<?php echo $params->iconbottomimg; ?>) no-repeat; 
+	width:<?php echo $iconbottomimg_width; ?>px; 
+	height:<?php echo $iconbottomimg_height; ?>px;   
+	display:block;
+	text-indent:-9999px;  
+	margin:0px auto;
+}    
+
+/* Default Joomla! Menu */
+
+a.mainlevel{
+	border-bottom:1px solid #DDDDDD;
+	color:#999;
+	background-color:#FFF
+}
+
+a.mainlevel:hover,
+a.mainlevel:active,
+a.mainlevel:focus {
+	border-right: 30px solid #a5509c;
+	color:#a5509c;
+}
+
+/*** Custom Menus ***/
+
+/* Main Menu */
+
+#mainmenu {
+	background:url(<?php echo $imgurl; ?>/menuBG.png) repeat-x;
+}
+#mainmenu li a {
+	color: #ffffff;
+}
+#mainmenu span.separator {
+	color: #999;
+}
+#mainmenu .parent > a {
+	color: #ffffff;
+}
+#mainmenu ul li ul {
+	background:#510850;
+	
+}
+#mainmenu ul li ul li {
+	border-bottom:1px solid #663366;
+	height:25px;
+	padding-bottom:7px;
+}
+#mainmenu ul li ul li a{
+	display:block;
+}
+#mainmenu ul li ul li:hover {
+	background:#a5509c;
+}
+
+/* Top Menu */
+
+#topmenu {
+background-color: transparent;
+background-image: url(<?php echo $imgurl; ?>/catmenuBG.png);
+background-repeat: repeat-x;
+background-attachment: scroll;
+background-position: 0% 0%;
+}
+
+#topmenu li a {
+	color: #510850;
+}
+#topmenu span.separator {
+	color: #939393;
+}
+
+#topmenu .xmenu {
+	font-style:italic;
+	color: #939393;
+}
+
+/* sample content */
+#customuser4 {
+	height:220px; background:url(<?php echo $imgurl; ?>/user4user6bkg.png) 0% 50% repeat-x;
+}
+
+#customuser5 {
+	height:220px; background:url(<?php echo $imgurl; ?>/user5bkg.png) 0% 50% repeat-x;padding:10px 0 0 5px;
+}
+
+#customuser6 {
+	height:220px; background:url(<?php echo $imgurl; ?>/user4user6bkg.png) 0% 50% repeat-x;padding:10px 0 0 5px;
+}
+/* MY INTRODUCTION */
+ul a, ol a, li a{
+	font-size:12px;
+	font-family:Arial;
+}
+ul a:hover, ol a:hover, li a:hover{
+color:#510850;
+	
+}
+strong{
+	color:#a5509c;
+	line-height:250%;
+}
+p{
+	font-size:13px;
+	text-align:justify;
+	margin-bottom: 1.5em;
+	
+}
+a {
+	font-family:sans-serif;
+	
+}
+.reg{
+	float:left;
+	padding-left:-20px;
+	color:#510850;
+}
+.reg a:hover{
+	text-decoration:underline;
+}
+
+.reg strong{
+	color:#660066;
+	margin-top:5px;
+	padding-left:30px;
+}
+
+.reg2{
+	float:right;
+	color:#510850;
+	padding-right:40px;
+	
+}
+.reg2 ul{
+ 
+    list-style-type:square;
+
+		
+}
+.reg2 a:hover{
+	text-decoration:underline;
+}
+
+.reg2 strong{
+	color:#660066;
+	margin-top:5px;
+}
+
+/*form 1 style*/
+
+
+#chk-bg label, #chk-bg label span{
+display:block;
+float:left;
+width:100%;
+padding-bottom:5px;
+	
+}
+#chk-bg label span{
+float:left;
+width:43%;
+text-align:right;
+padding-right:10px;
+font-size:90%;
+}
+#chk-bg fieldset{
+	background-image: url(http://localhost/futmini/images/futlogofa.png);
+	background-repeat:no-repeat;
+	background-position:left;
+	color:606;
+	padding-top:20px;
+	}
+
+#chk-bg fieldset em{
+color:#f00;
+}
+#chk-bg .para{
+width:24%;
+color:#666;
+margin-bottom:-120px;
+font-size:90%;
+}
+
+#chk-bg fieldset input:focus{
+background-color:#a5509c;
+color:#ffffff;
+
+}
+
+#but{
+	padding-left:46%;
+	margin-top:10%;
+	
+	
+}
+#but input{
+	color:#fff;
+	background-color:#510850;
+	font:120%;
+	
+}
+#but input:hover{
+	background-color:#a5509c;
+}
+
+/*form 2 style*/
+
+
+#chk2-bg label, #chk2-bg label span{
+display:block;
+float:left;
+width:100%;
+padding-bottom:5px;
+	
+}
+#chk2-bg label span{
+float:left;
+width:43%;
+text-align:right;
+padding-right:10px;
+font-size:90%;
+}
+#chk2-bg fieldset{
+	background-image: url(http://localhost/futmini/images/futlogofa.png);
+	background-repeat:no-repeat;
+	background-position:left;
+	color:606;
+	padding-top:80px;
+	}
+
+#chk2-bg fieldset em{
+color:#f00;
+}
+#chk2-bg .para2{
+width:24%;
+color:#666;
+margin-bottom:-80px;
+font-size:90%;
+padding-right:140px;
+}
+
+#chk2-bg fieldset input:focus{
+background-color:#a5509c;
+color:#ffffff;
+
+}
+
+#but2{
+	padding-left:46%;
+	margin-top:5%;
+	
+	
+}
+#but2 input{
+	color:#fff;
+	background-color:#510850;
+	font:120%;
+	
+}
+#but2 input:hover{
+	background-color:#a5509c;
+}
+
+
+/*form 3 style*/
+
+
+#chk3-bg label, #chk3-bg label span{
+display:block;
+float:left;
+width:100%;
+padding-bottom:5px;
+	
+}
+#chk3-bg label span{
+float:left;
+width:43%;
+text-align:right;
+padding-right:10px;
+font-size:90%;
+}
+#chk3-bg fieldset{
+	background-image: url(http://localhost/futmini/images/futlogofa.png);
+	background-repeat:no-repeat;
+	background-position:left;
+	color:606;
+	padding-top:20px;
+	}
+
+#chk3-bg fieldset em{
+color:#f00;
+}
+#chk3-bg .para3{
+width:24%;
+color:#666;
+margin-bottom:-150px;
+font-size:90%;
+}
+
+#chk3-bg fieldset input:focus{
+background-color:#a5509c;
+color:#ffffff;
+
+}
+
+#but3{
+	padding-left:46%;
+	margin-top:8%;
+	
+	
+}
+#but3 input{
+	color:#fff;
+	background-color:#510850;
+	font:120%;
+	
+}
+#but3 input:hover{
+	background-color:#a5509c;
+}
+#chk3-bg .mt-rand{
+	padding-left:48%;
+	height:100px;
+	width:50px;
+	color:#a5509c;
+	font-size:200%;
+}
+
+/*form 4 style*/
+
+
+#chk4-bg label, #chk4-bg label span{
+display:block;
+float:left;
+width:100%;
+padding-bottom:5px;
+	
+}
+#chk4-bg label span{
+float:left;
+width:43%;
+text-align:right;
+padding-right:10px;
+font-size:90%;
+}
+#chk4-bg fieldset{
+	background-image: url(http://localhost/futmini/images/futlogofa.png);
+	background-repeat:no-repeat;
+	background-position:left;
+	padding-top:20px;
+	
+	}
+
+#chk4-bg fieldset em{
+color:#f00;
+}
+#chk4-bg .para4{
+width:24%;
+color:#666;
+margin-bottom:-150px;
+font-size:90%;
+}
+
+#chk4-bg fieldset input:focus{
+background-color:#a5509c;
+color:#ffffff;
+
+}
+
+#but4{
+	padding-left:46%;
+	margin-top:8%;
+	
+	
+}
+#but4 input{
+	color:#fff;
+	background-color:#510850;
+	font:120%;
+	
+}
+#but4 input:hover{
+	background-color:#a5509c;
+}
+#chk4-bg .mt-rand{
+	padding-left:48%;
+	height:100px;
+	width:50px;
+	color:#a5509c;
+	font-size:200%;
+}
+table,td,th{
+	border: 1px solid #ccc;
+	border-collapse:collapse;
+	font-size:120%;
+}
+th{
+	color:#fff;
+	text-align:left;
+	padding: 0px 20px 0px 10px;
+	font-size:100%;
+	background-color:#a5509c;	
+}
+caption{
+	font-size:120%;
+	color:#fff;
+	font-weight:bold;
+	background-color:#606;
+}
+tr:hover,th:hover{
+	background-color:;
+	color:#606;
+}
+td{
+	padding: 0 10px; 
+}
+tfoot{
+	color:#606;
+	font-weight:bolder;
+}
+tbody{
+	font-size:90%;
+}
