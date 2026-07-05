@@ -4,14 +4,90 @@
 session_start();
 include('../inc/header.php');
 
+
+// --- START OF FORM PROCESSOR ---
+$error_status = 0;
+$error_msg = "";
+if (isset($_POST['fix_unbalanced'])) {
+    try {
+        $db->beginTransaction();
+        $lg_ref_no = $_POST['lg_ref_no'];
+        $latest_date = $_POST['latest_date'];
+        $accounts = $_POST['account'];
+        $amounts_dr = $_POST['amount_dr'];
+        $amounts_cr = $_POST['amount_cr'];
+        $narrations = $_POST['narration'];
+        
+        $posted_by = $_SESSION['fullname'];
+        $setdate = date("Y-m-d H:i:s");
+        
+        // Find active fiscal year
+        $fy_stmt = $db->query("SELECT id FROM chart_fiscal_year WHERE is_active = 1 LIMIT 1");
+        $fy_row = $fy_stmt->fetch(PDO::FETCH_ASSOC);
+        $fical_year = $fy_row ? $fy_row['id'] : 2;
+
+        $err = 0;
+        for ($i = 0; $i < count($accounts); ++$i) {
+            $account = $accounts[$i];
+            $dr_amt = (float)$amounts_dr[$i];
+            $cr_amt = (float)$amounts_cr[$i];
+            $narration = $narrations[$i];
+            
+            if (empty($account)) continue; // Skip empty rows
+            if ($dr_amt == 0 && $cr_amt == 0) continue; // Skip zero rows
+
+            $transc_type = ($dr_amt > 0) ? 'DEBIT' : 'CREDIT';
+            
+            $entry = $db->prepare('INSERT INTO chart_ledger(hospital_no, insurance_no, account_no, transc_type, dr_amt, cr_amt, date_entry, date_entry2, prepared_by, lg_ref_no, fiscal_year, item_services, invoice_no, can_delete) VALUES(NULL, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)');
+            
+            if (!$entry->execute([$account, $transc_type, $dr_amt, $cr_amt, $setdate, $latest_date, $posted_by, $lg_ref_no, $fical_year, $narration])) {
+                $err++;
+            }
+        }
+        
+        if ($err > 0) {
+            $db->rollBack();
+            $error_status = 1;
+            $error_msg = "Failed to make adjusting entry.";
+        } else {
+            $db->commit();
+            $error_status = 2;
+            $error_msg = "Adjusting entry added successfully!";
+        }
+    } catch (Exception $e) {
+        $db->rollBack();
+        $error_status = 1;
+        $error_msg = "Database Error: " . $e->getMessage();
+    }
+}
+// --- END OF FORM PROCESSOR ---
+
 // Get chart classes for account hierarchy
 $classes = $db->query('SELECT * FROM chart_class WHERE inactive = 0');
 $classes = $classes->fetchAll(PDO::FETCH_ASSOC);
 
+$account_options_html = '<option value="">-- Select Account --</option>';
+foreach ($classes as $class) {
+    $account_options_html .= '<optgroup label="' . htmlspecialchars($class['class_name']) . '">';
+    $groups = $db->prepare('SELECT * FROM chart_groups WHERE class_id = ? AND inactive = 0');
+    $groups->execute([$class['cid']]);
+    foreach ($groups->fetchAll(PDO::FETCH_ASSOC) as $group) {
+        $account_options_html .= '<optgroup label="&nbsp;&nbsp;' . htmlspecialchars($group['name']) . '">';
+        $accounts = $db->prepare('SELECT * FROM chart_accounts WHERE account_group = ? AND inactive = 0');
+        $accounts->execute([$group['id']]);
+        foreach ($accounts->fetchAll(PDO::FETCH_ASSOC) as $account) {
+            $account_options_html .= '<option value="' . htmlspecialchars($account['account_code']) . '">[' . htmlspecialchars($account['account_code']) . '] ' . htmlspecialchars($account['account_name']) . '</option>';
+        }
+        $account_options_html .= '</optgroup>';
+    }
+    $account_options_html .= '</optgroup>';
+}
+
+
 // Get date filters from form submission
 $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
 $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-t');
-$selected_month = isset($_GET['selected_month']) ? $_GET['selected_month'] : date('Y-m');
+$selected_month = isset($_GET['selected_month']) ? $_GET['selected_month'] : '';
 $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 ?>
 
@@ -99,13 +175,8 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
                                             echo "<p><strong>Date Range:</strong> $start_date to $end_date</p>";
 
                                             // Build date condition based on user input
-                                            if (!empty($selected_month)) {
-                                                $date_condition = "DATE_FORMAT(date_entry2, '%Y-%m') = :month";
-                                                $date_params = ['month' => $selected_month];
-                                            } else {
-                                                $date_condition = "date_entry2 BETWEEN :start_date AND :end_date";
-                                                $date_params = ['start_date' => $start_date, 'end_date' => $end_date];
-                                            }
+                                            $date_condition = "date_entry2 BETWEEN :start_date AND :end_date";
+                                            $date_params = ['start_date' => $start_date, 'end_date' => $end_date];
 
                                             // Add account filter
                                             $account_condition = "";
@@ -135,11 +206,7 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
 
                                             // Display filter information
                                             echo "<h3>Unbalanced Transactions Report</h3>";
-                                            if (!empty($selected_month)) {
-                                                echo "<p><strong>Filter:</strong> Month $selected_month</p>";
-                                            } else {
-                                                echo "<p><strong>Date Range:</strong> $start_date to $end_date</p>";
-                                            }
+                                            echo "<p><strong>Date Range:</strong> $start_date to $end_date</p>";
                                             if ($account_filter) {
                                                 // Get account name for display
                                                 $account_info = $db->prepare("SELECT account_name FROM chart_accounts WHERE account_code = ?");
@@ -221,23 +288,71 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
                                                     echo "</table>";
                                                     echo "</div>"; // Close table-responsive
 
-                                                    // Suggest adjustment
+                                                    // Build Adjusting Form
                                                     $adjustment = $ref['difference'];
                                                     $latestDate = $ref['latest_date'];
                                                     $amount = number_format(abs($adjustment), 2, '.', '');
+                                                    $dr_val = ($adjustment < 0) ? $amount : '0';
+                                                    $cr_val = ($adjustment > 0) ? $amount : '0';
+                                                    $ref_no_safe = htmlspecialchars($ref['lg_ref_no']);
 
-                                                    echo "<div class='alert alert-info'>";
-                                                    echo "<h5><i class='fa fa-lightbulb-o'></i> Suggested Fix:</h5>";
-                                                    if ($adjustment > 0) {
-                                                        echo "<p>Add <strong>Credit {$amount}</strong> to balance this transaction</p>";
-                                                        $sql = "INSERT INTO chart_ledger (hospital_no, insurance_no, account_no, transc_type, dr_amt, cr_amt, date_entry, date_entry2, prepared_by, lg_ref_no, fiscal_year, item_services, invoice_no, can_delete)
-																VALUES (NULL, NULL, 'ADJUST_ACC', 'CREDIT', 0, {$amount}, NOW(), '{$latestDate}', 'System Adjustment', '{$ref['lg_ref_no']}', 2, 'Adjustment to balance entry', 0, 0);";
-                                                    } else {
-                                                        echo "<p>Add <strong>Debit {$amount}</strong> to balance this transaction</p>";
-                                                        $sql = "INSERT INTO chart_ledger (hospital_no, insurance_no, account_no, transc_type, dr_amt, cr_amt, date_entry, date_entry2, prepared_by, lg_ref_no, fiscal_year, item_services, invoice_no, can_delete)
-																VALUES (NULL, NULL, 'ADJUST_ACC', 'DEBIT', {$amount}, 0, NOW(), '{$latestDate}', 'System Adjustment', '{$ref['lg_ref_no']}', 2, 'Adjustment to balance entry', 0, 0);";
+                                                    // Determine the account to pre-select if it is a mismatched amount
+                                                    $preselect_account = '';
+                                                    if ($adjustment < 0) {
+                                                        // Debit side is missing/lesser
+                                                        foreach ($rows as $r) {
+                                                            if ($r['dr_amt'] > 0) {
+                                                                $preselect_account = $r['account_no'];
+                                                                break;
+                                                            }
+                                                        }
+                                                    } else if ($adjustment > 0) {
+                                                        // Credit side is missing/lesser
+                                                        foreach ($rows as $r) {
+                                                            if ($r['cr_amt'] > 0) {
+                                                                $preselect_account = $r['account_no'];
+                                                                break;
+                                                            }
+                                                        }
                                                     }
-                                                    echo "<pre style='background: #f5f5f5; padding: 10px; border-radius: 5px;'>$sql</pre>";
+
+                                                    $custom_options = $account_options_html;
+                                                    if ($preselect_account != '') {
+                                                        $custom_options = str_replace('value="' . htmlspecialchars($preselect_account) . '"', 'value="' . htmlspecialchars($preselect_account) . '" selected', $account_options_html);
+                                                    }
+
+                                                    echo "<div class='alert alert-info' style='background-color:#fdfdfd; border-color:#e7eaec;'>";
+                                                    echo "<h5><i class='fa fa-wrench'></i> Post Adjusting Entry for {$ref_no_safe}:</h5>";
+                                                    echo "<form method='POST' action='' id='form_{$ref_no_safe}'>";
+                                                    echo "<input type='hidden' name='lg_ref_no' value='{$ref_no_safe}'>";
+                                                    echo "<input type='hidden' name='latest_date' value='{$latestDate}'>";
+                                                    
+                                                    echo "<table class='table table-bordered' id='adj_table_{$ref_no_safe}'>";
+                                                    echo "<thead><tr><th>Account</th><th>Debit</th><th>Credit</th><th>Narration</th><th></th></tr></thead>";
+                                                    echo "<tbody id='adj_body_{$ref_no_safe}'>";
+                                                    
+                                                    // First default row
+                                                    echo "<tr>";
+                                                    echo "<td width='35%'>";
+                                                    echo "<select name='account[]' class='form-control select2_account' required>";
+                                                    echo $custom_options;
+                                                    echo "</select>";
+                                                    echo "</td>";
+                                                    echo "<td><input type='number' step='any' min='0' class='form-control dr_amt_input' name='amount_dr[]' value='{$dr_val}' required></td>";
+                                                    echo "<td><input type='number' step='any' min='0' class='form-control cr_amt_input' name='amount_cr[]' value='{$cr_val}' required></td>";
+                                                    echo "<td><input type='text' class='form-control' name='narration[]' value='Adjustment to balance entry' required></td>";
+                                                    echo "<td><button type='button' class='btn btn-danger btn-sm' onclick='removeAdjRow(this, \"{$ref_no_safe}\")'><i class='fa fa-times'></i></button></td>";
+                                                    echo "</tr>";
+                                                    
+                                                    echo "</tbody>";
+                                                    echo "<tfoot>";
+                                                    echo "<tr><td colspan='5'>";
+                                                    echo "<button type='button' class='btn btn-success btn-sm' onclick='addAdjRow(\"{$ref_no_safe}\")'><i class='fa fa-plus'></i> Add Row</button> ";
+                                                    echo "<button type='submit' name='fix_unbalanced' class='btn btn-primary btn-sm pull-right'><i class='fa fa-save'></i> Post Adjusting Entry</button>";
+                                                    echo "</td></tr>";
+                                                    echo "</tfoot>";
+                                                    echo "</table>";
+                                                    echo "</form>";
                                                     echo "</div>";
 
                                                     echo "</div>";
@@ -279,6 +394,7 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
                 }
             });
 
+
             // Initialize Select2 for account dropdown
             $(document).ready(function() {
                 $('.select2').select2({
@@ -286,7 +402,66 @@ $account_filter = isset($_GET['account_filter']) ? $_GET['account_filter'] : '';
                     allowClear: true,
                     width: '100%'
                 });
+                
+                $('.select2_account').select2({
+                    placeholder: "-- Select Account --",
+                    allowClear: true,
+                    width: '100%'
+                });
             });
+
+            // Store the HTML options so we can dynamically add rows
+            var accountOptionsHtml = `<?php echo $account_options_html; ?>`;
+
+            function addAdjRow(refNo) {
+                var tbody = document.getElementById('adj_body_' + refNo);
+                var tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td width='35%'>
+                        <select name='account[]' class='form-control select2_account_dynamic' required>
+                            ${accountOptionsHtml}
+                        </select>
+                    </td>
+                    <td><input type='number' step='any' min='0' class='form-control dr_amt_input' name='amount_dr[]' value='0' required onchange='calcTotals("${refNo}")' onkeyup='calcTotals("${refNo}")'></td>
+                    <td><input type='number' step='any' min='0' class='form-control cr_amt_input' name='amount_cr[]' value='0' required onchange='calcTotals("${refNo}")' onkeyup='calcTotals("${refNo}")'></td>
+                    <td><input type='text' class='form-control' name='narration[]' value='Adjustment to balance entry' required></td>
+                    <td><button type='button' class='btn btn-danger btn-sm' onclick='removeAdjRow(this, "${refNo}")'><i class='fa fa-times'></i></button></td>
+                `;
+                tbody.appendChild(tr);
+                
+                // Init select2 on the new row
+                $(tr).find('.select2_account_dynamic').select2({
+                    placeholder: "-- Select Account --",
+                    allowClear: true,
+                    width: '100%'
+                });
+                
+                calcTotals(refNo);
+            }
+
+            function removeAdjRow(btn, refNo) {
+                var row = $(btn).closest('tr');
+                // Ensure we don't remove the last row if it's the only one
+                if (row.parent().children('tr').length > 1) {
+                    row.remove();
+                    calcTotals(refNo);
+                } else {
+                    alert("You must have at least one adjusting row.");
+                }
+            }
+            
+            function calcTotals(refNo) {
+                // We can add logic to validate that the new entries completely balance the transaction 
+                // by summing original difference + new debits - new credits = 0
+                // For now, this just serves as a hook.
+            }
+            
+            <?php if (isset($error_status) && $error_status == 1) { ?>
+                toastr.error('<?php echo $error_msg; ?>', 'Error', { timeOut: 5000 });
+            <?php } elseif (isset($error_status) && $error_status == 2) { ?>
+                toastr.success('<?php echo $error_msg; ?>', 'Success', { timeOut: 5000 });
+            <?php } ?>
+
         </script>
 
 </body>
