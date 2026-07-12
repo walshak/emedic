@@ -5,7 +5,7 @@ ini_set('display_errors', 0);
 
 // PDO connection object
 // Path to the connection file
-$connectionFile = '../Connections/conn.php';
+$connectionFile = '../Connections/Conn.php';
 
 // Check if the connection file exists
 if (file_exists($connectionFile)) {
@@ -38,7 +38,7 @@ function createDirectory($path)
         }
     }
 }
-echo "<pre>";
+
 try {
     // Create backup directory if it doesn't exist
     createDirectory($backupDir);
@@ -47,13 +47,23 @@ try {
     //     $db = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Get the list of all tables
     $stmt = $db->query("SHOW TABLES");
     $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $total = count($tables);
+    $current = 0;
 
-    echo "<h2>Starting Backup Sequence...</h2>";
+    echo "Starting Backup Sequence...\n";
+    ob_flush(); flush();
 
     foreach ($tables as $table) {
+        $current++;
+        
+        // Check for stop flag
+        if (file_exists('../backup/stop_backup.flag')) {
+            echo "🛑 Backup stopped by user.\n";
+            unlink('../backup/stop_backup.flag');
+            break;
+        }
         try {
             // Open a file to save the table's SQL data
             $filePath = $backupDir . '/' . $table . '.sql';
@@ -91,11 +101,11 @@ try {
 
             fclose($file);
 
-            echo "Exported table `$table` to $filePath<br>";
+            echo "Exported table `$table` to $filePath ($current/$total)\n";
             ob_flush();
             flush();
         } catch (Exception $e) {
-            echo "<b>Error exporting table `$table`:</b> " . $e->getMessage() . "<br>";
+            echo "Error exporting table `$table`: " . $e->getMessage() . "\n";
             // Optionally: reconnect PDO here if needed
             // $db = new PDO(...);
             // Continue to next table without stopping script
@@ -103,8 +113,8 @@ try {
     }
 
 
-    echo "<h2>Backup complete!</h2>";
-    echo "<a href='backup_page.php'>Go Back </a>";
+    echo "Backup complete!\n";
+    ob_flush(); flush();
 } catch (Exception $e) {
     echo "Error: " . $e->getMessage();
 } finally {
@@ -113,4 +123,4 @@ try {
         $db = null;
     }
 }
-echo "</pre>";
+
