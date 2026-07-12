@@ -21,11 +21,11 @@
 
   <link href="../css/plugins/nouslider/jquery.nouislider.css" rel="stylesheet">
 
-  <link href="../css/plugins/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css" rel="stylesheet">
+  <!-- <link href="../css/plugins/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css" rel="stylesheet"> -->
 
-  <link href="../css/plugins/clockpicker/clockpicker.css" rel="stylesheet">
+  <!-- <link href="../css/plugins/clockpicker/clockpicker.css" rel="stylesheet"> -->
 
-  <link href="../css/plugins/daterangepicker/daterangepicker-bs3.css" rel="stylesheet">
+  <!-- <link href="../css/plugins/daterangepicker/daterangepicker-bs3.css" rel="stylesheet"> -->
 
   <link href="../css/plugins/datapicker/datepicker3.css" rel="stylesheet">
 
@@ -36,7 +36,7 @@
   <link href="../css/plugins/dataTables/dataTables.responsive.css" rel="stylesheet">
   <link href="../css/plugins/dataTables/dataTables.tableTools.min.css" rel="stylesheet">
 
-  <link href="css/plugins/dataTables/datatables.min.css" rel="stylesheet">
+  <!-- <link href="css/plugins/dataTables/datatables.min.css" rel="stylesheet"> -->
 
   <!-- c3 Charts -->
   <link href="../css/plugins/c3/c3.min.css" rel="stylesheet">

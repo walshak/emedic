@@ -110,7 +110,8 @@ if (isset($_POST['save_setting'])) {
         notify_pharm = :notify_pharm,
         notify_lab = :notify_lab,
         slider_text1 = :slider_text1,
-        slider_text2 = :slider_text2
+        slider_text2 = :slider_text2,
+        llm_config = :llm_config
         WHERE sn = 1";
 
 		$stmt = $db->prepare($updateSQL);
@@ -144,6 +145,30 @@ if (isset($_POST['save_setting'])) {
 		$stmt->bindParam(':notify_lab', $_POST['notify_lab'], PDO::PARAM_INT);
 		$stmt->bindParam(':slider_text1', $_POST['slider_text1'], PDO::PARAM_STR);
 		$stmt->bindParam(':slider_text2', $_POST['slider_text2'], PDO::PARAM_STR);
+
+		// Handle LLM Config
+		$llmConfigJson = null;
+		if (isset($_POST['llm_config']) && is_array($_POST['llm_config'])) {
+			$llmConfig = $_POST['llm_config'];
+			$llmConfig['enabled'] = isset($llmConfig['enabled']) ? true : false;
+			$llmConfig['summary_voice_enabled'] = isset($llmConfig['summary_voice_enabled']) ? true : false;
+			
+			// Load existing config to preserve passwords if empty
+			$stmt_d = $db->query("SELECT llm_config FROM hospital_details WHERE sn = 1");
+			$existing = $stmt_d->fetch(PDO::FETCH_ASSOC);
+			$existingConfig = !empty($existing['llm_config']) ? json_decode($existing['llm_config'], true) : [];
+			if (!is_array($existingConfig)) $existingConfig = [];
+
+			if (isset($llmConfig['providers'])) {
+				foreach ($llmConfig['providers'] as $provider => $providerData) {
+					if (empty($providerData['api_key'])) {
+						$llmConfig['providers'][$provider]['api_key'] = isset($existingConfig['providers'][$provider]['api_key']) ? $existingConfig['providers'][$provider]['api_key'] : '';
+					}
+				}
+			}
+			$llmConfigJson = json_encode($llmConfig);
+		}
+		$stmt->bindParam(':llm_config', $llmConfigJson, PDO::PARAM_STR);
 
 		// Execute
 		if ($stmt->execute()) {

@@ -259,8 +259,7 @@ $(document).on('click', '.update_service_review_btn', function(evt){
 
             $(document).on('click', '#save-patient-alert', function() {
                 var alert_note = $('#patient-alert-notes').val();
-           
-
+                if (alert_note != '') {
 					alert(alert_note);
 				
                     $.ajax({

@@ -8,7 +8,7 @@
 
         setTimeout(function() {
 
-            var records_per_page = document.getElementById("records_per_page").value;
+            var records_per_page = $('#records_per_page').val() || 10;
 
             $.ajax({
                 url: med_hx_url,
@@ -37,12 +37,12 @@
         toastr.info('Please Wait .... ', 'Processing', {
             timeOut: 500
         })
-        var records_per_page = document.getElementById("records_per_page").value;
-        var documentation = document.getElementById("documentation_type").value;
-        var doctor_names = document.getElementById("doctor_names").value;
-        var search_anything = document.getElementById("search_anything").value;
-        var end_date = document.getElementById("end_date").value;
-        var start_date = document.getElementById("start_date").value;
+        var records_per_page = $('#records_per_page').val() || 10;
+        var documentation = $('#documentation_type').val() || '';
+        var doctor_names = $('#doctor_names').val() || '';
+        var search_anything = $('#search_anything').val() || '';
+        var end_date = $('#end_date').val() || '';
+        var start_date = $('#start_date').val() || '';
 
         $.ajax({
             url: med_hx_url,
@@ -80,12 +80,12 @@
         toastr.info('Please Wait .... ', 'Processing', {
             timeOut: 500
         })
-        var records_per_page = document.getElementById("records_per_page").value;
-        var documentation = document.getElementById("documentation_type").value;
-        var doctor_names = document.getElementById("doctor_names").value;
-        var search_anything = document.getElementById("search_anything").value;
-        var end_date = document.getElementById("end_date").value;
-        var start_date = document.getElementById("start_date").value;
+        var records_per_page = $('#records_per_page').val() || 10;
+        var documentation = $('#documentation_type').val() || '';
+        var doctor_names = $('#doctor_names').val() || '';
+        var search_anything = $('#search_anything').val() || '';
+        var end_date = $('#end_date').val() || '';
+        var start_date = $('#start_date').val() || '';
 
         $.ajax({
             url: med_hx_url,
@@ -120,12 +120,12 @@
         toastr.info('Please Wait .... ', 'Processing', {
             timeOut: 500
         })
-        var records_per_page = document.getElementById("records_per_page").value;
-        var documentation = document.getElementById("documentation_type").value;
-        var doctor_names = document.getElementById("doctor_names").value;
-        var search_anything = document.getElementById("search_anything").value;
-        var end_date = document.getElementById("end_date").value;
-        var start_date = document.getElementById("start_date").value;
+        var records_per_page = $('#records_per_page').val() || 10;
+        var documentation = $('#documentation_type').val() || '';
+        var doctor_names = $('#doctor_names').val() || '';
+        var search_anything = $('#search_anything').val() || '';
+        var end_date = $('#end_date').val() || '';
+        var start_date = $('#start_date').val() || '';
 
         $.ajax({
             url: med_hx_url,
@@ -160,7 +160,7 @@
 
     $(document).ready(function() {
         $.ajax({
-            url: 'sort.php',
+            url: '../doctor/sort.php',
             type: 'POST',
             data: {
                 hospital_no: "<?php echo $hospital_no; ?>",
@@ -354,7 +354,7 @@
         //        timeOut: 5000
         //    })
 
-        var old_hostpital_no = document.getElementById("old_hostpital_no").value;
+        var old_hostpital_no = $('#old_hostpital_no').val() || '';
 
         document.getElementById("switch_hx3").innerHTML = 'please wait ... ';
         document.getElementById("switch_hx3").disabled = true;

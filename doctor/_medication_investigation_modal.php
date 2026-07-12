@@ -295,7 +295,7 @@
                 });
 
                 $.ajax({
-                    url: '_imaging_hx.php',
+                    url: '../doctor/_imaging_hx.php',
                     method: "POST",
                     data: {
                         loadInvsHx: true,

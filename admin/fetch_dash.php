@@ -7,7 +7,20 @@ include("../inc/credit_current_balance.php");
 if (isset($_POST["admin_settings_id"])) {
 
 	$stmt_d = $db->query("SELECT * FROM hospital_details");
-	$rwxx = $stmt_d->fetch(PDO::FETCH_ASSOC); ?>
+	$rwxx = $stmt_d->fetch(PDO::FETCH_ASSOC); 
+	
+	$llm_config = isset($rwxx['llm_config']) ? json_decode($rwxx['llm_config'], true) : [];
+	if (!is_array($llm_config)) $llm_config = [];
+	$llm_enabled = isset($llm_config['enabled']) && $llm_config['enabled'] ? 'checked' : '';
+	$llm_voice = isset($llm_config['summary_voice_enabled']) && $llm_config['summary_voice_enabled'] ? 'checked' : '';
+	$llm_provider = isset($llm_config['active_provider']) ? $llm_config['active_provider'] : '';
+	$llm_model = isset($llm_config['active_model']) ? $llm_config['active_model'] : '';
+	$openai_key = isset($llm_config['providers']['openai']['api_key']) ? $llm_config['providers']['openai']['api_key'] : '';
+	$anthropic_key = isset($llm_config['providers']['anthropic']['api_key']) ? $llm_config['providers']['anthropic']['api_key'] : '';
+	$gemini_key = isset($llm_config['providers']['gemini']['api_key']) ? $llm_config['providers']['gemini']['api_key'] : '';
+	$prompt_summary = isset($llm_config['system_prompts']['patient_summary']) ? $llm_config['system_prompts']['patient_summary'] : '';
+	$prompt_polish = isset($llm_config['system_prompts']['polish_note']) ? $llm_config['system_prompts']['polish_note'] : '';
+	?>
 
 	<div class="modal-body">
 		<form method="post" action="index.php">
@@ -208,6 +221,55 @@ if (isset($_POST["admin_settings_id"])) {
 				<textarea name="slider_text2" class="form-control" data-required="true"><?php echo $rwxx['slider_text2'] ?></textarea>
 			</div>
 
+			<hr>
+			<h3 style="color:#2c3e50;"><i class="fa fa-robot"></i> AI / LLM Configuration</h3>
+			<div style="background:#f8f9fa; padding:15px; border-radius:8px; border:1px solid #ddd; margin-bottom:20px;">
+				<div class="form-group">
+					<label><input type="checkbox" name="llm_config[enabled]" <?= $llm_enabled ?>> Enable AI Features (Dictation, Polishing, Summary)</label>
+				</div>
+				<div class="form-group">
+					<label><input type="checkbox" name="llm_config[summary_voice_enabled]" <?= $llm_voice ?>> Enable Text-to-Speech (Voice Synthesizer)</label>
+				</div>
+				<div class="form-group">
+					<label>Active LLM Provider</label>
+					<select name="llm_config[active_provider]" class="form-control">
+						<option value="">Select Provider...</option>
+						<option value="gemini" <?= $llm_provider == 'gemini' ? 'selected' : '' ?>>Google (Gemini)</option>
+						<option value="openai" <?= $llm_provider == 'openai' ? 'selected' : '' ?>>OpenAI (GPT)</option>
+						<option value="anthropic" <?= $llm_provider == 'anthropic' ? 'selected' : '' ?>>Anthropic (Claude)</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<label>Active Model Name (e.g. gemini-2.5-flash, gpt-4o-mini)</label>
+					<input type="text" name="llm_config[active_model]" class="form-control" value="<?= htmlspecialchars($llm_model) ?>" placeholder="Leave blank for provider default">
+				</div>
+				
+				<hr>
+				<h4>Provider API Keys</h4>
+				<div class="form-group">
+					<label>Google Gemini API Key</label>
+					<input type="password" name="llm_config[providers][gemini][api_key]" class="form-control" placeholder="<?= !empty($gemini_key) ? '******** (configured)' : 'Enter API Key' ?>">
+				</div>
+				<div class="form-group">
+					<label>OpenAI API Key</label>
+					<input type="password" name="llm_config[providers][openai][api_key]" class="form-control" placeholder="<?= !empty($openai_key) ? '******** (configured)' : 'Enter API Key' ?>">
+				</div>
+				<div class="form-group">
+					<label>Anthropic API Key</label>
+					<input type="password" name="llm_config[providers][anthropic][api_key]" class="form-control" placeholder="<?= !empty($anthropic_key) ? '******** (configured)' : 'Enter API Key' ?>">
+				</div>
+
+				<hr>
+				<h4>Custom System Prompts (Optional)</h4>
+				<div class="form-group">
+					<label>Patient Summary Prompt</label>
+					<textarea name="llm_config[system_prompts][patient_summary]" class="form-control" rows="3" placeholder="Default prompt will be used if empty..."><?= htmlspecialchars($prompt_summary) ?></textarea>
+				</div>
+				<div class="form-group">
+					<label>Note Polishing Prompt</label>
+					<textarea name="llm_config[system_prompts][polish_note]" class="form-control" rows="3" placeholder="Default prompt will be used if empty..."><?= htmlspecialchars($prompt_polish) ?></textarea>
+				</div>
+			</div>
 
 
 			<div class="form_sep">

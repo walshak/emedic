@@ -43,3 +43,9 @@
                                     </div>
                                 </div>
                             </div>
+
+<!-- AI Clinical Toolkit Widget -->
+<script>
+    if (!window.currentHospitalNo) window.currentHospitalNo = '<?= $hospital_no ?>';
+    if (!window.currentPatientId) window.currentPatientId = '<?= $hospital_no ?>';
+</script>

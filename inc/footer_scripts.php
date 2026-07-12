@@ -11,7 +11,7 @@
 <!-- walshak 9/6/2023 -->
 <!-- typeahead -->
 <!-- <script src="../js/plugins/typeahead/typeahead.min.js"></script> -->
-<script src="../js/plugins/typeahead/typeahead.jquery.min.js"></script>
+<script src="../js/typeahead.jquery.min.js"></script>
 <!-- walshak 9/6/2023 -->
 
 <!-- Custom and plugin javascript -->

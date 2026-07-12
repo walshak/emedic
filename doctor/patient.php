@@ -1855,16 +1855,22 @@ $doctor_no = $_SESSION['id'];
 			}, 300);
 
 			// Set up event listeners
-			searchInput.addEventListener('input', debouncedSearch);
+			if (searchInput) {
+				searchInput.addEventListener('input', debouncedSearch);
+			}
 
-			clearButton.addEventListener('click', function() {
-				searchInput.value = '';
-				filterTableFunction('medication_search_input', 'medication___notes___table', 0, 2);
-				searchInput.focus();
-			});
+			if (clearButton) {
+				clearButton.addEventListener('click', function() {
+					searchInput.value = '';
+					filterTableFunction('medication_search_input', 'medication___notes___table', 0, 2);
+					searchInput.focus();
+				});
+			}
 
 			// Initial filter to hide loading message when real data loads
-			filterTableFunction('medication_search_input', 'medication___notes___table', 0, 2);
+			if (searchInput) {
+				filterTableFunction('medication_search_input', 'medication___notes___table', 0, 2);
+			}
 		});
 
 		var substringMatcher = function(strs) {
@@ -2554,7 +2560,8 @@ $doctor_no = $_SESSION['id'];
 					page_num: page_num
 				},
 				success: function(data) {
-					document.getElementById('data_displayed_ward_round').innerHTML = data;
+					var el = document.getElementById('data_displayed_ward_round');
+					if (el) el.innerHTML = data;
 				}
 			});
 		}
@@ -3116,7 +3123,7 @@ $doctor_no = $_SESSION['id'];
 					String(minutes).padStart(2, '0') + ":" +
 					String(seconds).padStart(2, '0');
 
-				///const el = document.getElementById('timerDisplay');
+				const el = document.getElementById('timerDisplay');
 				if (el) el.textContent = display;
 			}
 
@@ -3183,6 +3190,7 @@ $doctor_no = $_SESSION['id'];
 	</script>
 
 	<?php include('new_results.php'); ?>
+	<?php include_once('../inc/ai_toolkit_widget.php'); ?>
 
 </body>
 

@@ -197,3 +197,9 @@ if(isset($_POST["load-cons-template"])){
 
 ?>
 
+<!-- AI Clinical Toolkit Widget -->
+<script>
+    window.currentHospitalNo = '<?= $hospital_no ?>';
+    window.currentPatientId = '<?= $hospital_no ?>';
+</script>
+

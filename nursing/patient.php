@@ -1208,7 +1208,8 @@ WHERE (adm_status=3 OR adm_status=0) AND hospital_no = ? order by sn DESC LIMIT 
 
 		function show_ward_notes(page_num) {
 
-			var appointment_number = document.getElementById('appointment_number').value;
+			var appt_el = document.getElementById('appointment_number');
+			var appointment_number = appt_el ? appt_el.value : '';
 			///alert(appointment_number);
 			$.ajax({
 				url: "../inc/_ward_round_notes_hx.php",
@@ -1219,7 +1220,8 @@ WHERE (adm_status=3 OR adm_status=0) AND hospital_no = ? order by sn DESC LIMIT 
 					page_num: page_num
 				},
 				success: function(data) {
-					document.getElementById('data_displayed_ward_round').innerHTML = data;
+					var el = document.getElementById('data_displayed_ward_round');
+					if (el) el.innerHTML = data;
 				}
 			});
 		}
@@ -1266,7 +1268,8 @@ WHERE (adm_status=3 OR adm_status=0) AND hospital_no = ? order by sn DESC LIMIT 
 					check_alert: hosp_no
 				},
 				success: function(data) {
-					document.getElementById("patient-alert-tbody").innerHTML = data;
+					var el = document.getElementById("patient-alert-tbody");
+					if (el) el.innerHTML = data;
 				}
 			});
 		}
@@ -1800,7 +1803,7 @@ WHERE (adm_status=3 OR adm_status=0) AND hospital_no = ? order by sn DESC LIMIT 
 
 	<script src="../js/idle.js"></script>
 
-
+	<?php include_once('../inc/ai_toolkit_widget.php'); ?>
 
 </body>
 

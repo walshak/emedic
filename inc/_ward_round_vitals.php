@@ -221,7 +221,7 @@ if ($vitals__stmt->rowCount() > 0) {
 
 <script src="../js/jquery-3.1.1.min.js"></script>
 <script src="../js/bootstrap.min.js"></script>
-<script src="chart.js"></script>
+<script src="../doctor/chart.js"></script>
 <script>
     function deleteVitals(vital) {
         toastr.info('Deleting, pls wait...', '', {
