@@ -182,15 +182,20 @@ include("../inc/patient_alert.php"); ?>
 	<?php } ?>
 
 	window.onload = blinkOn;
-
 	function blinkOn() {
-		document.getElementById("blink").style.color = "#ff0000"
-		setTimeout("blinkOff()", 500)
+		var el = document.getElementById("blink");
+		if (el) {
+			el.style.color = "#ff0000";
+			setTimeout("blinkOff()", 500);
+		}
 	}
 
 	function blinkOff() {
-		document.getElementById("blink").style.color = ""
-		setTimeout("blinkOn()", 500)
+		var el = document.getElementById("blink");
+		if (el) {
+			el.style.color = "";
+			setTimeout("blinkOn()", 500);
+		}
 	}
 
 	function UpdateCost() {

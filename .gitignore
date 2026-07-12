@@ -15,6 +15,7 @@ php-error.log
 
 # Sensitive Configs
 .my.cnf
+replicate_config.env
 
 # Specific Text / Debug Files
 device_info.txt
