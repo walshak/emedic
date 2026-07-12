@@ -3042,7 +3042,21 @@ if (isset($_POST["departmentId_stock_"])) {
 									<input type="hidden" name="oname" value="<?= $oname; ?>">
 									<input type="hidden" name="dob" value="<?= $dob; ?>">
 									<input type="hidden" name="gender" value="<?= $gender; ?>">
-									<input type="hidden" name="phoneno" value="<?= $phoneno; ?>">
+									<div class="form_sep" style="margin-bottom:10px;">
+										<label><input type="checkbox" name="send_welcome_sms" class="send_welcome_sms_exist" value="1" checked> Send Welcome SMS</label>
+									</div>
+									<div class="form_sep sms_phone_container" style="margin-bottom:10px;">
+										<label class="req">Phone No:</label>
+										<input type="text" name="phoneno" class="form-control phoneno_input_exist" value="<?= $phoneno; ?>" required>
+									</div>
+
+									<div class="form_sep" style="margin-bottom:10px;">
+										<label><input type="checkbox" name="send_welcome_email" class="send_welcome_email_exist" value="1" checked> Send Welcome Email</label>
+									</div>
+									<div class="form_sep email_container" style="margin-bottom:10px;">
+										<label class="req">Email Address:</label>
+										<input type="email" name="email" class="form-control email_input_exist" required>
+									</div>
 
 									<div class="pull-left">
 										<button type="submit" class="btn btn-success btn btn-sm" name="Save_patient_save" id="Save_patient_save">Save & Continue ... </button>
@@ -3054,6 +3068,40 @@ if (isset($_POST["departmentId_stock_"])) {
 									</div>
 
 								</form>
+
+								<script>
+									$(function() {
+										const form = $("#existing_patient_form_<?= $hospital_no ?>");
+										const smsToggle = form.find(".send_welcome_sms_exist");
+										const emailToggle = form.find(".send_welcome_email_exist");
+										const phoneContainer = form.find(".sms_phone_container");
+										const phoneInput = form.find(".phoneno_input_exist");
+										const emailContainer = form.find(".email_container");
+										const emailInput = form.find(".email_input_exist");
+
+										function updateFields() {
+											if (smsToggle.is(":checked")) {
+												phoneContainer.show();
+												phoneInput.prop("required", true);
+											} else {
+												phoneContainer.hide();
+												phoneInput.prop("required", false);
+											}
+
+											if (emailToggle.is(":checked")) {
+												emailContainer.show();
+												emailInput.prop("required", true);
+											} else {
+												emailContainer.hide();
+												emailInput.prop("required", false);
+											}
+										}
+
+										smsToggle.on("change", updateFields);
+										emailToggle.on("change", updateFields);
+										updateFields();
+									});
+								</script>
 								<br>
 								<hr>
 								<div align="left" style="color:#F00; font-size:16px; ">Patient(s) with similary entries.</div><br>

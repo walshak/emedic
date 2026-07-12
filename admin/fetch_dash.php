@@ -22,265 +22,261 @@ if (isset($_POST["admin_settings_id"])) {
 	$prompt_polish = isset($llm_config['system_prompts']['polish_note']) ? $llm_config['system_prompts']['polish_note'] : '';
 	?>
 
-	<div class="modal-body">
-		<form method="post" action="index.php">
+	
+    
+    <div class="modal-body">
+        <form method="post" action="index.php">
+            <ul class="nav nav-tabs">
+                <li class="active"><a data-toggle="tab" href="#general_details">General Details</a></li>
+                <li><a data-toggle="tab" href="#email_config">Email (SMTP)</a></li>
+                <li><a data-toggle="tab" href="#sms_config">SMS (Twilio)</a></li>
+                <li><a data-toggle="tab" href="#welcome_templates">Welcome Templates</a></li>
+                <li><a data-toggle="tab" href="#ai_config">AI Config</a></li>
+            </ul>
+            <div class="tab-content" style="padding-top: 15px;">
+                <!-- General Details -->
+                <div id="general_details" class="tab-pane fade in active">
+                    <div class="form_sep">
+                        <label>drug_reversal_period (days)</label>
+                        <input type="number" name="drug_reversal_period" class="form-control" value="<?= $rwxx['drug_reversal_period']; ?>" required>
+                    </div>
+                    <div class="form_sep">
+                        <label>phones</label>
+                        <input type="text" name="phones" class="form-control" value="<?= $rwxx['phones']; ?>" required>
+                    </div>
+                    <div class="form_sep">
+                        <label>investigation_edit_period(days)</label>
+                        <input type="number" name="investigation_edit_period" class="form-control" value="<?= $rwxx['investigation_edit_period']; ?>" required>
+                    </div>
+                    <div class="form_sep">
+                        <label>billing_remarks for patient on admission</label>
+                        <textarea name="billing_remarks" class="form-control" data-required="true"><?php echo $rwxx['billing_remarks'] ?></textarea>
+                    </div>
+                    <div class="form_sep">
+                        <label>Total Member Allowed to Family Folder</label>
+                        <input type="number" name="total_family_member_allow" class="form-control" value="<?php echo $rwxx['total_family_member_allow'] ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Enable Pay from Wallet for Units</label>
+                        <select name="payfrom_status_" class="form-control" required>
+                            <option value="1" <?php echo ($rwxx['payfrom_status'] == '1') ? 'selected' : ''; ?>>Yes</option>
+                            <option value="0" <?php echo ($rwxx['payfrom_status'] == '0') ? 'selected' : ''; ?>>No</option>
+                        </select>
+                    </div>
+                    <div class="form_sep">
+                        <label>Logo Size (WIDTH/HEIGHT pixels)</label>
+                        <input type="number" name="wx" class="form-control" value="<?php echo $rwxx['wx'] ?>">
+                        <input type="number" name="hx" class="form-control" value="<?php echo $rwxx['hx'] ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Enable DAILYSIS module</label>
+                        <select name="dialysis" class="form-control">
+                            <option value="1" <?php echo ($rwxx['dialysis'] == '1') ? 'selected' : ''; ?>>Yes</option>
+                            <option value="0" <?php echo ($rwxx['dialysis'] == '0') ? 'selected' : ''; ?>>No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Enable IVF module</label>
+                        <select name="ivf" class="form-control">
+                            <option value="1" <?php echo ($rwxx['ivf'] == '1') ? 'selected' : ''; ?>>Yes</option>
+                            <option value="0" <?php echo ($rwxx['ivf'] == '0') ? 'selected' : ''; ?>>No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Enable allow part pay medical service</label>
+                        <select name="allow_part_pay_medical_service" class="form-control">
+                            <option value="1" <?php echo ($rwxx['allow_part_pay_medical_service'] == '1') ? 'selected' : ''; ?>>Yes</option>
+                            <option value="0" <?php echo ($rwxx['allow_part_pay_medical_service'] == '0') ? 'selected' : ''; ?>>No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Enable ADMINSTRATOR to Approve Stock Requisition</label>
+                        <select name="b4_approve_requisition_setup" class="form-control">
+                            <option value="1" <?php echo ($rwxx['b4_approve_requisition_setup'] == '1') ? 'selected' : ''; ?>>Yes</option>
+                            <option value="0" <?php echo ($rwxx['b4_approve_requisition_setup'] == '0') ? 'selected' : ''; ?>>No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Enable pharmacy to REQUEST from store</label>
+                        <select name="pharm_request_from_store" class="form-control">
+                            <option value="1" <?php echo ($rwxx['pharm_request_from_store'] == '1') ? 'selected' : ''; ?>>Yes</option>
+                            <option value="0" <?php echo ($rwxx['pharm_request_from_store'] == '0') ? 'selected' : ''; ?>>No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Enable WEBMEDIC FLASH</label>
+                        <select name="col3" class="form-control">
+                            <option value="1" <?php echo ($rwxx['col3'] == '1') ? 'selected' : ''; ?>>Yes</option>
+                            <option value="0" <?php echo ($rwxx['col3'] == '0') ? 'selected' : ''; ?>>No</option>
+                        </select>
+                    </div>
+                    <div class="form_sep">
+                        <label>General Credit Limit for All Patients</label>
+                        <input type="text" name="credit_limit_status" class="form-control" value="<?php echo $rwxx['credit_limit_status'] ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Enable investigation should display based on staff department</label>
+                        <select name="col4" class="form-control">
+                            <option value="1" <?php echo ($rwxx['col4'] == '1') ? 'selected' : ''; ?>>Yes</option>
+                            <option value="0" <?php echo ($rwxx['col4'] == '0') ? 'selected' : ''; ?>>No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Enable HMO DRUG VALIDATION STATUS SET YES MEANS PHARMACY TO VALIDATE NOT HMO DESKOFFICES</label>
+                        <select name="col5" class="form-control">
+                            <option value="1" <?php echo ($rwxx['col5'] == '1') ? 'selected' : ''; ?>>Yes</option>
+                            <option value="0" <?php echo ($rwxx['col5'] == '0') ? 'selected' : ''; ?>>No</option>
+                        </select>
+                    </div>
+                    <div class="form_sep">
+                        <label>color_code_hex</label>
+                        <input type="text" name="color_code_hex" class="form-control" value="<?php echo $rwxx['color_code_hex'] ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Enable use_simple_prescription for doctor</label>
+                        <select name="use_simple_presc" class="form-control">
+                            <option value="1" <?php echo ($rwxx['use_simple_presc'] == '1') ? 'selected' : ''; ?>>Yes</option>
+                            <option value="0" <?php echo ($rwxx['use_simple_presc'] == '0') ? 'selected' : ''; ?>>No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Enable notify_pharm alerts</label>
+                        <select name="notify_pharm" class="form-control">
+                            <option value="1" <?php echo ($rwxx['notify_pharm'] == '1') ? 'selected' : ''; ?>>Yes</option>
+                            <option value="0" <?php echo ($rwxx['notify_pharm'] == '0') ? 'selected' : ''; ?>>No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Enable notify_lab alerts</label>
+                        <select name="notify_lab" class="form-control">
+                            <option value="1" <?php echo ($rwxx['notify_lab'] == '1') ? 'selected' : ''; ?>>Yes</option>
+                            <option value="0" <?php echo ($rwxx['notify_lab'] == '0') ? 'selected' : ''; ?>>No</option>
+                        </select>
+                    </div>
+                    <div class="form_sep">
+                        <label>slider text1</label>
+                        <textarea name="slider_text1" class="form-control"><?php echo $rwxx['slider_text1'] ?></textarea>
+                    </div>
+                    <div class="form_sep">
+                        <label>slider text2</label>
+                        <textarea name="slider_text2" class="form-control"><?php echo $rwxx['slider_text2'] ?></textarea>
+                    </div>
+                </div>
+
+                <!-- Email Config -->
+                <div id="email_config" class="tab-pane fade">
+                    <div class="form_sep">
+                        <label>SMTP Host</label>
+                        <input type="text" name="smtp_host" class="form-control" value="<?php echo $rwxx['smtp_host'] ?>">
+                    </div>
+                    <div class="form_sep">
+                        <label>SMTP Username</label>
+                        <input type="text" name="smtp_username" class="form-control" value="<?php echo $rwxx['smtp_username'] ?>">
+                    </div>
+                    <div class="form_sep">
+                        <label>SMTP Password</label>
+                        <input type="text" name="smtp_password" class="form-control" value="<?php echo $rwxx['smtp_password'] ?>">
+                    </div>
+                    <div class="form_sep">
+                        <label>SMTP Port</label>
+                        <input type="text" name="smtp_port" class="form-control" value="<?php echo $rwxx['smtp_port'] ?>">
+                    </div>
+                    <div class="form_sep">
+                        <label>SMTP Encryption (e.g. tls, ssl)</label>
+                        <input type="text" name="smtp_encryption" class="form-control" value="<?php echo $rwxx['smtp_encryption'] ?>">
+                    </div>
+                </div>
+
+                <!-- SMS Config (Twilio) -->
+                <div id="sms_config" class="tab-pane fade">
+                    <div class="form_sep">
+                        <label>Twilio Account SID</label>
+                        <input type="text" name="twilio_sid" class="form-control" value="<?php echo isset($rwxx['twilio_sid']) ? $rwxx['twilio_sid'] : ''; ?>">
+                    </div>
+                    <div class="form_sep">
+                        <label>Twilio Auth Token</label>
+                        <input type="password" name="twilio_auth_token" class="form-control" value="<?php echo isset($rwxx['twilio_auth_token']) ? $rwxx['twilio_auth_token'] : ''; ?>">
+                    </div>
+                    <div class="form_sep">
+                        <label>Twilio Sender Phone Number (E.164 Format, e.g., +1234567890)</label>
+                        <input type="text" name="twilio_phone_number" class="form-control" value="<?php echo isset($rwxx['twilio_phone_number']) ? $rwxx['twilio_phone_number'] : ''; ?>">
+                    </div>
+                </div>
+
+                <!-- Welcome Templates -->
+                <div id="welcome_templates" class="tab-pane fade">
+                    <div class="alert alert-info" style="margin-top:10px;">
+                        <strong>Available Variables:</strong> [PatientName], [HospitalName], [PatientID]
+                    </div>
+                    <div class="form_sep">
+                        <label>Welcome Email Template (HTML supported)</label>
+                        <textarea name="welcome_email_template" class="form-control summernote" rows="8"><?php echo isset($rwxx['welcome_email_template']) ? htmlspecialchars($rwxx['welcome_email_template']) : ''; ?></textarea>
+                    </div>
+                    <div class="form_sep">
+                        <label>Welcome SMS Template (Plain Text)</label>
+                        <textarea name="welcome_sms_template" class="form-control" rows="4"><?php echo isset($rwxx['welcome_sms_template']) ? htmlspecialchars($rwxx['welcome_sms_template']) : ''; ?></textarea>
+                    </div>
+                </div>
+
+                <!-- AI Config -->
+                <div id="ai_config" class="tab-pane fade">
+                    <div style="background:#f8f9fa; padding:15px; border-radius:8px; border:1px solid #ddd; margin-bottom:20px;">
+                        <div class="form-group">
+                            <label><input type="checkbox" name="llm_config[enabled]" <?= $llm_enabled ?>> Enable AI Features (Dictation, Polishing, Summary)</label>
+                        </div>
+                        <div class="form-group">
+                            <label><input type="checkbox" name="llm_config[summary_voice_enabled]" <?= $llm_voice ?>> Enable Text-to-Speech (Voice Synthesizer)</label>
+                        </div>
+                        <div class="form-group">
+                            <label>Active LLM Provider</label>
+                            <select name="llm_config[active_provider]" class="form-control">
+                                <option value="">Select Provider...</option>
+                                <option value="gemini" <?= $llm_provider == 'gemini' ? 'selected' : '' ?>>Google (Gemini)</option>
+                                <option value="openai" <?= $llm_provider == 'openai' ? 'selected' : '' ?>>OpenAI (GPT)</option>
+                                <option value="anthropic" <?= $llm_provider == 'anthropic' ? 'selected' : '' ?>>Anthropic (Claude)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Active Model Name (e.g. gemini-2.5-flash, gpt-4o-mini)</label>
+                            <input type="text" name="llm_config[active_model]" class="form-control" value="<?= htmlspecialchars($llm_model) ?>" placeholder="Leave blank for provider default">
+                        </div>
+                        
+                        <hr>
+                        <h4>Provider API Keys</h4>
+                        <div class="form-group">
+                            <label>Google Gemini API Key</label>
+                            <input type="password" name="llm_config[providers][gemini][api_key]" class="form-control" placeholder="<?= !empty($gemini_key) ? '******** (configured)' : 'Enter API Key' ?>">
+                        </div>
+                        <div class="form-group">
+                            <label>OpenAI API Key</label>
+                            <input type="password" name="llm_config[providers][openai][api_key]" class="form-control" placeholder="<?= !empty($openai_key) ? '******** (configured)' : 'Enter API Key' ?>">
+                        </div>
+                        <div class="form-group">
+                            <label>Anthropic API Key</label>
+                            <input type="password" name="llm_config[providers][anthropic][api_key]" class="form-control" placeholder="<?= !empty($anthropic_key) ? '******** (configured)' : 'Enter API Key' ?>">
+                        </div>
+
+                        <hr>
+                        <h4>Custom System Prompts (Optional)</h4>
+                        <div class="form-group">
+                            <label>Patient Summary Prompt</label>
+                            <textarea name="llm_config[system_prompts][patient_summary]" class="form-control" rows="3" placeholder="Default prompt will be used if empty..."><?= htmlspecialchars($prompt_summary) ?></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Note Polishing Prompt</label>
+                            <textarea name="llm_config[system_prompts][polish_note]" class="form-control" rows="3" placeholder="Default prompt will be used if empty..."><?= htmlspecialchars($prompt_polish) ?></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+            <div class="form_sep">
+                <button class="btn btn-success btn-lg" type="submit" name="save_setting">Save Settings</button>
+            </div>
+        </form>
 
 
-			<div class="form_sep">
-				<label for="reg_input_no" class="">drug_reversal_period (days)</label>
-				<input type="number" id="drug_reversal_period" name="drug_reversal_period" class="form-control" value="<?= $rwxx['drug_reversal_period']; ?>" required>
-			</div>
-
-			<div class="form_sep">
-				<label for="reg_input_no" class="">phones</label>
-				<input type="text" id="phones" name="phones" class="form-control" value="<?= $rwxx['phones']; ?>" required>
-			</div>
-
-			<div class="form_sep">
-				<label for="reg_input_no" class="">investigation_edit_period(days)</label>
-				<input type="number" id="investigation_edit_period" name="investigation_edit_period" class="form-control" value="<?= $rwxx['investigation_edit_period']; ?>" required>
-			</div>
-
-			<div class="form_sep">
-				<label for="reg_textarea_message" class="">billing_remarks for patient on admission</label>
-				<textarea name="billing_remarks" id="" cols="30" rows="4" class="form-control" data-required="true" data-minlength="15"><?php echo $rwxx['billing_remarks'] ?></textarea>
-			</div>
-
-
-			<div class="form_sep">
-				<label for="" class="">Total Member Allowed to Family Folder (Family Card Registration)</label>
-				<input type="number" name="total_family_member_allow" class="form-control" data-required="true" value="<?php echo $rwxx['total_family_member_allow'] ?>">
-			</div>
-
-
-			<div class="form-group">
-				<label for="reg_select">Enable Pay from Wallet for Units</label>
-				<select name="payfrom_status_" id="" class="form-control" require>
-					<option selected value="">Select</option>
-
-					<option value="1" <?php echo ($rwxx['payfrom_status'] == '1') ? 'selected' : '';  ?>>Yes</option>
-					<option value="0" <?php echo ($rwxx['payfrom_status'] == '0') ? 'selected' : '';  ?>>No</option>
-				</select>
-			</div>
-
-			<div class="form_sep">
-				<label for="" class="">Logo Size (WIDTH/HEIGHT pixels)</label>
-				<input type="number" name="wx" class="form-control" data-required="true" value="<?php echo $rwxx['wx'] ?>">
-				<input type="number" name="hx" class="form-control" data-required="true" value="<?php echo $rwxx['hx'] ?>">
-			</div>
-
-			<div class="form-group">
-				<label for="reg_select">Enable DAILYSIS module</label>
-				<select name="dialysis" id="" class="form-control" require>
-					<option selected value="">Select</option>
-
-					<option value="1" <?php echo ($rwxx['dialysis'] == '1') ? 'selected' : '';  ?>>Yes</option>
-					<option value="0" <?php echo ($rwxx['dialysis'] == '0') ? 'selected' : '';  ?>>No</option>
-				</select>
-			</div>
-
-
-			<div class="form-group">
-				<label for="reg_select">Enable IVF module</label>
-				<select name="ivf" id="" class="form-control" require>
-					<option selected value="">Select</option>
-
-					<option value="1" <?php echo ($rwxx['ivf'] == '1') ? 'selected' : '';  ?>>Yes</option>
-					<option value="0" <?php echo ($rwxx['ivf'] == '0') ? 'selected' : '';  ?>>No</option>
-				</select>
-			</div>
-
-
-
-			<div class="form-group">
-				<label for="reg_select">Enable allow part pay medical service</label>
-				<select name="allow_part_pay_medical_service" id="" class="form-control" require>
-					<option selected value="">Select</option>
-
-					<option value="1" <?php echo ($rwxx['allow_part_pay_medical_service'] == '1') ? 'selected' : '';  ?>>Yes</option>
-					<option value="0" <?php echo ($rwxx['allow_part_pay_medical_service'] == '0') ? 'selected' : '';  ?>>No</option>
-				</select>
-			</div>
-			<div class="form-group">
-				<label for="reg_select">Enable ADMINSTRATOR to Approve Stock Requisition</label>
-				<select name="b4_approve_requisition_setup" id="" class="form-control" require>
-					<option selected value="">Select</option>
-
-					<option value="1" <?php echo ($rwxx['b4_approve_requisition_setup'] == '1') ? 'selected' : '';  ?>>Yes</option>
-					<option value="0" <?php echo ($rwxx['b4_approve_requisition_setup'] == '0') ? 'selected' : '';  ?>>No</option>
-				</select>
-			</div>
-			<div class="form-group">
-				<label for="reg_select">Enable pharmacy to REQUEST from store</label>
-				<select name="pharm_request_from_store" id="" class="form-control" require>
-					<option selected value="">Select</option>
-
-					<option value="1" <?php echo ($rwxx['pharm_request_from_store'] == '1') ? 'selected' : '';  ?>>Yes</option>
-					<option value="0" <?php echo ($rwxx['pharm_request_from_store'] == '0') ? 'selected' : '';  ?>>No</option>
-				</select>
-			</div>
-
-			<div class="form-group">
-				<label for="reg_select">Enable WEBMEDIC FLASH</label>
-				<select name="col3" id="" class="form-control" require>
-					<option selected value="">Select</option>
-
-					<option value="1" <?php echo ($rwxx['col3'] == '1') ? 'selected' : '';  ?>>Yes</option>
-					<option value="0" <?php echo ($rwxx['col3'] == '0') ? 'selected' : '';  ?>>No</option>
-				</select>
-			</div>
-
-			<div class="form_sep">
-				<label for="" class="">General Credit Limit for All Patients</label>
-				<input type="text" name="credit_limit_status" class="form-control" data-required="true" value="<?php echo $rwxx['credit_limit_status'] ?>">
-			</div>
-			<div class="form-group">
-				<label for="reg_select">Enable investigation should display based on staff department</label>
-				<select name="col4" id="" class="form-control" require>
-					<option selected value="">Select</option>
-
-					<option value="1" <?php echo ($rwxx['col4'] == '1') ? 'selected' : '';  ?>>Yes</option>
-					<option value="0" <?php echo ($rwxx['col4'] == '0') ? 'selected' : '';  ?>>No</option>
-				</select>
-			</div>
-
-
-			<div class="form-group">
-				<label for="reg_select">Enable HMO DRUG VALIDATION STATUS SET YES MEANS PHARMACY TO VALIDATE NOT HMO DESKOFFICES</label>
-				<select name="col5" id="" class="form-control" require>
-					<option selected value="">Select</option>
-
-					<option value="1" <?php echo ($rwxx['col5'] == '1') ? 'selected' : '';  ?>>Yes</option>
-					<option value="0" <?php echo ($rwxx['col5'] == '0') ? 'selected' : '';  ?>>No</option>
-				</select>
-			</div>
-
-			<div class="form_sep">
-				<label for="" class="">smtp_host</label>
-				<input type="text" name="smtp_host" class="form-control" data-required="true" value="<?php echo $rwxx['smtp_host'] ?>">
-			</div>
-
-
-
-			<div class="form_sep">
-				<label for="" class="">smtp_username</label>
-				<input type="text" name="smtp_username" class="form-control" data-required="true" value="<?php echo $rwxx['smtp_username'] ?>">
-			</div>
-			<div class="form_sep">
-				<label for="" class="">smtp_password</label>
-				<input type="text" name="smtp_password" class="form-control" data-required="true" value="<?php echo $rwxx['smtp_password'] ?>">
-			</div>
-			<div class="form_sep">
-				<label for="" class="">smtp_port</label>
-				<input type="text" name="smtp_port" class="form-control" data-required="true" value="<?php echo $rwxx['smtp_port'] ?>">
-			</div>
-			<div class="form_sep">
-				<label for="" class="">smtp_encryption</label>
-				<input type="text" name="smtp_encryption" class="form-control" data-required="true" value="<?php echo $rwxx['smtp_encryption'] ?>">
-			</div>
-			<div class="form_sep">
-				<label for="" class="">color_code_hex</label>
-				<input type="text" name="color_code_hex" class="form-control" data-required="true" value="<?php echo $rwxx['color_code_hex'] ?>">
-			</div>
-			<div class="form-group">
-				<label for="reg_select">Enable use_simple_prescription for doctor</label>
-				<select name="use_simple_presc" id="" class="form-control" require>
-					<option selected value="">Select</option>
-
-					<option value="1" <?php echo ($rwxx['use_simple_presc'] == '1') ? 'selected' : '';  ?>>Yes</option>
-					<option value="0" <?php echo ($rwxx['use_simple_presc'] == '0') ? 'selected' : '';  ?>>No</option>
-				</select>
-			</div>
-			<div class="form-group">
-				<label for="reg_select">Enable notify_pharm alerts</label>
-				<select name="notify_pharm" id="" class="form-control" require>
-					<option selected value="">Select</option>
-
-					<option value="1" <?php echo ($rwxx['notify_pharm'] == '1') ? 'selected' : '';  ?>>Yes</option>
-					<option value="0" <?php echo ($rwxx['notify_pharm'] == '0') ? 'selected' : '';  ?>>No</option>
-				</select>
-			</div>
-			<div class="form-group">
-				<label for="reg_select">Enable notify_lab alerts</label>
-				<select name="notify_lab" id="" class="form-control" require>
-					<option selected value="">Select</option>
-
-					<option value="1" <?php echo ($rwxx['notify_lab'] == '1') ? 'selected' : '';  ?>>Yes</option>
-					<option value="0" <?php echo ($rwxx['notify_lab'] == '0') ? 'selected' : '';  ?>>No</option>
-				</select>
-			</div>
-
-
-			<div class="form_sep">
-				<label for="" class="">slider text1</label>
-				<textarea name="slider_text1" class="form-control" data-required="true"><?php echo $rwxx['slider_text1'] ?></textarea>
-			</div>
-
-			<div class="form_sep">
-				<label for="" class="">slider text2</label>
-				<textarea name="slider_text2" class="form-control" data-required="true"><?php echo $rwxx['slider_text2'] ?></textarea>
-			</div>
-
-			<hr>
-			<h3 style="color:#2c3e50;"><i class="fa fa-robot"></i> AI / LLM Configuration</h3>
-			<div style="background:#f8f9fa; padding:15px; border-radius:8px; border:1px solid #ddd; margin-bottom:20px;">
-				<div class="form-group">
-					<label><input type="checkbox" name="llm_config[enabled]" <?= $llm_enabled ?>> Enable AI Features (Dictation, Polishing, Summary)</label>
-				</div>
-				<div class="form-group">
-					<label><input type="checkbox" name="llm_config[summary_voice_enabled]" <?= $llm_voice ?>> Enable Text-to-Speech (Voice Synthesizer)</label>
-				</div>
-				<div class="form-group">
-					<label>Active LLM Provider</label>
-					<select name="llm_config[active_provider]" class="form-control">
-						<option value="">Select Provider...</option>
-						<option value="gemini" <?= $llm_provider == 'gemini' ? 'selected' : '' ?>>Google (Gemini)</option>
-						<option value="openai" <?= $llm_provider == 'openai' ? 'selected' : '' ?>>OpenAI (GPT)</option>
-						<option value="anthropic" <?= $llm_provider == 'anthropic' ? 'selected' : '' ?>>Anthropic (Claude)</option>
-					</select>
-				</div>
-				<div class="form-group">
-					<label>Active Model Name (e.g. gemini-2.5-flash, gpt-4o-mini)</label>
-					<input type="text" name="llm_config[active_model]" class="form-control" value="<?= htmlspecialchars($llm_model) ?>" placeholder="Leave blank for provider default">
-				</div>
-				
-				<hr>
-				<h4>Provider API Keys</h4>
-				<div class="form-group">
-					<label>Google Gemini API Key</label>
-					<input type="password" name="llm_config[providers][gemini][api_key]" class="form-control" placeholder="<?= !empty($gemini_key) ? '******** (configured)' : 'Enter API Key' ?>">
-				</div>
-				<div class="form-group">
-					<label>OpenAI API Key</label>
-					<input type="password" name="llm_config[providers][openai][api_key]" class="form-control" placeholder="<?= !empty($openai_key) ? '******** (configured)' : 'Enter API Key' ?>">
-				</div>
-				<div class="form-group">
-					<label>Anthropic API Key</label>
-					<input type="password" name="llm_config[providers][anthropic][api_key]" class="form-control" placeholder="<?= !empty($anthropic_key) ? '******** (configured)' : 'Enter API Key' ?>">
-				</div>
-
-				<hr>
-				<h4>Custom System Prompts (Optional)</h4>
-				<div class="form-group">
-					<label>Patient Summary Prompt</label>
-					<textarea name="llm_config[system_prompts][patient_summary]" class="form-control" rows="3" placeholder="Default prompt will be used if empty..."><?= htmlspecialchars($prompt_summary) ?></textarea>
-				</div>
-				<div class="form-group">
-					<label>Note Polishing Prompt</label>
-					<textarea name="llm_config[system_prompts][polish_note]" class="form-control" rows="3" placeholder="Default prompt will be used if empty..."><?= htmlspecialchars($prompt_polish) ?></textarea>
-				</div>
-			</div>
-
-
-			<div class="form_sep">
-				<button class="btn btn-success btn-sm" type="submit" name="save_setting">Submit</button>
-
-			</div>
-
-
-
-
-		</form>
 
 
 		<hr>

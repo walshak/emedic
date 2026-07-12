@@ -185,9 +185,9 @@ if (isset($_POST["MM_update"]) == "add_new_patient_start") {
 			// Proceed with insertion ALTER TABLE `enrollee` ADD `captured_by` VARCHAR(255) NULL DEFAULT NULL AFTER `command_formation`;
 
 			$insertSQL = "INSERT INTO enrollee 
-                  (hospital_no, hmo_no, insurance, surname, fname, oname, gender, dob, age, phone, date_capture, visit_status, token, captured_by)
+                  (hospital_no, hmo_no, insurance, surname, fname, oname, gender, dob, age, phone, email, date_capture, visit_status, token, captured_by)
                   VALUES 
-                  (:hospital_no, :hmo_no, :insurance, :surname, :fname, :oname, :gender, :dob, :age, :phone, :date_capture, :visit_status, :token, :captured_by)";
+                  (:hospital_no, :hmo_no, :insurance, :surname, :fname, :oname, :gender, :dob, :age, :phone, :email, :date_capture, :visit_status, :token, :captured_by)";
 
 			// Prepare the statement
 			$stmt = $db->prepare($insertSQL);
@@ -203,6 +203,8 @@ if (isset($_POST["MM_update"]) == "add_new_patient_start") {
 			$stmt->bindParam(':dob', $_POST['dob'], PDO::PARAM_STR); // Assuming dob is from $_POST
 			$stmt->bindParam(':age', $age, PDO::PARAM_STR); // Assuming $age is defined elsewhere
 			$stmt->bindParam(':phone', $_POST['phoneno'], PDO::PARAM_STR); // Assuming phoneno is from $_POST
+			$email_val = isset($_POST['email']) ? $_POST['email'] : '';
+			$stmt->bindParam(':email', $email_val, PDO::PARAM_STR); 
 			$stmt->bindParam(':date_capture', $setdate, PDO::PARAM_STR); // Assuming $setdate is defined elsewhere
 			$stmt->bindParam(':visit_status', $visit_status, PDO::PARAM_STR); // Assuming $visit_status is defined elsewhere
 			$stmt->bindParam(':token', $token_, PDO::PARAM_STR); // Assuming $token_ is defined elsewhere
@@ -266,7 +268,27 @@ if (isset($_POST["MM_update"]) == "add_new_patient_start") {
 				// Execute the statement
 				$stmt->execute();
 				if ($stmt->rowCount() > 0) {
-					echo $hospital_no;
+					$notificationError = '';
+					// SEND WELCOME EMAIL & SMS IF TOGGLES ARE CHECKED
+					$sendSms = isset($_POST['send_welcome_sms']) && $_POST['send_welcome_sms'] == '1';
+					$sendEmail = isset($_POST['send_welcome_email']) && $_POST['send_welcome_email'] == '1';
+					if ($sendSms || $sendEmail) {
+						require_once("../inc/ExternalNotification.php");
+						try {
+							$notifier = new ExternalNotification($db);
+							$patientData = [
+								'name' => strtoupper($surname) . ' ' . strtoupper($fname) . ' ' . strtoupper($oname),
+								'hospital_no' => $hospital_no,
+								'phone'       => $sendSms ? $_POST['phoneno'] : '',
+								'email'       => $sendEmail ? ($_POST['email'] ?? '') : '' 
+							];
+							$notifier->sendWelcome($patientData);
+						} catch (Exception $e) {
+							$notificationError = $e->getMessage();
+							error_log("Failed to send welcome notification: " . $notificationError);
+						}
+					}
+					echo $hospital_no . ($notificationError ? '|||' . $notificationError : '');
 				} else {
 					$delete = $db->prepare("DELETE FROM enrollee WHERE hospital_no = '$hospital_no'");
 					$deleted = $delete->execute();

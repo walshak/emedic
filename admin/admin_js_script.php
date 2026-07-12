@@ -1960,12 +1960,21 @@ include("../inc/patient_alert.php"); ?>
 			url: "insert.php",
 			method: "POST",
 			data: $('#new_patient_dash_body').serialize(),
-			beforeSend: function() {},
+			beforeSend: function() {
+				$('#Save_patient').html('<i class="fa fa-spinner fa-spin"></i> Saving...').prop('disabled', true);
+			},
 			success: function(data) {
-				var msg = data;
-				///	alert(msg);
+				var parts = data.split('|||');
+				var msg = parts[0].trim();
+				var notifError = parts[1];
 
 				$('#new_patient_dash_modal').modal('hide');
+
+				if (notifError) {
+					toastr.warning('Registered successfully, but notification failed: ' + notifError, 'Notification Warning', {timeOut: 10000});
+				} else if (msg !== 'PatientExist') {
+					toastr.success('Patient registered successfully!', 'Success');
+				}
 
 				///==================================
 
@@ -1998,7 +2007,7 @@ include("../inc/patient_alert.php"); ?>
 				$('#test_fields').html(data);
 			},
 			complete: function() {
-				$('#Save_patient').val("Saved");
+				$('#Save_patient').html('Save').prop('disabled', false);
 			},
 			error: function(data) {
 

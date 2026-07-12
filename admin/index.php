@@ -111,6 +111,11 @@ if (isset($_POST['save_setting'])) {
         notify_lab = :notify_lab,
         slider_text1 = :slider_text1,
         slider_text2 = :slider_text2,
+        twilio_sid = :twilio_sid,
+        twilio_auth_token = :twilio_auth_token,
+        twilio_phone_number = :twilio_phone_number,
+        welcome_email_template = :welcome_email_template,
+        welcome_sms_template = :welcome_sms_template,
         llm_config = :llm_config
         WHERE sn = 1";
 
@@ -145,6 +150,11 @@ if (isset($_POST['save_setting'])) {
 		$stmt->bindParam(':notify_lab', $_POST['notify_lab'], PDO::PARAM_INT);
 		$stmt->bindParam(':slider_text1', $_POST['slider_text1'], PDO::PARAM_STR);
 		$stmt->bindParam(':slider_text2', $_POST['slider_text2'], PDO::PARAM_STR);
+		$stmt->bindParam(':twilio_sid', $_POST['twilio_sid'], PDO::PARAM_STR);
+		$stmt->bindParam(':twilio_auth_token', $_POST['twilio_auth_token'], PDO::PARAM_STR);
+		$stmt->bindParam(':twilio_phone_number', $_POST['twilio_phone_number'], PDO::PARAM_STR);
+		$stmt->bindParam(':welcome_email_template', $_POST['welcome_email_template'], PDO::PARAM_STR);
+		$stmt->bindParam(':welcome_sms_template', $_POST['welcome_sms_template'], PDO::PARAM_STR);
 
 		// Handle LLM Config
 		$llmConfigJson = null;
@@ -1936,13 +1946,56 @@ if (
 							</div>
 
 							<div class="form_sep">
-								<label for="reg_input_name" class="req">06. Phone No:</label>
-								<input type="text" id="phoneno" name="phoneno" class="form-control" required>
+								<label><input type="checkbox" name="send_welcome_sms" id="send_welcome_sms" value="1" checked> Send Welcome SMS</label>
 							</div>
 
+							<div class="form_sep">
+								<label for="phoneno">06. Phone No:</label>
+								<input type="text" id="phoneno" name="phoneno" class="form-control">
+							</div>
 
+							<div class="form_sep">
+								<label><input type="checkbox" name="send_welcome_email" id="send_welcome_email" value="1" checked> Send Welcome Email</label>
+							</div>
 
+							<div class="form_sep" id="email_field_container">
+								<label for="email" id="email_label">Email Address:</label>
+								<input type="email" id="email" name="email" class="form-control">
+							</div>
 
+							<script>
+								document.addEventListener("DOMContentLoaded", function() {
+									const smsToggle = document.getElementById("send_welcome_sms");
+									const emailToggle = document.getElementById("send_welcome_email");
+									const phoneInput = document.getElementById("phoneno");
+									const emailInput = document.getElementById("email");
+									const emailContainer = document.getElementById("email_field_container");
+
+									function updateInteractivity() {
+										if (smsToggle.checked) {
+											phoneInput.setAttribute("required", "required");
+											phoneInput.previousElementSibling.classList.add("req");
+										} else {
+											phoneInput.removeAttribute("required");
+											phoneInput.previousElementSibling.classList.remove("req");
+										}
+
+										if (emailToggle.checked) {
+											emailContainer.style.display = "block";
+											emailInput.setAttribute("required", "required");
+											document.getElementById("email_label").classList.add("req");
+										} else {
+											emailContainer.style.display = "none";
+											emailInput.removeAttribute("required");
+											document.getElementById("email_label").classList.remove("req");
+										}
+									}
+
+									smsToggle.addEventListener("change", updateInteractivity);
+									emailToggle.addEventListener("change", updateInteractivity);
+									updateInteractivity(); // Initialize on load
+								});
+							</script>
 
 							<div class="form_sep">
 								<div class="pull-left">

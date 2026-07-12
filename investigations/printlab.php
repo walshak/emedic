@@ -409,6 +409,15 @@ if (isset($_POST['display_result_print'])) {
                         <input type="hidden" id="test_to_send" name="test_to_send" value="<?php echo implode(',', $test_req_ids) ?>">
                         <label><strong>Enter eMail Address: </strong></label>
                         <input type="text" maxlength="150" name="result_email_address" id="result_email_address" class="form-control" value="<?= $email; ?>" required>
+                        <br>
+                        
+                        <label>
+                            <input type="checkbox" id="send_sms" name="send_sms" value="yes"> <strong>Send SMS Notification</strong>
+                        </label>
+                        <div id="sms_phone_section" style="display:none; margin-top: 10px;">
+                            <label><strong>Phone Number: </strong></label>
+                            <input type="text" name="result_phone" id="result_phone" class="form-control" value="<?= $phone; ?>">
+                        </div>
                         <br><br>
                         <div class="form-sep form-group">
                             <label for="service_to_use_instant_res">Use InstantResult NG</label>
@@ -436,16 +445,15 @@ if (isset($_POST['display_result_print'])) {
                         <button type="button" id="send_res_btn" onClick="sent_rslt()" class="btn btn-primary btn-sm"><i class="fa fa-mail-forward"></i>&nbsp; Send Result</button>
                     </div>
 
-                    <!-- Add this JavaScript to toggle password field -->
                     <script>
                         document.getElementById('encrypt_pdf').addEventListener('change', function() {
                             var passwordSection = document.getElementById('password_section');
                             passwordSection.style.display = this.checked ? 'block' : 'none';
+                        });
 
-                            // Clear password when unchecking
-                            // if (!this.checked) {
-                            //     document.getElementById('pdf_password').value = '';
-                            // }
+                        document.getElementById('send_sms').addEventListener('change', function() {
+                            var phoneSection = document.getElementById('sms_phone_section');
+                            phoneSection.style.display = this.checked ? 'block' : 'none';
                         });
                     </script>
                 </div>
@@ -505,6 +513,8 @@ if (isset($_POST['display_result_print'])) {
             var test_to_send = document.getElementById("test_to_send").value;
             var encrypt_pdf = document.getElementById("encrypt_pdf").checked ? 'yes' : 'no';
             var pdf_password = document.getElementById("pdf_password").value;
+            var send_sms = document.getElementById("send_sms").checked ? 'yes' : 'no';
+            var phone = document.getElementById("result_phone").value;
             var hosp_no = "<?= $hosp_no; ?>";
             var labrequest_no = "<?= $labrequest_no; ?>";
             var type_patient = "<?= $type_patient; ?>";
@@ -530,6 +540,8 @@ if (isset($_POST['display_result_print'])) {
                     labrequest_no: labrequest_no,
                     type_patient: type_patient,
                     email: email,
+                    phone: phone,
+                    send_sms: send_sms,
                     test_to_send: test_to_send,
                     service_to_use: service_to_use,
                     encrypt_pdf: encrypt_pdf,

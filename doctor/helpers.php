@@ -134,6 +134,12 @@ function save_patient_ap_service(
 
 
     if ($check->rowCount() == 0 || $allow_duplicate == true) {
+        $med_frequency = trim($med_frequency) === '' ? null : $med_frequency;
+        $med_dosage = trim($med_dosage) === '' ? null : $med_dosage;
+        $med_dosage_unit = trim($med_dosage_unit) === '' ? null : $med_dosage_unit;
+        $med_duration = trim($med_duration) === '' ? null : $med_duration;
+        $med_duration_unit = trim($med_duration_unit) === '' ? null : $med_duration_unit;
+
         $stmt = $db->prepare("INSERT INTO patient_ap_services (app_no,hospital_no,access,serv_group,cat_type,dept_id,drug_sn,item_services,tag,hosp_price,claim_amt,interest,qty,remarks,
           drug_status,invoice_status,invoice_no,invoice_date,invoice_by,prepared_by,transact_date,pay,pay_mode,paystatus,process_claim, med_frequency, med_dosage, med_dosage_unit, med_duration, med_duration_unit, created_by, cr, prescription) 
           VALUES  (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
@@ -237,6 +243,12 @@ function save_patient_ap_service_medication(
         $date_entry = date('Y-m-d H:i:s');
 
         if ($check->rowCount() == 0 || $allow_duplicate == true) {
+            $med_frequency = trim($med_frequency) === '' ? null : $med_frequency;
+            $med_dosage = trim($med_dosage) === '' ? null : $med_dosage;
+            $med_dosage_unit = trim($med_dosage_unit) === '' ? null : $med_dosage_unit;
+            $med_duration = trim($med_duration) === '' ? null : $med_duration;
+            $med_duration_unit = trim($med_duration_unit) === '' ? null : $med_duration_unit;
+
             $stmt = $db->prepare("
                 INSERT INTO patient_ap_services (
                     app_no, hospital_no, access, serv_group, cat_type, dept_id, dept_dispensory_id,
