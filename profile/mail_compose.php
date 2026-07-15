@@ -602,7 +602,12 @@ if (isset($_POST["send"]) || isset($_POST["draft"])) {
                                             <i class="fa fa-edit"></i> Customize Recipients
                                         </button>
                                         <small class="text-muted" style="display: block; margin-top: 5px;">
-                                            <i class="fa fa-info-circle"></i> By default, your reply goes to all participants (excluding BCC)
+                                            <i class="fa fa-info-circle"></i> 
+                                            <?php if ($reply_type == 'reply_all'): ?>
+                                                You selected <strong>Reply All</strong>. Your reply goes to the sender and all other visible participants (excluding BCC).
+                                            <?php else: ?>
+                                                You selected <strong>Reply</strong>. Your reply goes strictly to the original sender. Other participants will not receive this.
+                                            <?php endif; ?>
                                         </small>
                                     </div>
                                     <?php endif; ?>

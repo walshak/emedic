@@ -15,7 +15,7 @@ if (isset($_GET['bulk_trash'])) {
         $thread_id = intval($thread_id); // Sanitize
         if ($thread_id > 0) {
             // Mark all messages in thread as deleted for this user in mail_recipients with timestamp
-            $stmt = $db->prepare("UPDATE mail_recipients SET deleted_status='1', updated_at=NOW() WHERE thread_id=:thread_id AND recipient_username=:username");
+            $stmt = $db->prepare("UPDATE mail_recipients SET deleted_status='1', deleted_date=NOW() WHERE thread_id=:thread_id AND recipient_username=:username");
             $stmt->execute([':thread_id' => $thread_id, ':username' => $username]);
         }
     }
@@ -30,7 +30,7 @@ if (isset($_GET['trash_single'])) {
     $username = $_SESSION['username'];
     if ($thread_id > 0) {
         // Mark all messages in thread as deleted for this user in mail_recipients with timestamp
-        $stmt = $db->prepare("UPDATE mail_recipients SET deleted_status='1', updated_at=NOW() WHERE thread_id=:thread_id AND recipient_username=:username");
+        $stmt = $db->prepare("UPDATE mail_recipients SET deleted_status='1', deleted_date=NOW() WHERE thread_id=:thread_id AND recipient_username=:username");
         $stmt->execute([':thread_id' => $thread_id, ':username' => $username]);
         header("Location: mailbox.php?trash_success=1");
         exit;
@@ -81,7 +81,7 @@ if (isset($_GET['trash_single_message'])) {
         $thread_info = $stmt_thread->fetch(PDO::FETCH_ASSOC);
         
         // Mark single message as deleted for this user
-        $stmt = $db->prepare("UPDATE mail_recipients SET deleted_status='1', updated_at=NOW() WHERE mail_id=:mail_id AND recipient_username=:username");
+        $stmt = $db->prepare("UPDATE mail_recipients SET deleted_status='1', deleted_date=NOW() WHERE mail_id=:mail_id AND recipient_username=:username");
         $stmt->execute([':mail_id' => $mail_id, ':username' => $username]);
         
         // Redirect back to thread view
@@ -221,7 +221,7 @@ if (isset($_GET['trash_single_message'])) {
                                 m.from_name,
                                 m.from_username,
                                 m.msg as latest_message,
-                                mr.updated_at as deleted_date,
+                                mr.deleted_date as deleted_date,
                                 (SELECT GROUP_CONCAT(DISTINCT mr2.recipient_name SEPARATOR ', ') 
                                  FROM mail_recipients mr2 
                                  WHERE mr2.thread_id = mt.thread_id 
@@ -233,9 +233,9 @@ if (isset($_GET['trash_single_message'])) {
                                 AND m.mail_date = mt.last_activity
                             WHERE mr.recipient_username = :username
                                 AND mr.deleted_status = '1'
-                                AND mr.updated_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                                AND mr.deleted_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
                             GROUP BY mt.thread_id
-                            ORDER BY mr.updated_at DESC
+                            ORDER BY mr.deleted_date DESC
                         ");
                         $stmt->execute([':username' => $username]);
                     } elseif ($mail_status == 'Draft') {
@@ -311,8 +311,8 @@ if (isset($_GET['trash_single_message'])) {
                                     <tbody>
                                         <?php while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) { ?>
                                             <?php
-                                            // For threaded view (Inbox/Send)
-                                            if (isset($row['thread_id']) && $mail_status != 'Draft' && $mail_status != 'Trash') {
+                                            // For threaded view (Inbox/Send/Trash)
+                                            if (isset($row['thread_id']) && $mail_status != 'Draft') {
                                                 $thread_id = $row['thread_id'];
                                                 $subject = $row['subject'] ?: 'No Subject';
                                                 $unread_count = isset($row['unread_count']) ? intval($row['unread_count']) : 0;
