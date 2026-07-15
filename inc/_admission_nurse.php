@@ -58,10 +58,10 @@
 
 					<td width="20%">
 						<div style=" font-size:14px; color:#300"><strong><?php echo $room_bed; ?></strong></div>
-						<?php if ($_SESSION['rights'] == 'NS' && $admit_type == 'admit_o') { ?>
+						<?php if (in_array($_SESSION['rights'], ['NS', 'MD', 'SA']) && $admit_type == 'admit_o') { ?>
 							<a data-toggle="modal" class="btn btn-danger btn-xs" href="#change_accomodation">Change Admission Type</a>
 						<?php } ?>
-						<?php if ($discharge_request == 0 && $_SESSION['rights'] == 'NS' && $admit_type == 'admit_p') { ?>
+						<?php if ($discharge_request == 0 && in_array($_SESSION['rights'], ['NS', 'MD', 'SA']) && $admit_type == 'admit_p') { ?>
 							<a data-toggle="modal" class="btn btn-warning btn-xs" href="#change_accomodation">Change Room / Dept</a>
 							<?php if ($billable_ == 'yes' and $_SESSION['unit_head'] == '1') { ?>
 								<a href="patient.php?hosp_no=<?= $hospital_no; ?>&stopbill" onclick="return confirm('Are you sure you want to STOP Daily Accommodation Billing?')" class="btn btn-danger btn-xs">Stop Bill</a>
@@ -122,7 +122,9 @@
 
 				<div class="form_sep">
 					<div id="edit__mode" style="color: red;"></div>
-					<div name="mgt_notes_nurse" id="mgt_notes_nurse" class="trumbowygEditor" cols="30" rows="10" style="font-size:17px;"></div>
+					<div id="autosave-status" style="font-size: 14px; color: gray; "> <i class="fa fa-save"></i> Autosave Enabled</div>
+					<div id="autosaving-status" style="font-size: 14px; color: orange; display: none;">Autosaving...</div>
+					<div name="mgt_notes_nurse" id="mgt_notes_nurse" data-hospital_no="<?php echo $_GET['hosp_no'] ?? ''; ?>" data-app_no="<?php echo $_GET['app'] ?? ''; ?>" data-doctor="<?php echo $_SESSION['fullname']; ?>" class="trumbowygEditor" cols="30" rows="10" style="font-size:17px;"></div>
 				</div>
 
 				<div class="form_sep">
@@ -162,7 +164,7 @@
 				$admission_ = 0;
 			}
 
-			if ($adm_status == '0' && $_SESSION['rights'] == 'NS' && $admission_ == 0):
+			if ($adm_status == '0' && in_array($_SESSION['rights'], ['NS', 'MD', 'SA']) && $admission_ == 0):
 
 				if (isset($_GET['error_regamt'])) {
 					$require_amount_b4_adm = $_GET['error_regamt'];
@@ -305,7 +307,7 @@
 
 
 
-<?php if ($_SESSION['rights'] == 'NS') { ?>
+<?php if (in_array($_SESSION['rights'], ['NS', 'MD', 'SA'])) { ?>
 
 	<div class="modal inmodal" id="change_date" tabindex="-1" role="dialog" aria-hidden="true" data-keyboard="false" data-backdrop="static">
 
@@ -685,3 +687,5 @@
 		});
 	</script>
 <?php endif; ?>
+
+<?php include_once('../inc/autosave_widget.php'); ?>

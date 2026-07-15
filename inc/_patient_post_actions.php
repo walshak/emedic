@@ -654,7 +654,10 @@ if (isset($_POST['start_billing'])) {
     $room_bed_sn_ = $_POST['room_bed_sn_'];
     $admission_sn = $_POST['admission_sn'];
 
-    $admit_date_time = date("$admit_date $admit_time");
+    $admit_date_time = trim("$admit_date $admit_time");
+    if (strlen($admit_date_time) < 10) {
+        $admit_date_time = date('Y-m-d H:i:s');
+    }
 
     if (!empty($_REQUEST['services_name'])) {
         if (date('Y-m-d H:i:s') > $admit_date_time) {
@@ -994,7 +997,10 @@ if (isset($_POST['add_admit'])) {
         $floor = $_POST['floor'];
         $isServiceBillable = $_POST['isServiceBillable'];
 
-        $admit_date_time = date("$admit_date $admit_time");
+        $admit_date_time = trim("$admit_date $admit_time");
+        if (strlen($admit_date_time) < 10) {
+            $admit_date_time = date('Y-m-d H:i:s');
+        }
         $setdate = $admit_date_time;
         $serv_group = 'Nursing Services';
         $cat_type = 'Bed Space/Accommodation';
@@ -1569,7 +1575,10 @@ if (isset($_POST['change_adm_date_time'])) {
     $billable_ = $_POST['billable_'];
 
     $time = strtotime('H:i:s', $time_adm_change);
-    $date_admit = $date_adm_change . ' ' . $time_adm_change;
+    $date_admit = trim($date_adm_change . ' ' . $time_adm_change);
+    if (strlen($date_admit) < 10) {
+        $date_admit = date('Y-m-d H:i:s');
+    }
 
     $current_d = date('Y-m-d H:i:s');
 

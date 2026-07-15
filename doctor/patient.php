@@ -3191,6 +3191,7 @@ $doctor_no = $_SESSION['id'];
 
 	<?php include('new_results.php'); ?>
 	<?php include_once('../inc/ai_toolkit_widget.php'); ?>
+	<?php include_once('../inc/autosave_widget.php'); ?>
 
 </body>
 
