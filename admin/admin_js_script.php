@@ -18,14 +18,14 @@ include("../inc/patient_alert.php"); ?>
 
 	<?php
 
-	if ($error_status == 1) { ?>
-		toastr.error('<?php echo $error_msg ?>', 'Error', {
+	if (isset($error_status) && $error_status == 1) { ?>
+		toastr.error('<?php echo isset($error_msg) ? $error_msg : ''; ?>', 'Error', {
 			timeOut: 5000
 		})
 
-	<?php } elseif ($error_status == 2) {
+	<?php } elseif (isset($error_status) && $error_status == 2) {
 	?>
-		toastr.success(' <?php echo $error_msg ?> ', 'Success', {
+		toastr.success(' <?php echo isset($error_msg) ? $error_msg : ''; ?> ', 'Success', {
 			timeOut: 5000
 		})
 	<?php
@@ -90,7 +90,7 @@ include("../inc/patient_alert.php"); ?>
 		})
 	<?php } ?>
 
-	<?php if (isset($_GET['sv']) or isset($_GET['drn'])  or $sv == '1') { ?>
+	<?php if (isset($_GET['sv']) or isset($_GET['drn'])  or (isset($sv) && $sv == '1')) { ?>
 		toastr.success('<?php echo 'Successful'; ?>', 'Successful', {
 			timeOut: 5000
 		})
@@ -110,7 +110,7 @@ include("../inc/patient_alert.php"); ?>
 		})
 	<?php } ?>
 
-	<?php if (isset($_GET['dl']) or isset($_GET['deleted']) or $dl == '1') { ?>
+	<?php if (isset($_GET['dl']) or isset($_GET['deleted']) or (isset($dl) && $dl == '1')) { ?>
 		toastr.error('<?php echo 'Deleted'; ?>', 'Deleted', {
 			timeOut: 5000
 		})
@@ -224,7 +224,7 @@ include("../inc/patient_alert.php"); ?>
 	}
 
 
-	<?php if ($recep_msg != '') { ?>
+	<?php if (isset($recep_msg) && $recep_msg != '') { ?>
 		$(document).ready(function() {
 			$("#myModal").modal('show');
 		});
@@ -238,7 +238,7 @@ include("../inc/patient_alert.php"); ?>
 		let x = myFunction(hospital_number_edit);
 
 		$('#edit_patient_data_modal').modal('show');
-	<?php } elseif ($msg_status == 'show' and !isset($_GET['re_post'])) { ?>
+	<?php } elseif (isset($msg_status) && $msg_status == 'show' and !isset($_GET['re_post'])) { ?>
 		$(document).ready(function() {
 			$("#missing_data_modal").modal('show');
 		});
@@ -255,20 +255,20 @@ include("../inc/patient_alert.php"); ?>
 
 
 
-	<?php if ($dischargetable != '' or $cr_table != '' or $display_status == 1) { ?>
+	<?php if ((isset($dischargetable) && $dischargetable != '') or (isset($cr_table) && $cr_table != '') or (isset($display_status) && $display_status == 1)) { ?>
 		$(document).ready(function() {
 			$("#discharge_booking_modal").modal('show');
 		});
 	<?php  } ?>
 
-	<?php if ($acct_b_table != '') { ?>
+	<?php if (isset($acct_b_table) && $acct_b_table != '') { ?>
 		///alert();
 		$(document).ready(function() {
 			$("#discharge_booking_modal").modal('show');
 		});
 	<?php  } ?>
 
-	<?php if ($auth_table != '') { ?>
+	<?php if (isset($auth_table) && $auth_table != '') { ?>
 		$(document).ready(function() {
 			$("#auth_reminder_modal").modal('show');
 		});
@@ -2164,7 +2164,7 @@ include("../inc/patient_alert.php"); ?>
 			method: "POST",
 			data: {
 				mgt_stock_id: mgt_stock_id,
-				stock_table_to_post: "<?php echo $_GET['stock'] ?>"
+				stock_table_to_post: "<?php echo isset($_GET['stock']) ? $_GET['stock'] : ''; ?>"
 			},
 			success: function(data) {
 				/*

@@ -3,6 +3,7 @@
         <ul class="nav" id="side-menu">
             <?php
             $staff_p = "../staff_photos/";
+            $uname = isset($uname) ? $uname : (isset($_SESSION['username']) ? $_SESSION['username'] : '');
             $photo_path = $staff_p . 'port_' . $uname . '.jpg';
             $photo = file_exists($photo_path) ? $photo_path : '../img/user_avatar_lg.png';
             $unit = ($_SESSION['unit_head'] == 1) ? "Unit Head" : "";
@@ -17,7 +18,7 @@
                     <a data-toggle="dropdown" class="dropdown-toggle" href="javascript:void(0)">
                         <span class="clear">
                             <span class="block m-t-xs">
-                                <strong class="font-bold"><?php echo $fullname; ?></strong>
+                                <strong class="font-bold"><?php echo isset($fullname) ? $fullname : (isset($_SESSION['fullname']) ? $_SESSION['fullname'] : ''); ?></strong>
                             </span>
                             <span class="text-muted text-xs block">
                                 <?php

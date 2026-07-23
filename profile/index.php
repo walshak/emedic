@@ -12,9 +12,9 @@ include('../inc/header.php');
 define('UPLOADPATH', '../uploads/staff/');
 define('MAXFILESIZE', 300000);
 
-$upload_type = $_POST["upload_type"];
-$username = $_POST["username"];
-$filename = $upload_type . '_' . $_POST["username"];
+$upload_type = isset($_POST["upload_type"]) ? $_POST["upload_type"] : '';
+$username = isset($_POST["username"]) ? $_POST["username"] : '';
+$filename = $upload_type . '_' . $username;
 
 if ((isset($_POST["MM_update"])) && ($_POST["MM_update"] == "passport")) {
 

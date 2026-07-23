@@ -9,14 +9,16 @@ if (isset($_GET["dl"])) {
 	header("location:index.php?LV");
 }
 
+$LV = '';
+$rowx = array('leave_type'=>'', 'days'=>'', 'approver1'=>'', 'approver2'=>'', 'apply_type'=>'');
+$edit_mode = 0;
+
 if (isset($_GET["LV"])) {
 	$LV = $_GET["LV"];
 	if ($LV != '') {
 		$edit_mode = 1;
 		$stmt = $db->query("Select * from hrlv where sn='$LV'");
 		$rowx = $stmt->fetch(PDO::FETCH_ASSOC);
-	} else {
-		$edit_mode = 0;
 	}
 }
 
@@ -194,6 +196,7 @@ if (isset($_POST["LV"])) {
 
 							<?php
 							$n = 1;
+							$colordecide = 0;
 							while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 								if ($colordecide % 2 == 0) {
 									$bgcolor = "#F4F4F4";

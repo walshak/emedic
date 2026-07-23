@@ -345,7 +345,7 @@ if ($query->execute([$staff_id])) {
             timeOut: 5000
         })
     <?php } ?>
-    <?php if (isset($_GET['errors'])  or $errors == '1') { ?>
+    <?php if (isset($_GET['errors'])  or (isset($errors) && $errors == '1')) { ?>
         toastr.success('<?php echo 'Error'; ?>', 'An error occured', {
             timeOut: 5000
         })
