@@ -494,7 +494,7 @@ WHERE (adm_status=3 OR adm_status=0) AND hospital_no = ? order by sn DESC LIMIT 
 														<a data-toggle="tab" href="#med-hx-tab" style="color: black; font-size:15px;"><i class="fa fa-database"></i> [ Medical History ] </a>
 													</li>
 
-													<?php if ($admission_info->adm_status == 0  or $admission_count > 0 or  $adm_status == 3) { ?>
+													<?php if (($admission_info && $admission_info->adm_status == 0)  or $admission_count > 0 or  $adm_status == 3) { ?>
 
 
 
@@ -586,7 +586,7 @@ WHERE (adm_status=3 OR adm_status=0) AND hospital_no = ? order by sn DESC LIMIT 
 													</div>
 
 
-													<?php if ($admission_info->adm_status == 0  or $admission_count > 0 or  $adm_status == 3) { ?>
+													<?php if (($admission_info && $admission_info->adm_status == 0)  or $admission_count > 0 or  $adm_status == 3) { ?>
 														<div id="adm-tab" class="tab-pane <?= ($current_tab == 'adm' ? " active" : ""); ?>">
 															<div class="animated fadeInRight">
 																<div class="">

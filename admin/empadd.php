@@ -6,7 +6,7 @@ if ($query_rstSelect->rowCount() == 0) {
 	$EmployeeCode = sprintf('%003d', '1');
 } else {
 	$row_rstSelect = $query_rstSelect->fetch(PDO::FETCH_ASSOC);
-	$EmployeeCode = 1 + $row_rstSelect['EmployeeCode'];
+	$EmployeeCode = 1 + (int)$row_rstSelect['EmployeeCode'];
 	$EmployeeCode = sprintf('%003d', $EmployeeCode);
 }
 include('_uploadDocumentModal.php'); //include the file that contains the generic modal for uploading other staff docs

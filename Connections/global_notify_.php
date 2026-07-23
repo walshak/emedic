@@ -34,11 +34,12 @@ if (!function_exists('global_notify_')) {
     function global_notify_($db, $type, $pattern, $title, $message, $sender = null)
     {
         try {
-            // Only start transaction if one isn't already active (avoid nested transactions)
             $startedTransaction = false;
-            if (!$db->inTransaction()) {
-                $db->beginTransaction();
-                $startedTransaction = true;
+            if (PHP_VERSION_ID >= 70000) {
+                if (!$db->inTransaction()) {
+                    $db->beginTransaction();
+                    $startedTransaction = true;
+                }
             }
 
             $now = date("Y-m-d H:i:s");
@@ -173,7 +174,6 @@ if (!function_exists('global_notify_')) {
                     ));
                 }
 
-                // Only commit if this function started the transaction
                 if ($startedTransaction) {
                     $db->commit();
                 }
@@ -184,15 +184,13 @@ if (!function_exists('global_notify_')) {
                     'recipient_count' => count($recipients)
                 );
             } else {
-                // Only rollback if this function started the transaction
                 if ($startedTransaction) {
                     $db->rollBack();
                 }
                 return array('success' => false, 'error' => 'Notification not inserted.');
             }
         } catch (Exception $e) {
-            // Only rollback if this function started the transaction
-            if ($startedTransaction) {
+            if (isset($startedTransaction) && $startedTransaction) {
                 $db->rollBack();
             }
             error_log("Notification error: " . $e->getMessage());
