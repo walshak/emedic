@@ -26,6 +26,8 @@ To store these configurations dynamically, the `hospital_details` table requires
 
 ```sql
 ALTER TABLE `hospital_details` 
+ADD `twilio_sid` VARCHAR(255) NULL DEFAULT NULL,
+ADD `twilio_auth_token` VARCHAR(255) NULL DEFAULT NULL,
 ADD `twilio_phone_number` VARCHAR(50) NULL DEFAULT NULL,
 ADD `welcome_email_template` TEXT NULL DEFAULT NULL,
 ADD `welcome_sms_template` TEXT NULL DEFAULT NULL;

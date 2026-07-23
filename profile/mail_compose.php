@@ -124,7 +124,7 @@ if (isset($_POST["send"]) || isset($_POST["draft"])) {
                         UPDATE mail_threads 
                         SET last_activity = :last_activity, 
                             message_count = message_count + 1 
-                        WHERE thread_id = :thread_id
+                        WHERE id = :thread_id
                     ");
                     $stmt_update_thread->execute([
                         ':last_activity' => $setdate,
@@ -171,7 +171,7 @@ if (isset($_POST["send"]) || isset($_POST["draft"])) {
                 
                 // Update thread with original_mail_id (only for new threads)
                 if ($reply_type == 'new') {
-                    $stmt_update = $db->prepare("UPDATE mail_threads SET original_mail_id = :mail_id WHERE thread_id = :thread_id");
+                    $stmt_update = $db->prepare("UPDATE mail_threads SET original_mail_id = :mail_id WHERE id = :thread_id");
                     $stmt_update->execute([':mail_id' => $mail_id, ':thread_id' => $thread_id]);
                 }
                 
@@ -706,6 +706,9 @@ if (isset($_POST["send"]) || isset($_POST["draft"])) {
                                                 // Reset the statement to get all users again
                                                 $stmt2->execute();
                                                 while ($roww = $stmt2->fetch(PDO::FETCH_ASSOC)) { 
+                                                    // Exclude current logged in user from CC/BCC list
+                                                    if ($roww['username'] == $_SESSION['username']) continue;
+                                                    
                                                     $user_value = $roww["fullname"] . '/' . $roww["username"];
                                                     
                                                     // Pre-select CC recipients for reply_all
@@ -719,6 +722,12 @@ if (isset($_POST["send"]) || isset($_POST["draft"])) {
                                                     </option>
                                                 <?php } ?>
                                             </select>
+                                            
+                                            <div class="m-t-xs" style="margin-bottom: 10px;">
+                                                <a href="javascript:void(0);" onclick="select_all_additional()" class="text-info"><i class="fa fa-check-square-o"></i> Select All</a> &nbsp;|&nbsp; 
+                                                <a href="javascript:void(0);" onclick="deselect_all_additional()" class="text-danger"><i class="fa fa-square-o"></i> Deselect All</a>
+                                            </div>
+                                            
                                             <div class="m-t-xs">
                                                 <div id="mode-indicator" class="alert" style="padding: 8px 12px; margin-bottom: 10px;">
                                                     <i class="fa fa-users"></i> 
@@ -852,20 +861,52 @@ if (isset($_POST["send"]) || isset($_POST["draft"])) {
 
         // JavaScript for "Select All" functionality
         function select_all_u() {
-            console.log('clicked');
             $('#users-select option').prop('selected', true);
             $('#users-select').trigger('chosen:updated');
         }
 
-        // JavaScript for "Select All" functionality
+        // JavaScript for "Deselect All" functionality
         function deselect_all_u() {
-            console.log('clicked');
             $('#users-select option').prop('selected', false);
             $('#users-select').trigger('chosen:updated');
+        }
+
+        // JavaScript for "Select All" functionality for CC/BCC
+        function select_all_additional() {
+            $('#additional-select option:not(:disabled)').prop('selected', true);
+            $('#additional-select').trigger('chosen:updated');
+        }
+
+        // JavaScript for "Deselect All" functionality for CC/BCC
+        function deselect_all_additional() {
+            $('#additional-select option').prop('selected', false);
+            $('#additional-select').trigger('chosen:updated');
         }
         
         // Additional Recipients Management (CC or BCC mode)
         var currentMode = 'cc'; // Default mode
+        
+        // Exclude main recipient from additional recipients
+        $('#users-select').on('change', function() {
+            var selectedTo = $(this).val();
+            if (!selectedTo) selectedTo = [];
+            if (!Array.isArray(selectedTo)) selectedTo = [selectedTo];
+            
+            $('#additional-select option').each(function() {
+                if (selectedTo.includes(this.value)) {
+                    $(this).prop('disabled', true);
+                    $(this).prop('selected', false);
+                } else {
+                    $(this).prop('disabled', false);
+                }
+            });
+            $('#additional-select').trigger('chosen:updated');
+        });
+        
+        // Trigger on load
+        $(document).ready(function() {
+            $('#users-select').trigger('change');
+        });
         
         $('#add-cc-btn').on('click', function(e) {
             e.preventDefault();

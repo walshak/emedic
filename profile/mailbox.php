@@ -144,7 +144,7 @@ if (isset($_GET['trash_single_message'])) {
                         // For inbox, get threads where user is a recipient
                         $stmt = $db->prepare("
                             SELECT 
-                                mt.thread_id,
+                                mt.id as thread_id,
                                 mt.subject,
                                 mt.created_date,
                                 mt.last_activity,
@@ -156,23 +156,23 @@ if (isset($_GET['trash_single_message'])) {
                                 m.from_username,
                                 m.msg as latest_message,
                                 (SELECT COUNT(*) FROM mail_recipients mr 
-                                 WHERE mr.thread_id = mt.thread_id 
+                                 WHERE mr.thread_id = mt.id 
                                  AND mr.recipient_username = :username 
                                  AND mr.read_status = '0') as unread_count,
                                 (SELECT GROUP_CONCAT(DISTINCT mr2.recipient_name SEPARATOR ', ') 
                                  FROM mail_recipients mr2 
-                                 WHERE mr2.thread_id = mt.thread_id 
+                                 WHERE mr2.thread_id = mt.id 
                                  AND mr2.recipient_type IN ('to', 'cc')
                                  LIMIT 5) as all_recipients
                             FROM mail_threads mt
-                            INNER JOIN mail_recipients mr ON mr.thread_id = mt.thread_id
-                            INNER JOIN mails m ON m.thread_id = mt.thread_id 
+                            INNER JOIN mail_recipients mr ON mr.thread_id = mt.id
+                            INNER JOIN mails m ON m.thread_id = mt.id 
                                 AND m.mail_date = mt.last_activity
                             WHERE mr.recipient_username = :username2
                                 AND mr.deleted_status = '0'
-                            GROUP BY mt.thread_id
+                            GROUP BY mt.id
                             ORDER BY (SELECT COUNT(*) FROM mail_recipients mr3 
-                                     WHERE mr3.thread_id = mt.thread_id 
+                                     WHERE mr3.thread_id = mt.id 
                                      AND mr3.recipient_username = :username3
                                      AND mr3.read_status = '0') DESC,
                                      mt.last_activity DESC
@@ -182,7 +182,7 @@ if (isset($_GET['trash_single_message'])) {
                         // For sent, get threads created by user
                         $stmt = $db->prepare("
                             SELECT 
-                                mt.thread_id,
+                                mt.id as thread_id,
                                 mt.subject,
                                 mt.created_date,
                                 mt.last_activity,
@@ -196,11 +196,11 @@ if (isset($_GET['trash_single_message'])) {
                                 0 as unread_count,
                                 (SELECT GROUP_CONCAT(DISTINCT mr2.recipient_name SEPARATOR ', ') 
                                  FROM mail_recipients mr2 
-                                 WHERE mr2.thread_id = mt.thread_id 
+                                 WHERE mr2.thread_id = mt.id 
                                  AND mr2.recipient_type IN ('to', 'cc')
                                  LIMIT 5) as all_recipients
                             FROM mail_threads mt
-                            INNER JOIN mails m ON m.thread_id = mt.thread_id 
+                            INNER JOIN mails m ON m.thread_id = mt.id 
                                 AND m.mail_date = mt.last_activity
                             WHERE mt.created_by = :username
                             ORDER BY mt.last_activity DESC
@@ -210,7 +210,7 @@ if (isset($_GET['trash_single_message'])) {
                         // For trash, show deleted threads (only last 30 days)
                         $stmt = $db->prepare("
                             SELECT 
-                                mt.thread_id,
+                                mt.id as thread_id,
                                 mt.subject,
                                 mt.created_date,
                                 mt.last_activity,
@@ -224,17 +224,17 @@ if (isset($_GET['trash_single_message'])) {
                                 mr.deleted_date as deleted_date,
                                 (SELECT GROUP_CONCAT(DISTINCT mr2.recipient_name SEPARATOR ', ') 
                                  FROM mail_recipients mr2 
-                                 WHERE mr2.thread_id = mt.thread_id 
+                                 WHERE mr2.thread_id = mt.id 
                                  AND mr2.recipient_type IN ('to', 'cc')
                                  LIMIT 5) as all_recipients
                             FROM mail_threads mt
-                            INNER JOIN mail_recipients mr ON mr.thread_id = mt.thread_id
-                            INNER JOIN mails m ON m.thread_id = mt.thread_id 
+                            INNER JOIN mail_recipients mr ON mr.thread_id = mt.id
+                            INNER JOIN mails m ON m.thread_id = mt.id 
                                 AND m.mail_date = mt.last_activity
                             WHERE mr.recipient_username = :username
                                 AND mr.deleted_status = '1'
                                 AND mr.deleted_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-                            GROUP BY mt.thread_id
+                            GROUP BY mt.id
                             ORDER BY mr.deleted_date DESC
                         ");
                         $stmt->execute([':username' => $username]);
