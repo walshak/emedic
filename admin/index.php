@@ -1271,12 +1271,15 @@ if (
 
 			$(document).ready(function() {
 				var input = document.getElementById("search");
-				input.addEventListener("keyup", function(event) {
-					if (event.keyCode === 13) {
-						event.preventDefault();
-						document.getElementById("apply_action").click();
-					}
-				});
+				if (input) {
+					input.addEventListener("keyup", function(event) {
+						if (event.keyCode === 13) {
+							event.preventDefault();
+							var applyAction = document.getElementById("apply_action");
+							if (applyAction) applyAction.click();
+						}
+					});
+				}
 			});
 
 
@@ -1582,10 +1585,10 @@ if (
 
 		<script>
 			<?php
-			if ($error_status == 1) { ?>toastr.error('<?php echo $error_msg ?>', 'Error', {
+			if (isset($error_status) && $error_status == 1) { ?>toastr.error('<?php echo isset($error_msg) ? $error_msg : ''; ?>', 'Error', {
 				timeOut: 5000
 			})
-			<?php } else if ($error_status == 2) { ?>toastr.success(' <?php echo $error_msg ?> ', 'Success', {
+			<?php } else if (isset($error_status) && $error_status == 2) { ?>toastr.success(' <?php echo isset($error_msg) ? $error_msg : ''; ?> ', 'Success', {
 				timeOut: 5000
 			})
 			<?php } ?>
@@ -1654,12 +1657,15 @@ if (
 				};
 
 
-				var ctx = document.getElementById("lineChart").getContext("2d");
-				new Chart(ctx, {
-					type: 'line',
-					data: lineData,
-					options: lineOptions
-				});
+				var lineChartElement = document.getElementById("lineChart");
+				if (lineChartElement) {
+					var ctx = lineChartElement.getContext("2d");
+					new Chart(ctx, {
+						type: 'line',
+						data: lineData,
+						options: lineOptions
+					});
+				}
 
 			<?php } ?>
 
@@ -1684,12 +1690,15 @@ if (
 				};
 
 
-				var ctx2 = document.getElementById("barChart2").getContext("2d");
-				new Chart(ctx2, {
-					type: 'bar',
-					data: barData_data,
-					options: barOptions
-				});
+				var barChart2Element = document.getElementById("barChart2");
+				if (barChart2Element) {
+					var ctx2 = barChart2Element.getContext("2d");
+					new Chart(ctx2, {
+						type: 'bar',
+						data: barData_data,
+						options: barOptions
+					});
+				}
 			<?php } ?>
 
 			var barData = {
@@ -1697,17 +1706,17 @@ if (
 				datasets: [
 
 					{
-						label: "<?php echo $label; ?>",
+						label: "<?php echo isset($label) ? $label : ''; ?>",
 						backgroundColor: 'rgba(26,179,148,0.5)',
 						borderColor: "rgba(26,179,148,0.7)",
 						pointBackgroundColor: "rgba(26,179,148,1)",
 						pointBorderColor: "#fff",
-						data: [<?php echo $data; ?>]
+						data: [<?php echo isset($data) ? $data : ''; ?>]
 					}, {
-						label: "<?php echo $label2; ?>",
+						label: "<?php echo isset($label2) ? $label2 : ''; ?>",
 						backgroundColor: 'rgba(220, 220, 220, 0.5)',
 						pointBorderColor: "#fff",
-						data: [<?php echo $data2; ?>]
+						data: [<?php echo isset($data2) ? $data2 : ''; ?>]
 					}
 
 				]
@@ -1718,16 +1727,19 @@ if (
 			};
 
 
-			var ctx2 = document.getElementById("barChart").getContext("2d");
-			new Chart(ctx2, {
-				type: 'bar',
-				data: barData,
-				options: barOptions
-			});
+			var barChartElement = document.getElementById("barChart");
+			if (barChartElement) {
+				var ctx2 = barChartElement.getContext("2d");
+				new Chart(ctx2, {
+					type: 'bar',
+					data: barData,
+					options: barOptions
+				});
+			}
 
 
 
-			<?php if ($data_pc != '') { ?>
+			<?php if (isset($data_pc) && $data_pc != '') { ?>
 
 				$(document).ready(function() {
 
@@ -1946,7 +1958,7 @@ if (
 							</div>
 
 							<div class="form_sep">
-								<label><input type="checkbox" name="send_welcome_sms" id="send_welcome_sms" value="1" checked> Send Welcome SMS</label>
+								<label><input type="checkbox" name="send_welcome_sms" id="send_welcome_sms" value="1"> Send Welcome SMS</label>
 							</div>
 
 							<div class="form_sep">
@@ -1955,7 +1967,7 @@ if (
 							</div>
 
 							<div class="form_sep">
-								<label><input type="checkbox" name="send_welcome_email" id="send_welcome_email" value="1" checked> Send Welcome Email</label>
+								<label><input type="checkbox" name="send_welcome_email" id="send_welcome_email" value="1"> Send Welcome Email</label>
 							</div>
 
 							<div class="form_sep" id="email_field_container">
@@ -2668,14 +2680,14 @@ if (
 
 			<?php
 
-			if ($error_status == 1) { ?>
-				toastr.error('<?php echo $error_msg ?>', 'Error', {
+			if (isset($error_status) && $error_status == 1) { ?>
+				toastr.error('<?php echo isset($error_msg) ? $error_msg : ''; ?>', 'Error', {
 					timeOut: 5000
 				})
 
-			<?php } else if ($error_status == 2) {
+			<?php } else if (isset($error_status) && $error_status == 2) {
 			?>
-				toastr.success(' <?php echo $error_msg ?> ', 'Success', {
+				toastr.success(' <?php echo isset($error_msg) ? $error_msg : ''; ?> ', 'Success', {
 					timeOut: 5000
 				})
 			<?php

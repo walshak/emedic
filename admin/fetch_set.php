@@ -3043,7 +3043,7 @@ if (isset($_POST["departmentId_stock_"])) {
 									<input type="hidden" name="dob" value="<?= $dob; ?>">
 									<input type="hidden" name="gender" value="<?= $gender; ?>">
 									<div class="form_sep" style="margin-bottom:10px;">
-										<label><input type="checkbox" name="send_welcome_sms" class="send_welcome_sms_exist" value="1" checked> Send Welcome SMS</label>
+										<label><input type="checkbox" name="send_welcome_sms" class="send_welcome_sms_exist" value="1"> Send Welcome SMS</label>
 									</div>
 									<div class="form_sep sms_phone_container" style="margin-bottom:10px;">
 										<label class="req">Phone No:</label>
@@ -3051,7 +3051,7 @@ if (isset($_POST["departmentId_stock_"])) {
 									</div>
 
 									<div class="form_sep" style="margin-bottom:10px;">
-										<label><input type="checkbox" name="send_welcome_email" class="send_welcome_email_exist" value="1" checked> Send Welcome Email</label>
+										<label><input type="checkbox" name="send_welcome_email" class="send_welcome_email_exist" value="1"> Send Welcome Email</label>
 									</div>
 									<div class="form_sep email_container" style="margin-bottom:10px;">
 										<label class="req">Email Address:</label>
