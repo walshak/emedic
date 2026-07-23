@@ -35,7 +35,7 @@ if (isset($_POST['getTemplate'])) {
 // =========================
 // DECODE HOSPITAL/APP NUMBER
 // =========================
-$decoded = cleanInput($_GET['hosp_no'] ?? '');
+$decoded = cleanInput(isset($_GET['hosp_no']) ? $_GET['hosp_no'] : '');
 $decoded = base64_decode(base64_decode($decoded));
 
 list($hosp_no, $app_no) = array_pad(explode('||', $decoded), 2, null);
@@ -66,7 +66,7 @@ $ap_type       = 0;
 ?>
 <title>WebMedic | <?= !empty($_SESSION['Designation'])
                         ? htmlspecialchars($_SESSION['Designation'])
-                        : htmlspecialchars($_SESSION['speciality'] ?? '') ?>
+                        : htmlspecialchars(isset($_SESSION['speciality']) ? $_SESSION['speciality'] : '') ?>
 </title>
 
 <script src="js/jquery-3.1.1.min.js"></script>

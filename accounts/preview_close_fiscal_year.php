@@ -61,9 +61,9 @@ try {
     $retained_earnings = $income_total + $expense_total;
     
     $balances = getPreviewBalances($db, $current_year_id);
-    $assets = floatval($balances['assets'] ?? 0);
-    $liabilities = floatval($balances['liabilities'] ?? 0);
-    $equity = floatval($balances['equity'] ?? 0);
+    $assets = floatval(isset($balances['assets']) ? $balances['assets'] : 0);
+    $liabilities = floatval(isset($balances['liabilities']) ? $balances['liabilities'] : 0);
+    $equity = floatval(isset($balances['equity']) ? $balances['equity'] : 0);
 
     echo json_encode([
         'success' => true,

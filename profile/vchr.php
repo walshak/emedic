@@ -22,7 +22,7 @@ $dept_id = $_SESSION['dept_id'];
 function containsKeywords($string)
 {
     // Convert null to empty string to avoid deprecation warning
-    $string = $string ?? '';
+    $string = isset($string) ? $string : '';
 
     $keywords = array('LB', 'RD', 'PH', 'NS', 'CA', 'RE', 'nursing');
     $pattern = '/' . implode('|', array_map('preg_quote', $keywords)) . '/i';

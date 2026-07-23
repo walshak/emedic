@@ -708,7 +708,7 @@ if (isset($_POST["save_users"])) {
 
 		foreach ($map as $dbField => $postKey) {
 			$oldValue = $oldData[$dbField];
-			$newValue = $_POST[$postKey]; // no ?? null
+			$newValue = isset($_POST[$postKey]) ? $_POST[$postKey] : null; // no ?? null
 			if ($oldValue != $newValue) {
 				$changes[] = "$dbField changed from '{$oldValue}' to '{$newValue}'";
 			}

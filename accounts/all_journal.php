@@ -9,8 +9,8 @@ if (isset($_GET['start']) && isset($_GET['end'])) {
 	$end = $_GET['end'];
 
 	$prep = $_GET['prepared_by'];
-	$gl_acct = $_GET['account'] ?? '';
-	$selected_accounts = $_GET['account'] ?? ''; // Store original array
+	$gl_acct = isset($_GET['account']) ? $_GET['account'] : '';
+	$selected_accounts = isset($_GET['account']) ? $_GET['account'] : ''; // Store original array
 	$gl_acct = ($selected_accounts) ? implode(',', $selected_accounts) : ''; // Create comma-separated string for IN clause
 
 	$stmt_bnk_33 = $db->prepare("SELECT class_id FROM chart_accounts as c 

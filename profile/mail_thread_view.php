@@ -14,7 +14,7 @@ if ($thread_id == 0) {
 }
 
 // Get thread info
-$stmt_thread = $db->prepare("SELECT * FROM mail_threads WHERE thread_id = :thread_id");
+$stmt_thread = $db->prepare("SELECT * FROM mail_threads WHERE id = :thread_id");
 $stmt_thread->execute([':thread_id' => $thread_id]);
 $thread = $stmt_thread->fetch(PDO::FETCH_ASSOC);
 
@@ -57,7 +57,7 @@ $stmt_messages = $db->prepare("
          WHERE mr.mail_id = m.sn) as all_recipients,
         (SELECT mr2.deleted_status 
          FROM mail_recipients mr2 
-         WHERE mr2.mail_id = m.sn AND mr2.recipient_username = :username3) as is_deleted_by_me
+         WHERE mr2.mail_id = m.sn AND mr2.recipient_username = :username3 LIMIT 1) as is_deleted_by_me
     FROM mails m
     INNER JOIN mail_recipients mr ON mr.mail_id = m.sn
     WHERE m.thread_id = :thread_id
@@ -512,7 +512,7 @@ function getVisibleRecipients($all_recipients_str, $current_user, $message_sende
                                                 'txt' => 'fa-file-text-o',
                                                 'csv' => 'fa-file-excel-o',
                                             ];
-                                            return $icons[$ext] ?? 'fa-file-o';
+                                            return isset($icons[$ext]) ? $icons[$ext] : 'fa-file-o';
                                         }
                                         
                                         // Helper function to format file size

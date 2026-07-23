@@ -124,7 +124,7 @@
 					<div id="edit__mode" style="color: red;"></div>
 					<div id="autosave-status" style="font-size: 14px; color: gray; "> <i class="fa fa-save"></i> Autosave Enabled</div>
 					<div id="autosaving-status" style="font-size: 14px; color: orange; display: none;">Autosaving...</div>
-					<div name="mgt_notes_nurse" id="mgt_notes_nurse" data-hospital_no="<?php echo $_GET['hosp_no'] ?? ''; ?>" data-app_no="<?php echo $_GET['app'] ?? ''; ?>" data-doctor="<?php echo $_SESSION['fullname']; ?>" class="trumbowygEditor" cols="30" rows="10" style="font-size:17px;"></div>
+					<div name="mgt_notes_nurse" id="mgt_notes_nurse" data-hospital_no="<?php echo isset($_GET['hosp_no']) ? $_GET['hosp_no'] : ''; ?>" data-app_no="<?php echo isset($_GET['app']) ? $_GET['app'] : ''; ?>" data-doctor="<?php echo $_SESSION['fullname']; ?>" class="trumbowygEditor" cols="30" rows="10" style="font-size:17px;"></div>
 				</div>
 
 				<div class="form_sep">

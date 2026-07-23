@@ -15,7 +15,7 @@ if (!isset($_SESSION['username'])) {
 // Release session lock to prevent blocking other concurrent AJAX requests (e.g. polling vs remote DB connect)
 session_write_close();
 
-$action = $_GET['action'] ?? $_POST['action'] ?? '';
+$action = isset($_GET['action']) ? $_GET['action'] : (isset($_POST['action']) ? $_POST['action'] : '');
 $root_dir = dirname(__DIR__);
 
 // Helper to get crontab
@@ -227,10 +227,10 @@ if ($action === 'get_replicate_config') {
 }
 
 if ($action === 'save_replicate_config') {
-    $host = $_POST['host'] ?? '';
-    $user = $_POST['user'] ?? '';
-    $pass = $_POST['pass'] ?? '';
-    $db = $_POST['db'] ?? '';
+    $host = isset($_POST['host']) ? $_POST['host'] : '';
+    $user = isset($_POST['user']) ? $_POST['user'] : '';
+    $pass = isset($_POST['pass']) ? $_POST['pass'] : '';
+    $db = isset($_POST['db']) ? $_POST['db'] : '';
     
     $env_file = $root_dir . '/replicate_config.env';
     $content = "REMOTE_HOST=\"$host\"\n";
@@ -288,7 +288,7 @@ if ($action === 'list_usb_devices') {
 }
 
 if ($action === 'list_backups_for_device') {
-    $path = $_POST['path'] ?? '';
+    $path = isset($_POST['path']) ? $_POST['path'] : '';
     
     // Security check: ensure path is either ~/backups or under /media or /mnt
     $local_dir = trim(shell_exec("bash -c 'echo ~/backups'"));
@@ -429,7 +429,7 @@ if ($action === 'probe_remote_db') {
 }
 
 if ($action === 'probe_remote_table_sample') {
-    $table = $_POST['table'] ?? '';
+    $table = isset($_POST['table']) ? $_POST['table'] : '';
     if (empty($table)) send_json(['status' => 'error', 'msg' => 'No table provided.']);
 
     // Load remote DB config

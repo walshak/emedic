@@ -280,7 +280,7 @@ if (isset($_POST["MM_update"]) == "add_new_patient_start") {
 								'name' => strtoupper($surname) . ' ' . strtoupper($fname) . ' ' . strtoupper($oname),
 								'hospital_no' => $hospital_no,
 								'phone'       => $sendSms ? $_POST['phoneno'] : '',
-								'email'       => $sendEmail ? ($_POST['email'] ?? '') : '' 
+								'email'       => $sendEmail ? (isset($_POST['email']) ? $_POST['email'] : '') : ''
 							];
 							$notifier->sendWelcome($patientData);
 						} catch (Exception $e) {

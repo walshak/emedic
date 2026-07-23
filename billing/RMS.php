@@ -17,8 +17,8 @@ if ($insurance_type === 'Family') {
     $stmt->execute([':insurance_no' => $insurance_no]);
 
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    $old_bal = $row['bal'] ?? 0;
-    ///$emr     = $row['hospital_no'] ?? $emr;
+    $old_bal = isset($row['bal']) ? $row['bal'] : 0;
+    ///$emr     = isset($row['hospital_no']) ? $row['hospital_no'] : $emr;
 } else {
 
     $stmt = $db->prepare("
@@ -31,7 +31,7 @@ if ($insurance_type === 'Family') {
     $stmt->execute([':hosp_no' => $emr]);
 
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    $old_bal = $row['bal'] ?? 0;
+    $old_bal = isset($row['bal']) ? $row['bal'] : 0;
     $insurance_no = '1000';
 }
 
