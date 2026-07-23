@@ -1,18 +1,18 @@
-<?php include("../Connections/Conn.php"); ?>
+<?php include(__DIR__ . "/../Connections/Conn.php"); ?>
 
 <?php
 session_start();
-include('../inc/header.php');
+include(__DIR__ . '/../inc/header.php');
 ?>
 
 <body class="fixed-navigation">
 	<div id="wrapper">
 
-		<?php include("nav_side.php"); ?>
+		<?php include(__DIR__ . "/nav_side.php"); ?>
 
 		<div id="page-wrapper" class="gray-bg sidebar-content">
 
-			<?php include '../../inc/nav_header.php'; ?>
+			<?php include __DIR__ . '/../inc/nav_header.php'; ?>
 			<div class="">
 
 
@@ -73,22 +73,22 @@ include('../inc/header.php');
 				</div>
 
 
-				<?php include '../../inc/footer.php'; ?>
+				<?php include __DIR__ . '/../inc/footer.php'; ?>
 
 			</div>
 		</div>
 
 
-		<?php include('../modal_lock.php'); ?>
-		<?php include("../inc/footer_scripts.php"); ?>
+		<?php include(__DIR__ . '/../modal_lock.php'); ?>
+		<?php include(__DIR__ . "/../inc/footer_scripts.php"); ?>
 
 
 		<script>
 			<?php
-			if ($error_status == 1) { ?>toastr.error('<?php echo $error_msg; ?>', 'Error', {
+			if (isset($error_status) && $error_status == 1) { ?>toastr.error('<?php echo isset($error_msg) ? $error_msg : ''; ?>', 'Error', {
 				timeOut: 5000
 			})
-			<?php } elseif ($error_status == 2) { ?>toastr.success(' <?php echo $error_msg; ?> ', 'Success', {
+			<?php } elseif (isset($error_status) && $error_status == 2) { ?>toastr.success(' <?php echo isset($error_msg) ? $error_msg : ''; ?> ', 'Success', {
 				timeOut: 5000
 			})
 			<?php } ?>
