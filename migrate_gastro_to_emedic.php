@@ -74,8 +74,8 @@ try {
 
             // Create in hremp
             $names = explode(' ', $g_user['FullName'], 2);
-            $fname = $names[0] ?? '';
-            $lname = $names[1] ?? '';
+            $fname = isset($names[0]) ? $names[0] : '';
+            $lname = isset($names[1]) ? $names[1] : '';
 
             $insert_hr = $db_emedic->prepare("INSERT INTO hremp (EmployeeCode, FirstName, LastName, username, status) VALUES (?, ?, ?, ?, 1)");
             $insert_hr->execute([
@@ -167,8 +167,8 @@ try {
 
     foreach ($gastro_appts as $g_appt) {
         $new_appt_no = getNextApptNo($db_emedic);
-        $hosp_no = $patient_map[$g_appt['PatientID']] ?? null;
-        $doc_id = $user_map[$g_appt['UserID']] ?? null;
+        $hosp_no = isset($patient_map[$g_appt['PatientID']]) ? $patient_map[$g_appt['PatientID']] : null;
+        $doc_id = isset($user_map[$g_appt['UserID']]) ? $user_map[$g_appt['UserID']] : null;
 
         if (!$hosp_no) continue; // Skip if patient mapping failed (orphaned record)
 
@@ -211,7 +211,7 @@ try {
     $notes_added = 0;
 
     foreach ($gastro_consultations as $g_cons) {
-        $mapped_appt = $appt_map[$g_cons['Ap_ID']] ?? null;
+        $mapped_appt = isset($appt_map[$g_cons['Ap_ID']]) ? $appt_map[$g_cons['Ap_ID']] : null;
         if (!$mapped_appt) continue; // Skip orphaned
 
         $appt_no = $mapped_appt['appt_no'];
@@ -229,14 +229,20 @@ try {
 
         // 1. Consolidate Clinical Note (History, Physical Exam, Plan)
         $clinical_note_html = "";
-        if (!empty(trim($g_cons['History']))) {
-            $clinical_note_html .= "<p><h3>History:</h3><br>" . nl2br(htmlspecialchars($g_cons['History'])) . "</p>";
+        
+        $history = trim($g_cons['History']);
+        if (!empty($history) && strtolower($history) !== 'null') {
+            $clinical_note_html .= "<p><h3>History:</h3><br>" . nl2br(htmlspecialchars($history)) . "</p>";
         }
-        if (!empty(trim($g_cons['PysicalExam']))) {
-            $clinical_note_html .= "<p><h3>Physical Exam:</h3><br>" . nl2br(htmlspecialchars($g_cons['PysicalExam'])) . "</p>";
+        
+        $physical = trim($g_cons['PysicalExam']);
+        if (!empty($physical) && strtolower($physical) !== 'null') {
+            $clinical_note_html .= "<p><h3>Physical Exam:</h3><br>" . nl2br(htmlspecialchars($physical)) . "</p>";
         }
-        if (!empty(trim($g_cons['Plan']))) {
-            $clinical_note_html .= "<p><h3>Plan:</h3><br>" . nl2br(htmlspecialchars($g_cons['Plan'])) . "</p>";
+        
+        $plan = trim($g_cons['Plan']);
+        if (!empty($plan) && strtolower($plan) !== 'null') {
+            $clinical_note_html .= "<p><h3>Plan:</h3><br>" . nl2br(htmlspecialchars($plan)) . "</p>";
         }
 
         if (!empty($clinical_note_html)) {
@@ -247,8 +253,9 @@ try {
         }
 
         // 2. Extract Diagnosis into separate note (notes_type 'D')
-        if (!empty(trim($g_cons['Diagnosis']))) {
-            $diagnosis_html = "<div width='100%'><i><strong>Diagnosis: </strong></i><br> " . htmlspecialchars($g_cons['Diagnosis']) . " <br></div>";
+        $diagnosis = trim($g_cons['Diagnosis']);
+        if (!empty($diagnosis) && strtolower($diagnosis) !== 'null') {
+            $diagnosis_html = "<div width='100%'><i><strong>Diagnosis: </strong></i><br> " . htmlspecialchars($diagnosis) . " <br></div>";
             $insert_diag = $db_emedic->prepare("INSERT INTO notes (app_no, hospital_no, notes, tag, notes_type, prepared_by, created_by, date_entry, status) 
                                                 VALUES (?, ?, ?, 'DR', 'D', ?, ?, ?, '1')");
             $insert_diag->execute([$appt_no, $hosp_no, $diagnosis_html, $doc_name, $doc_id, $date_entry]);

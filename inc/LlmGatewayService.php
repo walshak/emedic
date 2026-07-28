@@ -116,7 +116,7 @@ class LlmGatewayService
         $data = json_decode($response, true);
 
         if (isset($data['error'])) {
-            throw new Exception('OpenAI API error: ' . ($data['error']['message'] ?? json_encode($data['error'])));
+            throw new Exception('OpenAI API error: ' . (isset($data['error']['message']) ? $data['error']['message'] : json_encode($data['error'])));
         }
 
         return isset($data['choices'][0]['message']['content']) ? $data['choices'][0]['message']['content'] : '';
@@ -145,7 +145,7 @@ class LlmGatewayService
         $data = json_decode($response, true);
 
         if (isset($data['error'])) {
-            throw new Exception('Anthropic API error: ' . ($data['error']['message'] ?? json_encode($data['error'])));
+            throw new Exception('Anthropic API error: ' . (isset($data['error']['message']) ? $data['error']['message'] : json_encode($data['error'])));
         }
 
         return isset($data['content'][0]['text']) ? $data['content'][0]['text'] : '';
@@ -178,7 +178,7 @@ class LlmGatewayService
         $data = json_decode($response, true);
 
         if (isset($data['error'])) {
-            throw new Exception('Gemini API error: ' . ($data['error']['message'] ?? json_encode($data['error'])));
+            throw new Exception('Gemini API error: ' . (isset($data['error']['message']) ? $data['error']['message'] : json_encode($data['error'])));
         }
 
         return isset($data['candidates'][0]['content']['parts'][0]['text']) ? $data['candidates'][0]['content']['parts'][0]['text'] : '';

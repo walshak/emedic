@@ -4,7 +4,7 @@ include('../Connections/Conn.php');
 
 if (isset($_POST['consumable_table'])) {
 
-  $search = $_POST['input_text'] ?? '';
+  $search = isset($_POST['input_text']) ? $_POST['input_text'] : '';
 
   $sql = "
     SELECT product_name, sn

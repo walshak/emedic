@@ -133,7 +133,7 @@ if ($procSns) {
 if (!empty($filters['paystatus'])) {
     $filterStatus = intval($filters['paystatus']); // 1 = Paid, 0 = Unpaid
     $displayRows = array_filter($displayRows, function ($r) use ($paymentData, $filterStatus) {
-        $pay = $paymentData[$r['sale_no']] ?? null;
+        $pay = isset($paymentData[$r['sale_no']]) ? $paymentData[$r['sale_no']] : null;
         if (!$pay) return $filterStatus === 0; // treat missing payment as unpaid
         return intval($pay['paystatus']) === $filterStatus;
     });
@@ -151,11 +151,11 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
     $out = fopen('php://output', 'w');
     fputcsv($out, ['Hospital No', 'Name', 'Procedure', 'Insurance', 'Department', 'Consultant', 'Performed Date', 'Cost', 'Payment Status', 'Pay Mode', 'Resources']);
     foreach ($displayRows as $r) {
-        $pay = $paymentData[$r['sale_no']] ?? [];
+        $pay = isset($paymentData[$r['sale_no']]) ? $paymentData[$r['sale_no']] : [];
         $resTxt = isset($resourcePersons[$r['sn']]) ? implode(", ", $resourcePersons[$r['sn']]) : '';
         $payStatus = isset($pay['paystatus']) ? ($pay['paystatus'] == 1 ? 'Paid' : 'Unpaid') : 'Unpaid';
         $performDate = !empty($r['performed_date']) ? date("Y-m-d", strtotime($r['performed_date'])) : '';
-        fputcsv($out, [$r['hospital_no'], $r['name'], $r['procedures'], $r['insurance_type'], $r['department'], $r['consultant_name'], $performDate, $r['cost'], $payStatus, $pay['pay_mode'] ?? '', $resTxt]);
+        fputcsv($out, [$r['hospital_no'], $r['name'], $r['procedures'], $r['insurance_type'], $r['department'], $r['consultant_name'], $performDate, $r['cost'], $payStatus, isset($pay['pay_mode']) ? $pay['pay_mode'] : '', $resTxt]);
     }
     fclose($out);
     exit;
@@ -266,8 +266,8 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                 <tbody>
                     <?php foreach ($displayRows as $r):
                         $sn = $r['sn'];
-                        $pay = $paymentData[$r['sale_no']] ?? [];
-                        $resTxt = $resourcePersons[$sn] ?? [];
+                        $pay = isset($paymentData[$r['sale_no']]) ? $paymentData[$r['sale_no']] : [];
+                        $resTxt = isset($resourcePersons[$sn]) ? $resourcePersons[$sn] : [];
                         $resTxt = implode("<br>", $resTxt);
                         $cost = is_numeric($r['cost']) ? floatval($r['cost']) : 0;
                         $totalCost += $cost;
@@ -280,7 +280,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                         if (isset($pay['paystatus'])) {
                             if ($pay['paystatus'] == 1) {
                                 $paidCount++;
-                                $totalPaid += floatval($pay['pay'] ?? 0);
+                                $totalPaid += floatval(isset($pay['pay']) ? $pay['pay'] : 0);
                             } else $unpaidCount++;
                         } else {
                             $unpaidCount++;
@@ -300,7 +300,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                             <td><?php echo $performDate; ?></td>
                             <td align="right"><?php echo number_format($cost, 2); ?></td>
                             <td><?php echo $payStatus; ?></td>
-                            <td><?php echo $pay['pay_mode'] ?? ''; ?></td>
+                            <td><?php echo isset($pay['pay_mode']) ? $pay['pay_mode'] : ''; ?></td>
                             <td><?php echo $resTxt; ?></td>
                         </tr>
                     <?php endforeach; ?>

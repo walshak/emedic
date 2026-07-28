@@ -7,11 +7,11 @@ if (!isset($_GET['rpt_type']) || $_GET['rpt_type'] !== 'ps') {
 
 $setdate = date('Y-m-d');
 
-$ddset = $_GET['ddset'] ?? 0;
-$start = $_GET['start'] ?? null;
-$to = $_GET['to'] ?? null;
-$dept_id = $_GET['dept_id'] ?? null;
-$staff = $_GET['staff'] ?? '';
+$ddset = isset($_GET['ddset']) ? $_GET['ddset'] : 0;
+$start = isset($_GET['start']) ? $_GET['start'] : null;
+$to = isset($_GET['to']) ? $_GET['to'] : null;
+$dept_id = isset($_GET['dept_id']) ? $_GET['dept_id'] : null;
+$staff = isset($_GET['staff']) ? $_GET['staff'] : '';
 
 $bindParams = [
     ':drug_status' => 1,

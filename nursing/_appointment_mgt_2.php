@@ -257,7 +257,7 @@ WHERE hospital_no = ? and date(date_ap)='$vb_date' ORDER BY sn desc LIMIT 1");
 
 										<div id="autosave-status" style="font-size: 14px; color: gray; "> <i class="fa fa-save"></i> Autosave Enabled</div>
 										<div id="autosaving-status" style="font-size: 14px; color: orange; display: none;">Autosaving...</div>
-										<div name="mgt_notes" id="mgt_notes" data-hospital_no="<?php echo $_GET['hosp_no'] ?? ''; ?>" data-app_no="<?php echo $_GET['app'] ?? ''; ?>" data-doctor="<?php echo $_SESSION['fullname']; ?>" class="trumbowygEditor" cols="30" rows="10" style="font-size: 17px; height: 500px;"></div>
+										<div name="mgt_notes" id="mgt_notes" data-hospital_no="<?php echo isset($_GET['hosp_no']) ? $_GET['hosp_no'] : ''; ?>" data-app_no="<?php echo isset($_GET['app']) ? $_GET['app'] : ''; ?>" data-doctor="<?php echo $_SESSION['fullname']; ?>" class="trumbowygEditor" cols="30" rows="10" style="font-size: 17px; height: 500px;"></div>
 
 
 										<div class="pull-right"><small>Template Name: [ <?= $template_name; ?> ]</small></div>

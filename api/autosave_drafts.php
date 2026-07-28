@@ -16,14 +16,14 @@ function generateDraftTitle($content) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $action = $_POST['action'] ?? '';
+    $action = isset($_POST['action']) ? $_POST['action'] : '';
     
     if ($action === 'save') {
-        $hospital_no = $_POST['hospital_no'] ?? '';
-        $app_no = $_POST['app_no'] ?? '';
-        $doctor = $_POST['doctor'] ?? '';
-        $content = $_POST['content'] ?? '';
-        $draft_id = $_POST['draft_id'] ?? ''; // Optional, if we want to overwrite a specific restored draft
+        $hospital_no = isset($_POST['hospital_no']) ? $_POST['hospital_no'] : '';
+        $app_no = isset($_POST['app_no']) ? $_POST['app_no'] : '';
+        $doctor = isset($_POST['doctor']) ? $_POST['doctor'] : '';
+        $content = isset($_POST['content']) ? $_POST['content'] : '';
+        $draft_id = isset($_POST['draft_id']) ? $_POST['draft_id'] : ''; // Optional, if we want to overwrite a specific restored draft
         
         $title = generateDraftTitle($content);
         $saved_at = date('Y-m-d H:i:s');
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     
     if ($action === 'delete') {
-        $id = $_POST['id'] ?? '';
+        $id = isset($_POST['id']) ? $_POST['id'] : '';
         $stmt = $db->prepare("DELETE FROM autosave WHERE id = ?");
         $stmt->execute([$id]);
         echo json_encode(['status' => 'success']);
@@ -68,10 +68,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     if ($action === 'cleanup') {
-        $hospital_no = $_POST['hospital_no'] ?? '';
-        $app_no = $_POST['app_no'] ?? '';
-        $doctor = $_POST['doctor'] ?? '';
-        $draft_id = $_POST['draft_id'] ?? '';
+        $hospital_no = isset($_POST['hospital_no']) ? $_POST['hospital_no'] : '';
+        $app_no = isset($_POST['app_no']) ? $_POST['app_no'] : '';
+        $doctor = isset($_POST['doctor']) ? $_POST['doctor'] : '';
+        $draft_id = isset($_POST['draft_id']) ? $_POST['draft_id'] : '';
         
         // Delete current app_no draft
         if (!empty($app_no)) {
@@ -88,11 +88,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         exit;
     }
 } elseif ($_SERVER['REQUEST_METHOD'] == 'GET') {
-    $action = $_GET['action'] ?? '';
+    $action = isset($_GET['action']) ? $_GET['action'] : '';
     
     if ($action === 'list') {
-        $hospital_no = $_GET['hospital_no'] ?? '';
-        $doctor = $_GET['doctor'] ?? '';
+        $hospital_no = isset($_GET['hospital_no']) ? $_GET['hospital_no'] : '';
+        $doctor = isset($_GET['doctor']) ? $_GET['doctor'] : '';
         
         $stmt = $db->prepare("SELECT id, app_no, title, saved_at FROM autosave WHERE hospital_no = ? AND doctor = ? ORDER BY saved_at DESC");
         $stmt->execute([$hospital_no, $doctor]);
@@ -103,8 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     
     if ($action === 'get') {
-        $id = $_GET['id'] ?? '';
-        $doctor = $_GET['doctor'] ?? '';
+        $id = isset($_GET['id']) ? $_GET['id'] : '';
+        $doctor = isset($_GET['doctor']) ? $_GET['doctor'] : '';
         $stmt = $db->prepare("SELECT id, content FROM autosave WHERE id = ? AND doctor = ?");
         $stmt->execute([$id, $doctor]);
         $draft = $stmt->fetch(PDO::FETCH_ASSOC);

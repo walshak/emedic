@@ -308,4 +308,4 @@ if (!$_ai_enabled) return; // Don't render anything if AI is not configured
 </div>
 
 <!-- ─── Script ────────────────────────────────────────────── -->
-<script src="/js/ai-toolkit.js"></script>
+<script src="../js/ai-toolkit.js"></script>
