@@ -216,7 +216,7 @@ function getDefaultSummaryPrompt()
 5. Recent lab results (if notable)
 6. Key clinical considerations
 
-Use clear, professional medical language. Use markdown headings and bullet points for readability. Keep it concise but comprehensive. Do NOT fabricate any data - only summarize what is provided.";
+Use clear, professional medical language. Use HTML formatting for readability (e.g. <h3>, <ul>, <li>, <p>). Keep it concise but comprehensive. Do NOT fabricate any data - only summarize what is provided. Do NOT output markdown.";
 }
 
 function getDefaultPolishPrompt()
@@ -225,8 +225,8 @@ function getDefaultPolishPrompt()
 1. Fix spelling, grammar, and punctuation errors
 2. Expand common medical abbreviations where appropriate (e.g., 'htn' → 'hypertension', 'sob' → 'shortness of breath')
 3. Improve sentence structure while preserving the clinical meaning exactly
-4. Format into clear paragraphs with SOAP-style sections if applicable
+4. Format into clear paragraphs with SOAP-style sections if applicable, using HTML tags (e.g. <p>, <b>, <br>)
 5. Do NOT add any clinical information that was not in the original note
 6. Do NOT change medical facts, dosages, or clinical observations
-7. Return ONLY the polished note text, no commentary or explanations";
+7. Return ONLY the polished note text as formatted HTML, no markdown, no commentary or explanations";
 }

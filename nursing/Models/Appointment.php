@@ -35,16 +35,12 @@ class Appointment
 
     public function genAppNo()
     {
-        $sql = "SELECT appt_no FROM apptm ORDER BY sn DESC LIMIT 1 ";
+        $sql = "SELECT MAX(CAST(appt_no AS UNSIGNED)) AS max_appt FROM apptm WHERE appt_no REGEXP '^[0-9]+$'";
         $stmt = $this->dbCon->prepare($sql);
         $stmt->execute();
-        if ($stmt->rowCount() == 0) {
-            $app_no = "000001";
-        } else {
-            $rwx = $stmt->fetch(PDO::FETCH_ASSOC);
-            $app_no = 1 + $rwx['appt_no'];
-            $app_no = sprintf('%006d', $app_no);
-        }
+        $rwx = $stmt->fetch(PDO::FETCH_ASSOC);
+        $last_appt = isset($rwx['max_appt']) ? (int)$rwx['max_appt'] : 0;
+        $app_no = sprintf('%06d', $last_appt + 1);
 
         return $app_no;
     }

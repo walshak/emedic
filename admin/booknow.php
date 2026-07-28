@@ -6,10 +6,10 @@ if (isset($_POST['finalbook_now'])) {
 
 	try {
 
-		$stmt = $db->query("SELECT MAX(sn) AS last_sn FROM apptm");
+		$stmt = $db->query("SELECT MAX(CAST(appt_no AS UNSIGNED)) AS max_appt FROM apptm WHERE appt_no REGEXP '^[0-9]+$'");
 		$row = $stmt->fetch(PDO::FETCH_ASSOC);
-		$last_sn = isset($row['last_sn']) ? (int)$row['last_sn'] : 0;
-		$appt_no = sprintf('%06d', $last_sn + 1);
+		$last_appt = isset($row['max_appt']) ? (int)$row['max_appt'] : 0;
+		$appt_no = sprintf('%06d', $last_appt + 1);
 
 		$hos_no = $_POST['hosp_no'];
 		$item_sn = $_POST['item_sn'];
@@ -87,7 +87,8 @@ if (isset($_POST['finalbook_now'])) {
 					if ($stmt->execute()) {
 						$lastInsertId = $db->lastInsertId();
 					} else {
-						header("location:index.php?bk_err");
+						$err = implode(" ", $stmt->errorInfo());
+						header("location:index.php?bk_err=" . urlencode("db_insert_failed: $err"));
 						exit;
 					}
 
@@ -173,7 +174,7 @@ if (isset($_POST['finalbook_now'])) {
 						$deleteStmt1->execute();
 
 						echo $response;
-						echo '<a href="index.php?bk_err">Click here to go to Main Page!!</a>';
+						echo '<a href="index.php?bk_err=' . urlencode('patient_ap_services_failed: ' . $response) . '">Click here to go to Main Page!!</a>';
 						exit;
 					}
 
@@ -240,11 +241,14 @@ if (isset($_POST['finalbook_now'])) {
 					header("Location: {$redirect}");
 					exit;
 				} else {
-					header("location:index.php?bk_err&appointment_already_exist");
+					header("location:index.php?bk_err=appointment_no_collision");
 				}
+			} else {
+				header("location:index.php?bk_err=active_appointment_exists");
+				exit;
 			}
 		} else {
-			header("location:index.php?bk_err");
+			header("location:index.php?bk_err=missing_duration_or_item");
 		}
 	} catch (Exception $e) {
 
@@ -253,7 +257,7 @@ if (isset($_POST['finalbook_now'])) {
 		$deleteStmt1->execute();
 
 		echo '<div style="color:red;">Error: ' . htmlspecialchars($e->getMessage()) . '</div>';
-		echo '<a href="index.php?bk_err">Click here to go to Main Page!</a>';
+		echo '<a href="index.php?bk_err=exception_' . urlencode($e->getMessage()) . '">Click here to go to Main Page!</a>';
 		exit;
 	}
 }

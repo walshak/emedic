@@ -18,8 +18,11 @@ if (isset($_POST["admin_settings_id"])) {
 	$openai_key = isset($llm_config['providers']['openai']['api_key']) ? $llm_config['providers']['openai']['api_key'] : '';
 	$anthropic_key = isset($llm_config['providers']['anthropic']['api_key']) ? $llm_config['providers']['anthropic']['api_key'] : '';
 	$gemini_key = isset($llm_config['providers']['gemini']['api_key']) ? $llm_config['providers']['gemini']['api_key'] : '';
-	$prompt_summary = isset($llm_config['system_prompts']['patient_summary']) ? $llm_config['system_prompts']['patient_summary'] : '';
-	$prompt_polish = isset($llm_config['system_prompts']['polish_note']) ? $llm_config['system_prompts']['polish_note'] : '';
+	$prompt_summary = isset($llm_config['system_prompts']['patient_summary']) && !empty($llm_config['system_prompts']['patient_summary']) ? $llm_config['system_prompts']['patient_summary'] : "You are a clinical summarizer for a hospital Electronic Medical Record system. Given the patient's clinical data, generate a concise, professional clinical summary suitable for a doctor's quick review. Include:<br>1. Patient overview (demographics, key identifiers)<br>2. Active problems and diagnoses<br>3. Recent clinical findings and vitals<br>4. Current medications<br>5. Recent lab results (if notable)<br>6. Key clinical considerations<br><br>Use clear, professional medical language. Use HTML formatting for readability (e.g. &lt;h3&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;p&gt;). Keep it concise but comprehensive. Do NOT fabricate any data - only summarize what is provided. Do NOT output markdown.";
+	$prompt_polish = isset($llm_config['system_prompts']['polish_note']) && !empty($llm_config['system_prompts']['polish_note']) ? $llm_config['system_prompts']['polish_note'] : "You are a medical note editor. Your task is to polish and clean up clinical notes written by healthcare professionals. Rules:<br>1. Fix spelling, grammar, and punctuation errors<br>2. Expand common medical abbreviations where appropriate (e.g., 'htn' &rarr; 'hypertension', 'sob' &rarr; 'shortness of breath')<br>3. Improve sentence structure while preserving the clinical meaning exactly<br>4. Format into clear paragraphs with SOAP-style sections if applicable, using HTML tags (e.g. &lt;p&gt;, &lt;b&gt;, &lt;br&gt;)<br>5. Do NOT add any clinical information that was not in the original note<br>6. Do NOT change medical facts, dosages, or clinical observations<br>7. Return ONLY the polished note text as formatted HTML, no markdown, no commentary or explanations";
+	
+	$default_welcome_email = "<p>Dear [PatientName],</p><p>Welcome to <strong>[HospitalName]</strong>! We are delighted to have you as our patient.</p><p>Your Hospital ID is: <strong>[PatientID]</strong></p><p>Please keep this ID safe as you will need it for future visits.</p><p>Thank you for choosing us.</p>";
+	$default_welcome_sms = "Welcome [PatientName] to [HospitalName]! Your Hospital ID is [PatientID]. We're glad to have you with us.";
 	?>
 
 	
@@ -210,11 +213,11 @@ if (isset($_POST["admin_settings_id"])) {
                     </div>
                     <div class="form_sep">
                         <label>Welcome Email Template (HTML supported)</label>
-                        <textarea name="welcome_email_template" class="form-control summernote" rows="8"><?php echo isset($rwxx['welcome_email_template']) ? htmlspecialchars($rwxx['welcome_email_template']) : ''; ?></textarea>
+                        <textarea name="welcome_email_template" class="form-control trumbowygEditor" rows="8"><?php echo isset($rwxx['welcome_email_template']) && !empty($rwxx['welcome_email_template']) ? htmlspecialchars($rwxx['welcome_email_template']) : htmlspecialchars($default_welcome_email); ?></textarea>
                     </div>
                     <div class="form_sep">
                         <label>Welcome SMS Template (Plain Text)</label>
-                        <textarea name="welcome_sms_template" class="form-control" rows="4"><?php echo isset($rwxx['welcome_sms_template']) ? htmlspecialchars($rwxx['welcome_sms_template']) : ''; ?></textarea>
+                        <textarea name="welcome_sms_template" class="form-control" rows="4"><?php echo isset($rwxx['welcome_sms_template']) && !empty($rwxx['welcome_sms_template']) ? htmlspecialchars($rwxx['welcome_sms_template']) : htmlspecialchars($default_welcome_sms); ?></textarea>
                     </div>
                 </div>
 
@@ -259,12 +262,12 @@ if (isset($_POST["admin_settings_id"])) {
                         <hr>
                         <h4>Custom System Prompts (Optional)</h4>
                         <div class="form-group">
-                            <label>Patient Summary Prompt</label>
-                            <textarea name="llm_config[system_prompts][patient_summary]" class="form-control" rows="3" placeholder="Default prompt will be used if empty..."><?= htmlspecialchars($prompt_summary) ?></textarea>
+                            <label>Patient Summary Prompt (HTML Supported)</label>
+                            <textarea name="llm_config[system_prompts][patient_summary]" class="form-control trumbowygEditor" rows="8" placeholder="Default prompt will be used if empty..."><?= htmlspecialchars($prompt_summary) ?></textarea>
                         </div>
                         <div class="form-group">
-                            <label>Note Polishing Prompt</label>
-                            <textarea name="llm_config[system_prompts][polish_note]" class="form-control" rows="3" placeholder="Default prompt will be used if empty..."><?= htmlspecialchars($prompt_polish) ?></textarea>
+                            <label>Note Polishing Prompt (HTML Supported)</label>
+                            <textarea name="llm_config[system_prompts][polish_note]" class="form-control trumbowygEditor" rows="8" placeholder="Default prompt will be used if empty..."><?= htmlspecialchars($prompt_polish) ?></textarea>
                         </div>
                     </div>
                 </div>

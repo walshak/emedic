@@ -43,9 +43,11 @@ include("../inc/patient_alert.php"); ?>
 			timeOut: 5000
 		})
 	<?php } ?>
-	<?php if (isset($_GET['bk_err'])) { ?>
-		toastr.error('<?php echo 'Unable to book appointment re-start again '; ?>', 'Error', {
-			timeOut: 5000
+	<?php if (isset($_GET['bk_err'])) { 
+		$err_reason = !empty($_GET['bk_err']) ? ' (' . htmlspecialchars($_GET['bk_err']) . ')' : '';
+	?>
+		toastr.error('<?php echo 'Unable to book appointment re-start again '; ?>' + '<?php echo $err_reason; ?>', 'Error', {
+			timeOut: 10000
 		})
 	<?php } ?>
 
@@ -2842,6 +2844,11 @@ include("../inc/patient_alert.php"); ?>
 				$('.modal-title').text('Admin Settings');
 
 				$('#admin_settings_body').html(data);
+				
+				if ($.fn.trumbowyg) {
+					$('#admin_settings_body .trumbowygEditor').trumbowyg();
+				}
+				
 				$('#admin_settings_modal').modal('show');
 			}
 		});
