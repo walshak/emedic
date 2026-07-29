@@ -109,6 +109,8 @@ function add_me($descriptn, $descriptn_sn, $setdatetime)
 
 if (isset($_POST["MM_update"]) == "add_new_patient_start") {
 
+	try {
+
 	if (isset($_POST["PatientExist"]) and $_POST["PatientExist"] != '') {
 		$PatientExist = '1';
 	} else {
@@ -196,9 +198,9 @@ if (isset($_POST["MM_update"]) == "add_new_patient_start") {
 			$stmt->bindParam(':hospital_no', $hospital_no, PDO::PARAM_STR);
 			$stmt->bindParam(':hmo_no', $hmo_no, PDO::PARAM_STR); // Assuming $hmo_no is defined elsewhere
 			$stmt->bindParam(':insurance', $insurance, PDO::PARAM_STR); // Assuming $insurance is defined elsewhere
-			$stmt->bindParam(':surname', strtoupper($surname), PDO::PARAM_STR);
-			$stmt->bindParam(':fname', strtoupper($fname), PDO::PARAM_STR);
-			$stmt->bindParam(':oname', strtoupper($oname), PDO::PARAM_STR);
+			$stmt->bindValue(':surname', strtoupper($surname), PDO::PARAM_STR);
+			$stmt->bindValue(':fname', strtoupper($fname), PDO::PARAM_STR);
+			$stmt->bindValue(':oname', strtoupper($oname), PDO::PARAM_STR);
 			$stmt->bindParam(':gender', $_POST['gender'], PDO::PARAM_STR); // Assuming gender is from $_POST
 			$stmt->bindParam(':dob', $_POST['dob'], PDO::PARAM_STR); // Assuming dob is from $_POST
 			$stmt->bindParam(':age', $age, PDO::PARAM_STR); // Assuming $age is defined elsewhere
@@ -298,6 +300,12 @@ if (isset($_POST["MM_update"]) == "add_new_patient_start") {
 		}
 	} else {
 		echo 'PatientExist';
+	}
+
+	} catch (Exception $e) {
+		http_response_code(200); // Return 200 so the AJAX success handler can display the error
+		error_log("Patient registration error: " . $e->getMessage());
+		echo "REG_ERROR: " . $e->getMessage();
 	}
 }
 

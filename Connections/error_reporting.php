@@ -6,12 +6,22 @@ ini_set('error_log', 'php-error.log');
 
 // Session configuration
 if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_set_cookie_params([
-        'lifetime' => 3600, // 1 hour
-        'path' => '/',
-        'domain' => isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : null,
-        'secure' => true, // Enable in production (HTTPS)
-        'httponly' => true,
-        'samesite' => 'Strict'
-    ]);
+    if (PHP_VERSION_ID >= 70300) {
+        session_set_cookie_params([
+            'lifetime' => 3600,
+            'path' => '/',
+            'domain' => isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : null,
+            'secure' => true,
+            'httponly' => true,
+            'samesite' => 'Strict'
+        ]);
+    } else {
+        session_set_cookie_params(
+            3600,
+            '/',
+            isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '',
+            true,
+            true
+        );
+    }
 }

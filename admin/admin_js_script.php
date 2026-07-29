@@ -92,7 +92,7 @@ include("../inc/patient_alert.php"); ?>
 		})
 	<?php } ?>
 
-	<?php if (isset($_GET['sv']) or isset($_GET['drn'])  or (isset($sv) && $sv == '1')) { ?>
+	<?php if (isset($_GET['sv']) or isset($_GET['drn']) or (isset($sv) && $sv == '1')) { ?>
 		toastr.success('<?php echo 'Successful'; ?>', 'Successful', {
 			timeOut: 5000
 		})
