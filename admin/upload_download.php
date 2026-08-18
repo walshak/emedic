@@ -1,8 +1,11 @@
 <?php
+require_once(__DIR__ . '/../Connections/Conn.php');
+
 if (isset($_POST['upload_data_button'])) {
 	$typeoftable = $_POST['typeoftable'];
 	if ($typeoftable == 'Pharmacy' or $typeoftable == 'Nursing Consumable' or $typeoftable == 'Store') {
-		$stmt = $db->query("SELECT sn FROM department where department='$typeoftable'");
+		$stmt = $db->prepare("SELECT sn FROM department where department = ?");
+		$stmt->execute([$typeoftable]);
 		if ($stmt->rowCount() > 0) {
 			$row = $stmt->fetch(PDO::FETCH_ASSOC);
 			$dept_id = $row["sn"];

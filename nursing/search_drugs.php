@@ -22,7 +22,7 @@ if (isset($_POST['drug_search_typeahead'])) {
                 m.product_name,
                 ' Qty: [', COALESCE(m.qty, '0'), ']',
                 CASE
-                    WHEN d.expire_date IS NULL OR d.expire_date = '' OR d.expire_date = '0000-00-00' 
+                    WHEN d.expire_date IS NULL OR CAST(d.expire_date AS CHAR) = '' OR CAST(d.expire_date AS CHAR) = '0000-00-00' 
                     THEN ''
                     WHEN DATE(d.expire_date) <= DATE_ADD(CURRENT_DATE, INTERVAL 6 MONTH)
                     THEN CONCAT(' **exp in ', DATEDIFF(d.expire_date, CURRENT_DATE), ' days**')
@@ -36,7 +36,7 @@ if (isset($_POST['drug_search_typeahead'])) {
             d.expire_date,
             COALESCE(m.qty, 0) as qty,
             CASE
-                WHEN d.expire_date IS NULL OR d.expire_date = '' OR d.expire_date = '0000-00-00' 
+                WHEN d.expire_date IS NULL OR CAST(d.expire_date AS CHAR) = '' OR CAST(d.expire_date AS CHAR) = '0000-00-00' 
                 THEN 0
                 WHEN DATE(d.expire_date) <= DATE_ADD(CURRENT_DATE, INTERVAL 6 MONTH)
                 THEN 1
@@ -56,7 +56,7 @@ if (isset($_POST['drug_search_typeahead'])) {
                 product_name,
                 ' Qty: [', COALESCE(qty, '0'), ']',
                 CASE
-                    WHEN expire_date IS NULL OR expire_date = '' OR expire_date = '0000-00-00' 
+                    WHEN expire_date IS NULL OR CAST(expire_date AS CHAR) = '' OR CAST(expire_date AS CHAR) = '0000-00-00' 
                     THEN ''
                     WHEN DATE(expire_date) <= DATE_ADD(CURRENT_DATE, INTERVAL 6 MONTH)
                     THEN CONCAT(' **exp in ', DATEDIFF(expire_date, CURRENT_DATE), ' days**')
@@ -70,7 +70,7 @@ if (isset($_POST['drug_search_typeahead'])) {
             expire_date,
             COALESCE(qty, 0) as qty,
             CASE
-                WHEN expire_date IS NULL OR expire_date = '' OR expire_date = '0000-00-00' 
+                WHEN expire_date IS NULL OR CAST(expire_date AS CHAR) = '' OR CAST(expire_date AS CHAR) = '0000-00-00' 
                 THEN 0
                 WHEN DATE(expire_date) <= DATE_ADD(CURRENT_DATE, INTERVAL 6 MONTH)
                 THEN 1

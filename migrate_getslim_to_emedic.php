@@ -405,9 +405,9 @@ $schemas = [
 
     foreach ($schemas as $tbl => $create_sql) {
         $db_target->exec($create_sql);
-        $db_target->exec("TRUNCATE TABLE `$tbl`");
+        // $db_target->exec("TRUNCATE TABLE `$tbl`"); // Removed to append gracefully
     }
-    echo "[*] Tables ready and cleared for fresh migration.\n\n";
+    echo "[*] Tables ready and prepared for migration.\n\n";
 
 } catch (PDOException $e) {
     die("[!] Database Connection Failed: " . $e->getMessage() . "\n");
@@ -506,6 +506,14 @@ try {
 
     $patients_added = 0;
     foreach ($getslim_patients as $g_patient) {
+        $check = $db_target->prepare("SELECT hospital_no FROM enrollee WHERE old_hospital_no = ?");
+        $check->execute([$g_patient['upi']]);
+        if ($check->rowCount() > 0) {
+            $existing = $check->fetch(PDO::FETCH_ASSOC);
+            $patient_map[$g_patient['upi']] = $existing['hospital_no'];
+            continue;
+        }
+
         $new_hospital_no = getNextHospitalNo($db_target);
 
         $fname = $g_patient['forename'] ?? '';
@@ -515,9 +523,24 @@ try {
             $surname = "Patient";
         }
         
+        $age = null;
+        if (!empty($g_patient['dob'])) {
+            $dob_dt = new DateTime($g_patient['dob']);
+            $now = new DateTime();
+            $diff = $now->diff($dob_dt);
+            if ($diff->y > 0) {
+                $age = $diff->y;
+            } elseif ($diff->m > 0) {
+                $age = $diff->m . " mths";
+                if ($diff->d > 0) $age .= " " . $diff->d . " days";
+            } else {
+                $age = $diff->d . " days";
+            }
+        }
+        
         $insert_pat = $db_target->prepare("INSERT INTO enrollee 
-            (hospital_no, old_hospital_no, fname, surname, dob, gender, email, addr, state_lga, phone, date_capture, captured_by, visit_status, validation_status) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Migration Script', 'New', 1)");
+            (hospital_no, old_hospital_no, fname, surname, dob, age, gender, email, addr, state_lga, phone, date_capture, captured_by, visit_status, validation_status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Migration Script', 'New', 1)");
 
         $insert_pat->execute([
             $new_hospital_no,
@@ -525,6 +548,7 @@ try {
             $fname,
             $surname,
             $g_patient['dob'] ?? null,
+            $age,
             $g_patient['gender'] ?? null,
             $g_patient['email'] ?? null,
             $g_patient['address'] ?? null,
@@ -566,12 +590,21 @@ try {
         $hosp_no = isset($patient_map[$g_sess['upi']]) ? $patient_map[$g_sess['upi']] : null;
         if (!$hosp_no) continue;
 
+        $datetime = $g_sess['created_at'] ?: date('Y-m-d H:i:s');
+
+        $check_appt = $db_target->prepare("SELECT appt_no FROM apptm WHERE hospital_no = ? AND ap_date_time = ?");
+        $check_appt->execute([$hosp_no, $datetime]);
+        if ($check_appt->rowCount() > 0) {
+            $existing = $check_appt->fetch(PDO::FETCH_ASSOC);
+            $session_appt_map[$g_sess['session_id']] = $existing['appt_no'];
+            continue;
+        }
+
         $new_appt_no = getNextApptNo($db_target);
         
         $doc_id = isset($user_map[$g_sess['created_by']]) ? $user_map[$g_sess['created_by']] : null;
         $doc_name = isset($doc_name_map[$g_sess['created_by']]) ? $doc_name_map[$g_sess['created_by']] : 'Migration Script';
 
-        $datetime = $g_sess['created_at'] ?: date('Y-m-d H:i:s');
         $date_ap = substr($datetime, 0, 10);
         $time_ap = substr($datetime, 11, 8);
 
@@ -648,6 +681,11 @@ try {
         $hosp_no = isset($patient_map[$vitals['upi']]) ? $patient_map[$vitals['upi']] : null;
         if (!$hosp_no) continue;
         
+        $date_ap = $vitals['created_at'] ?: date('Y-m-d H:i:s');
+        $check_vital = $db_target->prepare("SELECT sn FROM vital_sign WHERE hospital_no = ? AND date_ap = ?");
+        $check_vital->execute([$hosp_no, $date_ap]);
+        if ($check_vital->rowCount() > 0) continue;
+
         $doc_id = isset($user_map[$vitals['created_by']]) ? $user_map[$vitals['created_by']] : null;
         $doc_name = isset($doc_name_map[$vitals['created_by']]) ? $doc_name_map[$vitals['created_by']] : 'Migration Script';
         
@@ -688,6 +726,11 @@ try {
         $remarks = strlen($item_services) > 100 ? substr($item_services, 100, 300) : null;
         $item_services = substr($item_services, 0, 100);
         
+        $date_entry = $rx['created_at'] ?: date('Y-m-d H:i:s');
+        $check_rx = $db_target->prepare("SELECT sn FROM patient_ap_services WHERE hospital_no = ? AND date_entry = ? AND item_services = ?");
+        $check_rx->execute([$hosp_no, $date_entry, $item_services]);
+        if ($check_rx->rowCount() > 0) continue;
+
         $insert_rx = $db_target->prepare("INSERT INTO patient_ap_services (hospital_no, item_services, serv_group, cat_type, qty, drug_status, paystatus, date_entry, prepared_by, remarks) VALUES (?, ?, 'Pharmacy', 'Drugs', 1, 1, 1, ?, ?, ?)");
         $insert_rx->execute([
             $hosp_no,
@@ -732,6 +775,10 @@ try {
         $hosp_no = isset($patient_map[$bal['upi']]) ? $patient_map[$bal['upi']] : null;
         if (!$hosp_no) continue;
         
+        $check_bal = $db_target->prepare("SELECT sn FROM chart_ledger WHERE hospital_no = ? AND ref_value = 'Migration'");
+        $check_bal->execute([$hosp_no]);
+        if ($check_bal->rowCount() > 0) continue;
+
         $net_balance = round($bal['total_debts'] - $bal['total_credits'], 2);
         
         if ($net_balance == 0) continue;
@@ -808,6 +855,10 @@ try {
 
         $lab_req_no = sprintf("LR%06d", $req['sub_id']);
         
+        $check_lab = $db_target->prepare("SELECT sn FROM lab_manage WHERE labrequest_no = ?");
+        $check_lab->execute([$lab_req_no]);
+        if ($check_lab->rowCount() > 0) continue;
+
         $test_name = isset($req['pool_service_name']) && !empty($req['pool_service_name']) ? $req['pool_service_name'] : null;
         if (!$test_name && !empty($req['group_id']) && isset($group_map[$req['group_id']])) {
             $test_name = $group_map[$req['group_id']];
@@ -842,6 +893,10 @@ try {
         if ($hosp_no === 'UNKNOWN') continue;
 
         $lab_req_no = sprintf("PT%06d", $req['id']);
+
+        $check_path = $db_target->prepare("SELECT sn FROM lab_manage WHERE labrequest_no = ?");
+        $check_path->execute([$lab_req_no]);
+        if ($check_path->rowCount() > 0) continue;
 
         $test_name = $req['investigation'] ?: 'Pathology Sample';
         $specimen = $req['sample_name'] ?: 'Tissue';
@@ -903,6 +958,10 @@ try {
                 $lab_req_val = sprintf("LR%06d", $parent_sub_id);
                 $test_no_val = sprintf("TS%06d", $parent_sub_id); 
                 
+                $check_res = $db_target->prepare("SELECT sn FROM lab_result WHERE lab_no = ?");
+                $check_res->execute([$lab_req_val]);
+                if ($check_res->rowCount() > 0) continue;
+
                 $test_name_val = 'General Test';
                 $first_param = $params[0];
                 if (!empty($first_param['group_id']) && isset($group_map[$first_param['group_id']])) {

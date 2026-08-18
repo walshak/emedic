@@ -1,6 +1,6 @@
 <?php
 // Database configuration
-require_once('../Connections/Conn.php');
+require_once(__DIR__ . '/../Connections/Conn.php');
 
 function sanitize($str)
 {

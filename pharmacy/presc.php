@@ -1353,8 +1353,8 @@ if (isset($_POST['drug_sn_rem'])) {
 															' Qty: [', COALESCE(d.qty, '0'), ']',
 															CASE
 																WHEN d.expire_date IS NULL 
-																	OR d.expire_date = '' 
-																	OR d.expire_date = '0000-00-00' 
+																	OR CAST(d.expire_date AS CHAR) = '' 
+																	OR CAST(d.expire_date AS CHAR) = '0000-00-00' 
 																	OR DATE(d.expire_date) > DATE_ADD(CURRENT_DATE, INTERVAL 6 MONTH)
 																THEN ''
 																ELSE CONCAT(' **exp in ', DATEDIFF(d.expire_date, CURRENT_DATE), ' days**')
@@ -1377,8 +1377,8 @@ if (isset($_POST['drug_sn_rem'])) {
 															' Qty: [', COALESCE(qty, '0'), ']',
 															CASE
 																WHEN expire_date IS NULL 
-																	OR expire_date = '' 
-																	OR expire_date = '0000-00-00' 
+																	OR CAST(expire_date AS CHAR) = '' 
+																	OR CAST(expire_date AS CHAR) = '0000-00-00' 
 																	OR DATE(expire_date) > DATE_ADD(CURRENT_DATE, INTERVAL 6 MONTH)
 																THEN ''
 																ELSE CONCAT(' **exp in ', DATEDIFF(expire_date, CURRENT_DATE), ' days**')

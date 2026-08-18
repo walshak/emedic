@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         SELECT COUNT(*) AS cnt 
         FROM stock_table 
         WHERE DATE(expire_date) BETWEEN '$setdate' AND '$three_months_from_now' 
-          AND expire_date != '0000-00-00' 
+          AND expire_date IS NOT NULL AND CAST(expire_date AS CHAR) != '0000-00-00' AND CAST(expire_date AS CHAR) != '' 
           AND status = 'active' 
           AND stock_table = 'Pharmacy'
     ")->fetch(PDO::FETCH_ASSOC)['cnt'];
@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         SELECT COUNT(*) AS cnt 
         FROM stock_table 
         WHERE DATE(expire_date) BETWEEN '$three_months_from_now' AND '$six_months_from_now' 
-          AND expire_date != '0000-00-00' 
+          AND expire_date IS NOT NULL AND CAST(expire_date AS CHAR) != '0000-00-00' AND CAST(expire_date AS CHAR) != '' 
           AND status = 'active' 
           AND stock_table = 'Pharmacy'
     ")->fetch(PDO::FETCH_ASSOC)['cnt'];

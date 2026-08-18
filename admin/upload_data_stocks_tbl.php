@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once('../Connections/Conn.php'); // $db must be PDO
+require_once(__DIR__ . '/../Connections/Conn.php'); // $db must be PDO
 
 /* ---------------- HELPER FUNCTIONS ---------------- */
 

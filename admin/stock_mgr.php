@@ -129,10 +129,10 @@ if ($stock == '') { ?>
 				$back_6m = date('Y-m-d', strtotime('+6 months'));
 				$back_3m = date('Y-m-d', strtotime('+3 months'));
 
-				$exp_today = $db->query("SELECT sn FROM stock_table WHERE date(expire_date) <='$setdate' and date(expire_date) != '0000-00-00' and status='active' $search $search_plus"); ?>
-				<?php $exp_3m = $db->query("SELECT sn FROM stock_table WHERE DATE(expire_date) BETWEEN '$setdate' AND '$back_3m' and date(expire_date) != '0000-00-00' and status='active' $search $search_plus"); ?>
-				<?php $exp_6m = $db->query("SELECT sn FROM stock_table WHERE date(expire_date) BETWEEN '$back_3m' AND '$back_6m' and date(expire_date) != '0000-00-00' and status='active' $search $search_plus"); ?>
-				<?php $exp_invalid = $db->query("SELECT sn FROM stock_table WHERE (expire_date = '0000-00-00' OR expire_date IS NULL) and status='active' $search $search_plus"); ?>
+				$exp_today = $db->query("SELECT sn FROM stock_table WHERE expire_date IS NOT NULL AND CAST(expire_date AS CHAR) != '0000-00-00' AND CAST(expire_date AS CHAR) != '' AND expire_date <= '$setdate' and status='active' $search $search_plus"); ?>
+				<?php $exp_3m = $db->query("SELECT sn FROM stock_table WHERE expire_date IS NOT NULL AND CAST(expire_date AS CHAR) != '0000-00-00' AND CAST(expire_date AS CHAR) != '' AND expire_date BETWEEN '$setdate' AND '$back_3m' and status='active' $search $search_plus"); ?>
+				<?php $exp_6m = $db->query("SELECT sn FROM stock_table WHERE expire_date IS NOT NULL AND CAST(expire_date AS CHAR) != '0000-00-00' AND CAST(expire_date AS CHAR) != '' AND expire_date BETWEEN '$back_3m' AND '$back_6m' and status='active' $search $search_plus"); ?>
+				<?php $exp_invalid = $db->query("SELECT sn FROM stock_table WHERE (expire_date IS NULL OR CAST(expire_date AS CHAR) = '0000-00-00' OR CAST(expire_date AS CHAR) = '') and status='active' $search $search_plus"); ?>
 				<?php $odr_today = $db->query("SELECT sn FROM stock_table WHERE status='active' and qty<=reorder_level $search $search_plus"); ?>
 				<?php $rq_request = $db->query("SELECT sn FROM stock_table_request WHERE status='pending' and seen=1 $search $search_plus $dept_incharge_stock"); ?>
 				<?php $total_stock = $db->query("SELECT sn FROM stock_table WHERE status='active' $search $search_plus"); ?>
@@ -1556,20 +1556,20 @@ if ($stock == '') { ?>
 							$search = " and status='active' and main_qty=reorder_level";
 						} elseif (isset($_GET['expired'])) {
 							$setdate = date("Y-m-d");
-							$search = " and status='active' and date(expire_date) != '0000-00-00' and date(expire_date)<='$setdate'";
+							$search = " and status='active' and expire_date IS NOT NULL and CAST(expire_date AS CHAR) != '0000-00-00' and CAST(expire_date AS CHAR) != '' and expire_date<='$setdate'";
 						} elseif (isset($_GET['exp_now'])) {
 							$setdate = date("Y-m-d");
-							$search = " and status='active' and date(expire_date) != '0000-00-00' and date(expire_date)<='$setdate'";
+							$search = " and status='active' and expire_date IS NOT NULL and CAST(expire_date AS CHAR) != '0000-00-00' and CAST(expire_date AS CHAR) != '' and expire_date<='$setdate'";
 						} elseif (isset($_GET['exp_3m'])) {
 							$setdate = date("Y-m-d");
 							///$search = " and status='active' and date(expire_date) != '0000-00-00' and date(expire_date)<='$exp_3m' and date(expire_date) > '$setdate'";
 							/// DATE(date_entry2) BETWEEN '$begin' AND '$end'
-							$search = " and status='active' and date(expire_date) != '0000-00-00' and DATE(expire_date) BETWEEN '$setdate' AND '$exp_3m'";
+							$search = " and status='active' and expire_date IS NOT NULL and CAST(expire_date AS CHAR) != '0000-00-00' and CAST(expire_date AS CHAR) != '' and expire_date BETWEEN '$setdate' AND '$exp_3m'";
 						} elseif (isset($_GET['exp_6m'])) {
 							$setdate = date("Y-m-d");
-							$search = " and status='active' and date(expire_date) != '0000-00-00' and DATE(expire_date) BETWEEN '$exp_3m' AND '$exp_6m'";
+							$search = " and status='active' and expire_date IS NOT NULL and CAST(expire_date AS CHAR) != '0000-00-00' and CAST(expire_date AS CHAR) != '' and expire_date BETWEEN '$exp_3m' AND '$exp_6m'";
 						} elseif (isset($_GET['exp_invalid'])) {
-							$search = " and status='active' and (expire_date = '0000-00-00' OR expire_date IS NULL)";
+							$search = " and status='active' and (expire_date IS NULL OR CAST(expire_date AS CHAR) = '0000-00-00' OR CAST(expire_date AS CHAR) = '')";
 						} else {
 							$search = " and status='active'";
 						}
