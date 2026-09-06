@@ -54,7 +54,7 @@
   <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"> -->
   <link rel="stylesheet" href="../js/vendors/editor/dist/ui/trumbowyg.css">
   <link rel="stylesheet" href="../js/vendors/editor/dist/plugins/colors/ui/trumbowyg.colors.min.css">
-  </style>
+  <script src="../js/jquery-3.1.1.min.js"></script>
 
   <style>
     .search-table-outter {

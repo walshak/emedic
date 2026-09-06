@@ -1941,6 +1941,7 @@ $edit_patient_biodata_merge = $editValue !== false ? $editValue : null;
 					<?php } else { ?>
 						<b>Print Patient's Medical Report Disabled</b>
 					<?php } ?>
+					<button type="button" class="btn btn-warning block full-width m-b" data-toggle="modal" data-target="#proc_medserv_modal" onclick="loadProcMedServData()"><i class="fa fa-list-alt"></i> Procedures & Medical Services</button>
 					<hr>
 
 
@@ -2809,3 +2810,4 @@ $edit_patient_biodata_merge = $editValue !== false ? $editValue : null;
 
 
 <?php include_once('../doctor/_medical_report_modal.php'); ?>
+<?php include_once('_proc_medserv_modal.php'); ?>

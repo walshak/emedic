@@ -10,6 +10,16 @@
 			<?php } ?>
 
 			<?php if ($window_mode != 'bill') { ?>
+                                <?php
+                                $hdNurseStmt = $db->query("SELECT nurses_can_fully_admit_discharge FROM hospital_details LIMIT 1");
+                                $hdNurseRow = $hdNurseStmt->fetch(PDO::FETCH_ASSOC);
+                                $nurseFullPerm = (!empty($hdNurseRow['nurses_can_fully_admit_discharge']) && $hdNurseRow['nurses_can_fully_admit_discharge'] == 1);
+                                if ($nurseFullPerm && !$isOnAdmission) { ?>
+                                        <a href="#" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#admit_patient_modal_nurse" style="font-size: 13px; color: white;">
+                                                <i class="fa fa-bed"></i>&nbsp;Initiate Admission
+                                        </a>
+                                <?php } ?>
+
 				<a href="patient_bill.php?hosp_no=<?= $hospital_no ?>&Invoice" class="btn btn-sm btn-info" style="font-size: 13px; color: white;"><i class="fa fa-stack-overflow"></i>&nbsp;&nbsp;View Billing</a>
 
 				<?php if (in_array(strtoupper($sex), ['F', 'FEMALE'])) { ?>

@@ -20,11 +20,16 @@
 						$stmt->bindValue(':cr', $cr, PDO::PARAM_STR);
 						$stmt->bindValue(':paystatus', $paystatus, PDO::PARAM_STR);
 						$stmt->execute();
+
+						$hdNurseStmt = $db->query("SELECT nurses_can_fully_admit_discharge FROM hospital_details LIMIT 1");
+						$hdNurseRow = $hdNurseStmt->fetch(PDO::FETCH_ASSOC);
+						$nurseFullPerm = (!empty($hdNurseRow['nurses_can_fully_admit_discharge']) && $hdNurseRow['nurses_can_fully_admit_discharge'] == 1);
+						$canDischargeNow = ($discharge_request != 0 || $nurseFullPerm);
 						?>
 
 						<input type="button" name="dischgr" value="DISCHARGE" data-target="#modal"
-							id="<?php echo $hosp_no . '___' . $room_bed_sn; ?>" <?php if ($discharge_request == 0) { ?>disabled<?php } ?>
-							class="btn btn-<?php if ($discharge_request == 0) { ?>default<?php } else { ?>danger<?php } ?> btn-bg discharge_patient" />
+							id="<?php echo $hosp_no . '___' . $room_bed_sn; ?>" <?php if (!$canDischargeNow) { ?>disabled<?php } ?>
+							class="btn btn-<?php if (!$canDischargeNow) { ?>default<?php } else { ?>danger<?php } ?> btn-bg discharge_patient" />
 
 
 					</td>
@@ -250,10 +255,17 @@
 					</a>
 				<?php endif; ?>
 
-			<?php else: ?>
+				<?php else: ?>
 
-				<hr>
-				<h4 style="color:brown;">Admission rights are disabled.</h4>
+				<?php if ($nurseFullPerm): ?>
+					<hr>
+					<button class="btn btn-primary" data-toggle="modal" data-target="#admit_modal">
+						<i class="fa fa-plus-circle"></i> Initiate Patient Admission (Nurse)
+					</button>
+				<?php else: ?>
+					<hr>
+					<h4 style="color:brown;">Admission rights are disabled.</h4>
+				<?php endif; ?>
 
 			<?php endif; ?>
 		<?php } ?>
@@ -604,8 +616,22 @@
 
 						</div>
 
-
-
+						<?php
+						$admChkStmt = $db->query("SELECT * FROM admission_discharge_checklists WHERE type = 'admission' AND status = 1 ORDER BY id ASC");
+						if ($admChkStmt->rowCount() > 0) {
+							echo '<div class="form_sep" style="background: #f8f9fa; padding: 12px; border-radius: 4px; margin-top: 10px; border: 1px solid #e7eaec;">';
+							echo '<label style="font-size:14px; font-weight:bold;"><i class="fa fa-check-square-o"></i> Admission Nurse Checklist:</label><br>';
+							while ($acRow = $admChkStmt->fetch(PDO::FETCH_ASSOC)) {
+								echo '<div class="checkbox" style="margin-bottom:8px;">';
+								echo '<label><input type="checkbox" name="admission_checklist[' . $acRow['id'] . ']" value="1"> <strong>' . htmlspecialchars($acRow['title']) . '</strong></label>';
+								if (!empty($acRow['description'])) {
+									echo '<br><small class="text-muted" style="margin-left: 20px;">' . htmlspecialchars($acRow['description']) . '</small>';
+								}
+								echo '</div>';
+							}
+							echo '</div>';
+						}
+						?>
 
 						<div class="form_sep">
 

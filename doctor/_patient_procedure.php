@@ -116,7 +116,7 @@ if ($patient_procedure_stmt->rowCount() > 0) {
                 <td><b>Anaesthetia Type: </b> </td>
                 <td><?= $procedure_anaesthetia_type; ?> </td>
                 <td><b>Result/OutCome: </b></td>
-                <td><?= $procedure_Findprocedure_post_op_resultsings; ?> </td>
+                <td><?= !empty($procedure['post_op_results']) ? $procedure['post_op_results'] : $procedure['Findings']; ?> </td>
             </tr>
             <tr>
                 <td><b>Indication: </b> </td>

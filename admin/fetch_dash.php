@@ -107,6 +107,27 @@ if (isset($_POST["admin_settings_id"])) {
                         </select>
                     </div>
                     <div class="form-group">
+                        <label>Allow Reception / Frontdesk to book PROCEDURES</label>
+                        <select name="frontdesk_can_book_procedures" class="form-control">
+                            <option value="1" <?php echo (isset($rwxx['frontdesk_can_book_procedures']) && $rwxx['frontdesk_can_book_procedures'] == '1') ? 'selected' : ''; ?>>Yes</option>
+                            <option value="0" <?php echo (!isset($rwxx['frontdesk_can_book_procedures']) || $rwxx['frontdesk_can_book_procedures'] == '0') ? 'selected' : ''; ?>>No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Allow Reception / Frontdesk to book MEDICAL SERVICES</label>
+                        <select name="frontdesk_can_book_medical_services" class="form-control">
+                            <option value="1" <?php echo (isset($rwxx['frontdesk_can_book_medical_services']) && $rwxx['frontdesk_can_book_medical_services'] == '1') ? 'selected' : ''; ?>>Yes</option>
+                            <option value="0" <?php echo (!isset($rwxx['frontdesk_can_book_medical_services']) || $rwxx['frontdesk_can_book_medical_services'] == '0') ? 'selected' : ''; ?>>No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Allow NURSES to fully initiate and complete ADMISSION & DISCHARGE (including Observation)</label>
+                        <select name="nurses_can_fully_admit_discharge" class="form-control">
+                            <option value="1" <?php echo (isset($rwxx['nurses_can_fully_admit_discharge']) && $rwxx['nurses_can_fully_admit_discharge'] == '1') ? 'selected' : ''; ?>>Yes</option>
+                            <option value="0" <?php echo (!isset($rwxx['nurses_can_fully_admit_discharge']) || $rwxx['nurses_can_fully_admit_discharge'] == '0') ? 'selected' : ''; ?>>No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>Enable WEBMEDIC FLASH</label>
                         <select name="col3" class="form-control">
                             <option value="1" <?php echo ($rwxx['col3'] == '1') ? 'selected' : ''; ?>>Yes</option>

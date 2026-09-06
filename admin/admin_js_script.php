@@ -2389,14 +2389,16 @@ include("../inc/patient_alert.php"); ?>
 		});
 	}
 
-	$('.dataTables-example').dataTable({
-		pageLength: 200,
-		responsive: true,
-		"dom": 'T<"clear">lfrtip',
-		"tableTools": {
-			"sSwfPath": "js/plugins/dataTables/swf/copy_csv_xls_pdf.swf"
-		}
-	});
+	if ($('.dataTables-example').length > 0 && $('.dataTables-example th').length > 0) {
+		$('.dataTables-example').dataTable({
+			pageLength: 200,
+			responsive: true,
+			"dom": 'T<"clear">lfrtip',
+			"tableTools": {
+				"sSwfPath": "js/plugins/dataTables/swf/copy_csv_xls_pdf.swf"
+			}
+		});
+	}
 
 	$('#data_5 .input-daterange').datepicker({
 		keyboardNavigation: false,

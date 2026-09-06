@@ -896,8 +896,14 @@ if (isset($_POST['change_adm_admit_p'])) {
             $sql->bindParam(':sn_numb', $admission_sn, PDO::PARAM_STR);
             $sql->execute();
 
-
             if ($sql->rowCount() > 0) {
+                // Log admission checklist items if provided
+                if (!empty($_POST['admission_checklist']) && is_array($_POST['admission_checklist']) && !empty($admission_sn)) {
+                    $chkInsert = $db->prepare("INSERT INTO patient_admission_checklist_logs (admission_id, hospital_no, checklist_id, checklist_type, is_checked, checked_by) VALUES (?, ?, ?, 'admission', 1, ?)");
+                    foreach ($_POST['admission_checklist'] as $chkId => $val) {
+                        $chkInsert->execute([$admission_sn, $hosp_no, intval($chkId), $_SESSION['fullname']]);
+                    }
+                }
                 $invoice_status = 0;
                 $query = build_query_save($db, $app_no, $hosp_no, $service_access, $serv_group, $cat_type, $dept_id, $item_sn, $service_name, $claim_amt, $ccop_int_charge, $item_amt, $invoice_no, $fullname, $setdate, $amt_paying, $pay_mode, $invoice_status);
                 if ($query != 1) {
@@ -1104,6 +1110,12 @@ if (isset($_POST['add_admit'])) {
                     $sql->execute();
 
                     if ($sql->rowCount() > 0) {
+                        if (!empty($_POST['admission_checklist']) && is_array($_POST['admission_checklist']) && !empty($sn_numb)) {
+                            $chkInsert = $db->prepare("INSERT INTO patient_admission_checklist_logs (admission_id, hospital_no, checklist_id, checklist_type, is_checked, checked_by) VALUES (?, ?, ?, 'admission', 1, ?)");
+                            foreach ($_POST['admission_checklist'] as $chkId => $val) {
+                                $chkInsert->execute([$sn_numb, $hosp_no, intval($chkId), $_SESSION['fullname']]);
+                            }
+                        }
 
                         if ($isServiceBillable == 'billable' && $services_list == 1 && $admit_type == 'admit_p') {
                             $status = 1;
@@ -1730,7 +1742,11 @@ if (isset($_POST['discharge_patien'])) {
     $stmt = $db->prepare("SELECT * FROM discharge_fellowup WHERE hospital_no = ?");
     $stmt->execute(array($hosp_no));
 
-    if ($stmt->rowCount() > 0 && isset($_SESSION['fullname']) && $_SESSION['fullname'] != '') {
+    $hdNurseStmt = $db->query("SELECT nurses_can_fully_admit_discharge FROM hospital_details LIMIT 1");
+    $hdNurseRow = $hdNurseStmt->fetch(PDO::FETCH_ASSOC);
+    $nurseFullPerm = (!empty($hdNurseRow['nurses_can_fully_admit_discharge']) && $hdNurseRow['nurses_can_fully_admit_discharge'] == 1);
+
+    if (($stmt->rowCount() > 0 || $nurseFullPerm) && isset($_SESSION['fullname']) && $_SESSION['fullname'] != '') {
         try {
             $db->beginTransaction();
 
@@ -1745,18 +1761,34 @@ if (isset($_POST['discharge_patien'])) {
             $adm_status = '4';
             $adm_status2 = '3';
             $date_discharge = date('Y-m-d H:i:s');
+            $discharge_note = isset($_POST['discharge_note']) ? cleanInput($_POST['discharge_note']) : '';
+
+            // Fetch active admission ID
+            $admIdStmt = $db->prepare("SELECT sn FROM admission WHERE hospital_no = ? AND adm_status = '3' ORDER BY sn DESC LIMIT 1");
+            $admIdStmt->execute([$hosp_no]);
+            $activeAdmId = $admIdStmt->fetchColumn();
 
             $updateAdm = $db->prepare("UPDATE admission SET 
                 adm_status = :adm_status,
                 date_discharge = :date_discharge,
+                discharge_note = :discharge_note,
                 discharge_by_nurse = :discharge_by_nurse 
                 WHERE hospital_no = :hospital_no AND adm_status = :adm_status2");
             $updateAdm->bindParam(':adm_status', $adm_status, PDO::PARAM_STR);
             $updateAdm->bindParam(':date_discharge', $date_discharge, PDO::PARAM_STR);
+            $updateAdm->bindParam(':discharge_note', $discharge_note, PDO::PARAM_STR);
             $updateAdm->bindParam(':discharge_by_nurse', $_SESSION['fullname'], PDO::PARAM_STR);
             $updateAdm->bindParam(':hospital_no', $hosp_no, PDO::PARAM_STR);
             $updateAdm->bindParam(':adm_status2', $adm_status2, PDO::PARAM_STR);
             $updateAdm->execute();
+
+            // Log discharge checklist items if provided
+            if (!empty($_POST['discharge_checklist']) && is_array($_POST['discharge_checklist']) && $activeAdmId) {
+                $chkInsert = $db->prepare("INSERT INTO patient_admission_checklist_logs (admission_id, hospital_no, checklist_id, checklist_type, is_checked, checked_by) VALUES (?, ?, ?, 'discharge', 1, ?)");
+                foreach ($_POST['discharge_checklist'] as $chkId => $val) {
+                    $chkInsert->execute([$activeAdmId, $hosp_no, intval($chkId), $_SESSION['fullname']]);
+                }
+            }
 
             if ($updateAdm->rowCount() > 0) {
 

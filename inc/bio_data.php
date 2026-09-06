@@ -22,7 +22,7 @@ if ($stmt->rowCount() > 0) {
 ?>
 
 
-    <table class="table table-striped table-bordered table-hover dataTables-example">
+    <table class="table table-striped table-bordered table-hover">
         <tr style="background: #666; color: #FFF;">
             <td style="font:bold 14px 'Arial';" width="30%">Patient No: </td>
             <td style="font:bold 14px 'Arial';" width="30%">Patient Name: </td>
@@ -108,7 +108,7 @@ if ($stmt->rowCount() > 0) {
 
         <br>
         <h3 class="heading_a" style="color:#F00">Insurance / <?php echo $insurance_name ?></h3>
-        <table class="table table-striped table-bordered table-hover dataTables-example">
+        <table class="table table-striped table-bordered table-hover ">
             <tr style="background: #666; color: #FFF;">
                 <td width="33%" style="font:bold 14px 'Arial';">Insurance Name: </td>
                 <td width="34%" style="font:bold 14px 'Arial';">Membership/NHIS No.:</td>
@@ -142,7 +142,7 @@ if ($stmt->rowCount() > 0) {
 
     <br>
     <h3 class="heading_a">Contact information</h3>
-    <table class="table table-striped table-bordered table-hover dataTables-example">
+    <table class="table table-striped table-bordered table-hover ">
         <tr style="background: #666; color: #FFF;">
             <td style="font:bold 14px 'Arial';" width="30%">Phone No: </td>
             <td style="font:bold 14px 'Arial';" width="30%">Email: </td>
@@ -162,7 +162,7 @@ if ($stmt->rowCount() > 0) {
     $stmt = $db->query("SELECT * FROM guardian_tbl WHERE patient_id='$hos_no' order by guardian_id");
     if ($stmt->rowCount() > 0 && $name != '') { ?>
 
-        <table class="table table-striped table-bordered table-hover dataTables-example">
+        <table class="table table-striped table-bordered table-hover ">
             <tr style="background: #666; color: #FFF;">
                 <td width="1%">#</td>
                 <td style="font:bold 14px 'Arial';" width="20%">Next of Kin Name: </td>

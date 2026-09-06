@@ -79,9 +79,12 @@
 	</li>
 <?php endif; ?>
 
-<?php if ($_SESSION['template_setup'] == 1 or $_SESSION['rights'] === 'LB'): ?>
+<?php if ($_SESSION['template_setup'] == 1 or $_SESSION['rights'] === 'LB' or $_SESSION['rights'] === 'SA' or $_SESSION['speciality_admin'] === 'Administrator'): ?>
 	<li>
 		<a href="../profile/templates.php"><i class="fa fa-tasks"></i> <span class="nav-label">Templates Setting</span></a>
+	</li>
+	<li>
+		<a href="../admin/index.php?admission_checklists"><i class="fa fa-check-square-o"></i> <span class="nav-label">Admission Checklists</span></a>
 	</li>
 <?php endif; ?>
 

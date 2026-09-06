@@ -100,6 +100,9 @@ if (isset($_POST['save_setting'])) {
         allow_part_pay_medical_service = :allow_part_pay_medical_service,
         b4_approve_requisition_setup = :b4_approve_requisition_setup,
         pharm_request_from_store = :pharm_request_from_store,
+        frontdesk_can_book_procedures = :frontdesk_can_book_procedures,
+        frontdesk_can_book_medical_services = :frontdesk_can_book_medical_services,
+        nurses_can_fully_admit_discharge = :nurses_can_fully_admit_discharge,
         col3 = :col3,
         credit_limit_status = :credit_limit_status,
         col4 = :col4,
@@ -139,6 +142,9 @@ if (isset($_POST['save_setting'])) {
 		$stmt->bindParam(':allow_part_pay_medical_service', $_POST['allow_part_pay_medical_service'], PDO::PARAM_INT);
 		$stmt->bindParam(':b4_approve_requisition_setup', $_POST['b4_approve_requisition_setup'], PDO::PARAM_INT);
 		$stmt->bindParam(':pharm_request_from_store', $_POST['pharm_request_from_store'], PDO::PARAM_INT);
+		$stmt->bindParam(':frontdesk_can_book_procedures', $_POST['frontdesk_can_book_procedures'], PDO::PARAM_INT);
+		$stmt->bindParam(':frontdesk_can_book_medical_services', $_POST['frontdesk_can_book_medical_services'], PDO::PARAM_INT);
+		$stmt->bindParam(':nurses_can_fully_admit_discharge', $_POST['nurses_can_fully_admit_discharge'], PDO::PARAM_INT);
 		$stmt->bindParam(':col3', $_POST['col3'], PDO::PARAM_INT);
 		$stmt->bindParam(':credit_limit_status', $_POST['credit_limit_status'], PDO::PARAM_INT);
 		$stmt->bindParam(':col4', $_POST['col4'], PDO::PARAM_INT);
@@ -380,6 +386,8 @@ if (
 					include("bed.php");
 				} elseif (isset($_GET['bed_enq'])) {
 					include("bed_enq.php");
+				} elseif (isset($_GET['admission_checklists'])) {
+					include("admission_checklists.php");
 				} elseif (isset($_GET['doc'])) {
 					include("doc_incom.php");
 				} elseif (isset($_GET['dsry'])) {

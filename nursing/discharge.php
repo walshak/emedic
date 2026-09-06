@@ -116,16 +116,38 @@ paystatus=0 and invoice_status =0  and claim_amt> 0 and (drug_status='1' or cr='
 
 		<br>
 		<hr>
-		<h2>Discharge this patient ?</h2>
+		<h2>Discharge Verification & Checklist</h2>
 		<hr>
 
 		<form action="patient.php?hosp_no=<?php echo $hos_no; ?>" method='POST' id='subject' name='subject' enctype='multipart/form-data'>
 
-			<button class='btn btn-success btn-lg' type='submit' name='discharge_patien' id='discharge_patien'>Discharge Now</button>
+			<?php
+			$chkListStmt = $db->query("SELECT * FROM admission_discharge_checklists WHERE type = 'discharge' AND status = 1 ORDER BY id ASC");
+			if ($chkListStmt->rowCount() > 0) {
+				echo '<div style="text-align: left; background: #fff; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #ddd;">';
+				echo '<h4><i class="fa fa-check-square-o"></i> Discharge Nurse Checklist:</h4>';
+				while ($cRow = $chkListStmt->fetch(PDO::FETCH_ASSOC)) {
+					echo '<div class="checkbox" style="font-size: 14px; margin-bottom: 10px;">';
+					echo '<label><input type="checkbox" name="discharge_checklist[' . $cRow['id'] . ']" value="1"> <strong>' . htmlspecialchars($cRow['title']) . '</strong></label>';
+					if (!empty($cRow['description'])) {
+						echo '<br><small class="text-muted" style="margin-left: 20px;">' . htmlspecialchars($cRow['description']) . '</small>';
+					}
+					echo '</div>';
+				}
+				echo '</div>';
+			}
+			?>
+
+			<div class="form-group" style="text-align: left;">
+				<label>Discharge Notes / Clinical Summary</label>
+				<textarea name="discharge_note" class="form-control" rows="3" placeholder="Enter discharge summary notes..."></textarea>
+			</div>
+
+			<button class='btn btn-success btn-lg' type='submit' name='discharge_patien' id='discharge_patien' onclick="return confirm('Are you sure you want to DISCHARGE this patient now?')">Discharge Now</button>
 			<input type='hidden' value="<?php echo $hos_no; ?>" name='hosp_no'>
 			<input type='hidden' value="<?php echo $room_bed_sn; ?>" name='room_bed_sn'>
-			<input type='hidden' value="<?php echo $app_no; ?>" name='app_no'>
-			<input type='hidden' value="<?php echo $row['Total_Pay']; ?>" name='Total_Pay'>
+			<input type='hidden' value="<?php echo isset($app_no) ? $app_no : ''; ?>" name='app_no'>
+			<input type='hidden' value="<?php echo isset($row['Total_Pay']) ? $row['Total_Pay'] : 0; ?>" name='Total_Pay'>
 		</form>
 
 

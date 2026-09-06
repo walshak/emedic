@@ -1383,18 +1383,20 @@ $range_define = 0;
 																		$amt_sysSelected = $amt_sysSelected + $pay;
 																		$snn = $snn + 1;							?>
 																		<tr>
-																			<input type="checkbox" value="<?php echo $sn . '__' . $pay . '__' . $item . '__' . $qty . '__' . $discount . '__' . $charge
-																												. '__' . $dura . '__' . $post_type . '__' . $count_bal . '__' . $dsc_chr_set . '__' . $cat_type_ . '__' . $cr . '__' . $serv_group_ . '__' . $sn_service . '__' . $service_type . '__' . $departmentName; ?>" name="item[]" checked style="visibility: hidden" />
-																			<td><?php echo $snn; ?></td>
+																			<td>
+																				<input type="checkbox" value="<?php echo $sn . '__' . $pay . '__' . $item . '__' . $qty . '__' . $discount . '__' . $charge
+																													. '__' . $dura . '__' . $post_type . '__' . $count_bal . '__' . $dsc_chr_set . '__' . $cat_type_ . '__' . $cr . '__' . $serv_group_ . '__' . $sn_service . '__' . $service_type . '__' . $departmentName; ?>" name="item[]" checked style="display: none;" />
+																				<?php echo $snn; ?>
+																			</td>
 																			<td><?php echo $item; ?></td>
 																			<td><?php echo $qty; ?></td>
 																			<td><?php echo number_format($pay, 2); ?></td>
 																			<td><?php if ($charge > 0) {
-																					echo 'CHR: ' . number_format($charge, 2);
+																					echo 'CHR: ' . number_format((float)$charge, 2);
 																				}
 																				if ($discount > 0) {
-																					$Total_dsc = $Total_dsc + $discount;
-																					echo 'DSC: ' . number_format($discount, 2);
+																					$Total_dsc += (float)$discount;
+																					echo 'DSC: ' . number_format((float)$discount, 2);
 																				}
 																				?></td>
 																			<td><?php if ($cr == 1) {
@@ -1409,13 +1411,14 @@ $range_define = 0;
 																		$snn = $snn + 1;
 																	?>
 																		<tr>
-																			<input type="checkbox" value="<?php echo $sn . '__' . $pay . '__' . $item . '__' . $qty . '__' . $discount . '__' . $charge
-																												. '__' . $dura . '__' . $post_type . '__' . $count_bal . '__' . $dsc_chr_set . '__' . $cat_type_ . '__' . $cr . '__' . $serv_group_ . '__' . $departmentName . '__' . $service_type . '__' . $sn_service; ?>" name="item[]" checked style="visibility: hidden" />
-																			<td><?php echo $snn; ?></td>
+																			<td>
+																				<input type="checkbox" value="<?php echo $sn . '__' . $pay . '__' . $item . '__' . $qty . '__' . $discount . '__' . $charge
+																													. '__' . $dura . '__' . $post_type . '__' . $count_bal . '__' . $dsc_chr_set . '__' . $cat_type_ . '__' . $cr . '__' . $serv_group_ . '__' . $departmentName . '__' . $service_type . '__' . $sn_service; ?>" name="item[]" checked style="display: none;" />
+																				<?php echo $snn; ?>
+																			</td>
 																			<td><?php echo $item; ?></td>
 																			<td><?php echo $qty; ?></td>
 																			<td><?php echo number_format($pay, 2); ?></td>
-																			<td>
 																			<td>
 																				<?php
 																				if ($charge > 0) {
@@ -1426,7 +1429,6 @@ $range_define = 0;
 																					echo 'DSC: ' . number_format((float)$discount, 2);
 																				}
 																				?>
-																			</td>
 																			</td>
 																			<td><?php if ($cr == 1) {
 																					echo 'Credit';
@@ -1485,7 +1487,7 @@ $range_define = 0;
 																		<?php } else { ?>
 																			<option value=''>Select...</option>
 																			<?php if ($v_discount  == 0) { ?>
-																				<option value="cash" <?php if ($paymethod == 'cash') { ?>selected<?php } ?>>Cash Payment</option>
+																				<option value="cash" <?php if ($paymethod == 'cash' || empty($paymethod)) { ?>selected<?php } ?>>Cash Payment</option>
 																				<option value="POS" <?php if ($paymethod == 'POS') { ?>selected<?php } ?>>POS Payment</option>
 																				<option value="Transfer" <?php if ($paymethod == 'Transfer') { ?>selected<?php } ?>>Transfer Payment</option>
 																			<?php } ?>
@@ -1898,6 +1900,27 @@ $range_define = 0;
 
 
 
+		<!-- Payment Confirmation Modal -->
+		<div class="modal inmodal fade" id="paynow_confirm_modal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+						<h4 class="modal-title">Confirm Payment Processing</h4>
+					</div>
+					<div class="modal-body" id="paynow_confirm_modal_body">
+						<p style="font-size: 15px; font-weight: bold; color: #333;">Are you sure you want to process this payment transaction?</p>
+						<div id="paynow_confirm_details" style="background: #f8f9fa; padding: 12px; border: 1px solid #e7eaec; border-radius: 4px; font-size: 14px; margin-top: 10px;">
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+						<button type="button" class="btn btn-primary" id="confirm_paynow_process_btn" onclick="execute_paynow_final_pay()">Confirm & Process</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<?php include("mdl.php"); ?>
 
 
@@ -1990,7 +2013,8 @@ $range_define = 0;
 			function UpdateCost() {
 				var sum = 0;
 				var gn, elem;
-				for (var i = 1; i < <?php echo $inv_count; ?>; i++) {
+				var maxLoop = <?php echo isset($inv_count) ? intval($inv_count) : (isset($n) ? intval($n) + 1 : 1000); ?>;
+				for (var i = 1; i < maxLoop; i++) {
 					gn = 'add_m_' + i;
 					elem = document.getElementById(gn);
 
@@ -2007,7 +2031,10 @@ $range_define = 0;
 				var value = sum.toFixed(2);
 				var formattedValue = value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-				document.getElementById('totalcost').value = formattedValue;
+				var totalCostElem = document.getElementById('totalcost');
+				if (totalCostElem) {
+					totalCostElem.value = formattedValue;
+				}
 			}
 
 			window.onload = UpdateCost;
@@ -2117,19 +2144,15 @@ $range_define = 0;
 			}
 
 			$(document).ready(function() {
-				$("#cashpos, #bill_account").hide();
-
-				$('#paymethod').on('change', function() {
-					const payMethod = this.value;
+				function updatePayMethodUI() {
+					const payMethod = $('#paymethod').val() || '';
 					const walletAmount = parseFloat($('#wallet_amount').val()) || 0;
 					const cash = parseFloat($('#cash').val()) || 0;
-
 
 					// Reset visibility
 					$("#cashpos, #bill_account").hide();
 
-					// Default button label
-					let buttonLabel = 'CASH PAY NOW';
+					let buttonLabel = 'Post Now';
 
 					switch (payMethod) {
 						case 'Wallet':
@@ -2138,7 +2161,7 @@ $range_define = 0;
 							break;
 
 						case 'cash':
-							if (walletAmount >= cash) {
+							if (walletAmount >= cash && walletAmount > 0) {
 								$('#sufficient_bal_modal').modal('show');
 							}
 							buttonLabel = 'CASH PAY NOW';
@@ -2161,8 +2184,7 @@ $range_define = 0;
 
 						case 'CASHPOS':
 						case 'CASHTransfer':
-
-							if (walletAmount >= cash) {
+							if (walletAmount >= cash && walletAmount > 0) {
 								$('#sufficient_bal_modal').modal('show');
 							}
 							$("#cashpos").show();
@@ -2170,39 +2192,45 @@ $range_define = 0;
 							break;
 
 						case 'Bill_to':
-
-							if (walletAmount >= cash) {
+							if (walletAmount >= cash && walletAmount > 0) {
 								$('#sufficient_bal_modal').modal('show');
 							}
-
 							$("#bill_account").show();
 							buttonLabel = 'BILL TO ACCOUNT';
 							break;
 
 						case 'POS':
-							if (walletAmount >= cash) {
+							if (walletAmount >= cash && walletAmount > 0) {
 								$('#sufficient_bal_modal').modal('show');
 							}
 							buttonLabel = 'POS PAYMENT';
 							break;
 
 						case 'Transfer':
-							if (walletAmount >= cash) {
+							if (walletAmount >= cash && walletAmount > 0) {
 								$('#sufficient_bal_modal').modal('show');
 							}
 							buttonLabel = 'BANK TRANSFER';
 							break;
 
 						case 'writeoff':
-							if (walletAmount >= cash) {
+							if (walletAmount >= cash && walletAmount > 0) {
 								$('#sufficient_bal_modal').modal('show');
 							}
 							buttonLabel = 'WRITE OFF';
 							break;
+
+						case '':
+						default:
+							buttonLabel = 'Select Payment Method';
+							break;
 					}
 
 					$('#paynow_final_pay_BUTTON').html(buttonLabel);
-				});
+				}
+
+				$('#paymethod').on('change', updatePayMethodUI);
+				updatePayMethodUI();
 			});
 
 
@@ -2582,173 +2610,265 @@ $range_define = 0;
 				});
 			});
 
+			function getVal(id) {
+				var el = document.getElementById(id);
+				return el ? el.value : '';
+			}
+
 			function paynow_final_pay() {
-				/// confirm
+				console.log("paynow_final_pay called");
 
-				var emr = document.getElementById('emr').value;
-				var value_date = document.getElementById('value_date').value;
-				var auth_staff = document.getElementById('auth_staff').value;
-				var cash_split = document.getElementById('cash_split').value;
-				var insurance_no = document.getElementById('insurance_no').value;
-				var cash = document.getElementById('cash').value;
-				var v_discount = document.getElementById('v_discount').value;
-				var auth_code = document.getElementById('auth_code').value;
-				var save_insurance_no = document.getElementById('save_insurance_no').value;
-				var patient_name = document.getElementById('patient_name').value;
-				var grp_idv_no = document.getElementById('grp_idv_no').value;
-				var transaction_code = document.getElementById('transaction_code').value;
-				var wallet_amount = document.getElementById('wallet_amount').value;
-				var paymethod = document.getElementById('paymethod').value;
-				var payment_remarks = document.getElementById('payment_remarks').value;
-				var ref_no = document.getElementById('ref_no').value;
-				var bank_name = document.getElementById('bank_name').value;
-				var wallet_payeee = document.getElementById('wallet_payeee').value;
-				var wallet_account = document.getElementById('wallet_account').value;
-				var insurance_type = document.getElementById('insurance_type').value;
-				var voucher_center = document.getElementById('voucher_center').value;
-				var voucher_type = document.getElementById('voucher_type').value;
-				var voucher_created_by = document.getElementById('voucher_created_by').value;
-				var debt_post = document.getElementById('debt_post').value;
-				var discount_set = document.getElementById('discount_set').value;
-				var discount_insurance_no = document.getElementById('discount_insurance_no').value;
-				var dsc_chr_type = document.getElementById('dsc_chr_type').value;
+				var emr = getVal('emr');
+				var value_date = getVal('value_date');
+				var auth_staff = getVal('auth_staff');
+				var cash_split = getVal('cash_split');
+				var insurance_no = getVal('insurance_no');
+				var cash = getVal('cash');
+				var v_discount = getVal('v_discount');
+				var auth_code = getVal('auth_code');
+				var save_insurance_no = getVal('save_insurance_no');
+				var patient_name = getVal('patient_name');
+				var grp_idv_no = getVal('grp_idv_no');
+				var transaction_code = getVal('transaction_code');
+				var wallet_amount = getVal('wallet_amount');
+				var paymethod = getVal('paymethod');
+				var payment_remarks = getVal('payment_remarks');
+				var ref_no = getVal('ref_no');
+				var bank_name = getVal('bank_name');
+				var voucher_type = getVal('voucher_type');
 
-				var characterLength = payment_remarks.length;
+				var characterLength = payment_remarks ? payment_remarks.length : 0;
+
+				console.log("paynow_final_pay state:", {
+					emr: emr,
+					paymethod: paymethod,
+					bank_name: bank_name,
+					auth_staff: auth_staff,
+					value_date: value_date,
+					voucher_type: voucher_type,
+					characterLength: characterLength
+				});
+
+				function showMsg(msg, isError) {
+					console.log("showMsg:", msg, isError ? "ERROR" : "SUCCESS");
+					if (typeof toastr !== 'undefined') {
+						if (isError) toastr.error(msg, 'Error', { timeOut: 5000 });
+						else toastr.success(msg, 'Success', { timeOut: 5000 });
+					} else {
+						alert(msg);
+					}
+				}
 
 				// Check if payment method is selected
-				if (paymethod === '') {
-					toastr.error('Select Payment Method Before you Continue', 'Error', {
-						timeOut: 5000
-					});
+				if (!paymethod || paymethod === '') {
+					console.warn("Validation failed: paymethod is empty");
+					showMsg('Select Payment Method Before you Continue', true);
 					return false;
 				}
 
 				// Check for Bill_to with missing staff authorization
-				if (paymethod === 'Bill_to' && auth_staff === '') {
-					toastr.error('Select Account Name To Bill To', 'Error', {
-						timeOut: 5000
-					});
+				if (paymethod === 'Bill_to' && !auth_staff) {
+					console.warn("Validation failed: auth_staff is empty for Bill_to");
+					showMsg('Select Account Name To Bill To', true);
 					return false;
 				}
 
 				// Check for required remarks in certain payment methods or writeoff
 				const needsLongRemark = ['pay_from_patient_wallet', 'Bill_to'].includes(paymethod) || voucher_type === 'writeoff';
 				if (needsLongRemark && characterLength < 50) {
-					toastr.error('Enter at least 50 characters or more for Remarks', 'Error', {
-						timeOut: 5000
-					});
+					console.warn("Validation failed: remarks < 50 chars");
+					showMsg('Enter at least 50 characters or more for Remarks', true);
 					return false;
 				}
 
 				const bankRequiredMethods = ['POS', 'CASHPOS', 'Transfer', 'CASHTransfer'];
-				if (bankRequiredMethods.includes(paymethod) && bank_name === '') {
-					toastr.error('Select Bank Name !', 'Error', {
-						timeOut: 5000
-					});
+				if (bankRequiredMethods.includes(paymethod) && !bank_name) {
+					console.warn("Validation failed: bank_name is empty");
+					showMsg('Select Bank Name !', true);
 					return false;
 				}
 
-				if (value_date === '') {
-					toastr.error('Invalid Date', 'Error', {
-						timeOut: 5000
-					});
+				if (!value_date) {
+					console.warn("Validation failed: value_date is empty");
+					showMsg('Invalid Date', true);
 					return false;
 				}
-
 
 				var favorite = [];
-				$.each($("input[name='item[]']:checked"), function() {
-					if ($(this).val() != '') {
-						favorite.push($(this).val());
+				$.each($("input[name='item[]']"), function() {
+					var val = $(this).val();
+					if (val && val !== '' && !favorite.includes(val)) {
+						favorite.push(val);
 					}
 				});
+				if (favorite.length === 0) {
+					$.each($("input[name='SystemSelected[]']"), function() {
+						var val = $(this).val();
+						if (val && val !== '' && !favorite.includes(val)) {
+							favorite.push(val);
+						}
+					});
+				}
+
+				var detailsHtml = `
+					<div style="font-size: 14px; line-height: 1.8;">
+						<p style="margin-bottom: 4px;"><strong>Patient:</strong> ${patient_name || emr}</p>
+						<p style="margin-bottom: 4px;"><strong>Payment Method:</strong> ${paymethod}</p>
+						${bank_name ? `<p style="margin-bottom: 4px;"><strong>Receiving Bank:</strong> ${bank_name}</p>` : ''}
+						${ref_no ? `<p style="margin-bottom: 4px;"><strong>Reference No:</strong> ${ref_no}</p>` : ''}
+						<p style="margin-bottom: 4px;"><strong>Value Date:</strong> ${value_date}</p>
+						<p style="margin-bottom: 0;"><strong>Selected Items:</strong> ${favorite.length} item(s)</p>
+					</div>
+				`;
+
+				$('#paynow_confirm_details').html(detailsHtml);
+				$('#paynow_confirm_modal').modal('show');
+			}
+
+			function execute_paynow_final_pay() {
+				console.log("execute_paynow_final_pay called");
+				$('#paynow_confirm_modal').modal('hide');
+
+				var emr = getVal('emr');
+				var value_date = getVal('value_date');
+				var auth_staff = getVal('auth_staff');
+				var cash_split = getVal('cash_split');
+				var insurance_no = getVal('insurance_no');
+				var cash = getVal('cash');
+				var v_discount = getVal('v_discount');
+				var auth_code = getVal('auth_code');
+				var save_insurance_no = getVal('save_insurance_no');
+				var patient_name = getVal('patient_name');
+				var grp_idv_no = getVal('grp_idv_no');
+				var transaction_code = getVal('transaction_code');
+				var wallet_amount = getVal('wallet_amount');
+				var paymethod = getVal('paymethod');
+				var payment_remarks = getVal('payment_remarks');
+				var ref_no = getVal('ref_no');
+				var bank_name = getVal('bank_name');
+				var wallet_payeee = getVal('wallet_payeee');
+				var wallet_account = getVal('wallet_account');
+				var insurance_type = getVal('insurance_type');
+				var voucher_center = getVal('voucher_center');
+				var voucher_type = getVal('voucher_type');
+				var voucher_created_by = getVal('voucher_created_by');
+				var debt_post = getVal('debt_post');
+				var discount_set = getVal('discount_set');
+				var discount_insurance_no = getVal('discount_insurance_no');
+				var dsc_chr_type = getVal('dsc_chr_type');
+
+				function showMsg(msg, isError) {
+					if (typeof toastr !== 'undefined') {
+						if (isError) toastr.error(msg, 'Error', { timeOut: 5000 });
+						else toastr.success(msg, 'Success', { timeOut: 5000 });
+					} else {
+						alert(msg);
+					}
+				}
+
+				var favorite = [];
+				$.each($("input[name='item[]']"), function() {
+					var val = $(this).val();
+					if (val && val !== '' && !favorite.includes(val)) {
+						favorite.push(val);
+					}
+				});
+				if (favorite.length === 0) {
+					$.each($("input[name='SystemSelected[]']"), function() {
+						var val = $(this).val();
+						if (val && val !== '' && !favorite.includes(val)) {
+							favorite.push(val);
+						}
+					});
+				}
 				var v = favorite.join(",");
 
-				document.getElementById("paynow_final_pay_BUTTON").disabled = true;
-				var button_titel = document.getElementById('paynow_final_pay_BUTTON').innerHTML;
-				document.getElementById("paynow_final_pay_BUTTON").innerHTML = 'Wait ...';
+				var btnElem = document.getElementById("paynow_final_pay_BUTTON");
+				if (btnElem) btnElem.disabled = true;
+				var button_titel = btnElem ? btnElem.innerHTML : 'CASH PAY NOW';
+				if (btnElem) btnElem.innerHTML = 'Wait ...';
 
 				var paynow_final = true;
 
-				var confm = 'true';
-
-				if (confm == 'true') {
-					var rr = confirm("Are you sure you want to PROCESS? ");
-				} else {
-					rr = true;
-				}
-
-				if (rr === true) {
-					$.ajax({
-						url: "pacct_process.php",
-						method: "POST",
-						data: {
-							emr: emr,
-							auth_staff: auth_staff,
-							item: v,
-							paynow_final: paynow_final,
-							insurance_no: insurance_no,
-							cash: cash,
-							v_discount: v_discount,
-							auth_code: auth_code,
-							save_insurance_no: save_insurance_no,
-							patient_name: patient_name,
-							grp_idv_no: grp_idv_no,
-							transaction_code: transaction_code,
-							wallet_amount: wallet_amount,
-							paymethod: paymethod,
-							payment_remarks: payment_remarks,
-							ref_no: ref_no,
-							bank_name: bank_name,
-							cash_split: cash_split,
-							wallet_payeee: wallet_payeee,
-							wallet_account: wallet_account,
-							insurance_type: insurance_type,
-							value_date: value_date,
-							voucher_created_by: voucher_created_by,
-							debt_post: debt_post,
-							discount_set: discount_set,
-							discount_insurance_no: discount_insurance_no,
-							dsc_chr_type: dsc_chr_type
-						},
-						success: function(data) {
-
-							////	alert(data);  ///dsc_chr_type discount_insurance_no discount_set
-
-
-							var jsonn = JSON.parse(data);
-
-							if (jsonn["status"] == 3) {
-								window.location = '../inc/printout2.php?deposit=' + emr + '&name=' + patient_name + '&dep=' + jsonn["url"];
-
-							} else if (jsonn["status"] == 1) {
-								document.getElementById("paynow_final_pay_BUTTON").disabled = false;
-								document.getElementById("paynow_final_pay_BUTTON").innerHTML = button_titel;
-								toastr.error(jsonn["message"], 'Attention', {
-									timeOut: 5000
-								})
-
-							} else if (jsonn["status"] == 22) {
-
-								document.getElementById("paynow_final_pay_BUTTON").disabled = true;
-								document.getElementById("paynow_final_pay_BUTTON").innerHTML = button_titel;
-								toastr.success(jsonn["message"], 'Attention', {
-									timeOut: 5000
-								})
-
-							} else {
-								toastr.success(jsonn["message"], 'Success', {
-									timeOut: 5000
-								})
-								window.location = '../inc/printout2.php?recepinv=' + emr + '&name=' + patient_name + '&r';
+				console.log("Sending AJAX to pacct_process.php...");
+				$.ajax({
+					url: "pacct_process.php",
+					method: "POST",
+					data: {
+						emr: emr,
+						auth_staff: auth_staff,
+						item: v,
+						paynow_final: paynow_final,
+						insurance_no: insurance_no,
+						cash: cash,
+						v_discount: v_discount,
+						auth_code: auth_code,
+						save_insurance_no: save_insurance_no,
+						patient_name: patient_name,
+						grp_idv_no: grp_idv_no,
+						transaction_code: transaction_code,
+						wallet_amount: wallet_amount,
+						paymethod: paymethod,
+						payment_remarks: payment_remarks,
+						ref_no: ref_no,
+						bank_name: bank_name,
+						cash_split: cash_split,
+						wallet_payeee: wallet_payeee,
+						wallet_account: wallet_account,
+						insurance_type: insurance_type,
+						value_date: value_date,
+						voucher_created_by: voucher_created_by,
+						debt_post: debt_post,
+						discount_set: discount_set,
+						discount_insurance_no: discount_insurance_no,
+						dsc_chr_type: dsc_chr_type
+					},
+					success: function(data) {
+						console.log("AJAX success response raw:", data);
+						var jsonn = {};
+						try {
+							jsonn = JSON.parse(data);
+						} catch(e) {
+							console.error("JSON parse error:", e, data);
+							if (btnElem) {
+								btnElem.disabled = false;
+								btnElem.innerHTML = button_titel;
 							}
+							showMsg("Server Error: " + data, true);
+							return;
 						}
-					});
-				} else {
-					document.getElementById("paynow_final_pay_BUTTON").disabled = false;
-					document.getElementById("paynow_final_pay_BUTTON").innerHTML = button_titel;
-				}
 
+						if (jsonn["status"] == 3) {
+							window.location = '../inc/printout2.php?deposit=' + emr + '&name=' + patient_name + '&dep=' + jsonn["url"];
+
+						} else if (jsonn["status"] == 1) {
+							if (btnElem) {
+								btnElem.disabled = false;
+								btnElem.innerHTML = button_titel;
+							}
+							showMsg(jsonn["message"], true);
+
+						} else if (jsonn["status"] == 22) {
+							if (btnElem) {
+								btnElem.disabled = true;
+								btnElem.innerHTML = button_titel;
+							}
+							showMsg(jsonn["message"], false);
+
+						} else {
+							showMsg(jsonn["message"] || 'Success', false);
+							window.location = '../inc/printout2.php?recepinv=' + emr + '&name=' + patient_name + '&r';
+						}
+					},
+					error: function(xhr, status, err) {
+						console.error("AJAX Error:", status, err);
+						if (btnElem) {
+							btnElem.disabled = false;
+							btnElem.innerHTML = button_titel;
+						}
+						showMsg("Network error: " + err, true);
+					}
+				});
 			}
 
 			process_accomodation_invoice();
