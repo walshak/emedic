@@ -171,6 +171,15 @@ if (isset($request->investigation) && isset($request->appointment_number)) {
                         echo json_encode(["status" => 500, "message" => "An error occurred while saving the data."]);
                         exit;
                     }
+
+                    // Dispatch to External LIS if mapped and LIS is enabled
+                    try {
+                        require_once(__DIR__ . '/../../inc/lis/LisService.php');
+                        LisService::dispatchOrderIfMapped($db, $lab_reqno, $request->hospital_no, $investigation->sn, $investigation->test, $investigation->request_note ?? '');
+                    } catch (Exception $e) {
+                        // Log LIS dispatch error without interrupting main EMR transaction
+                        error_log("LIS Dispatch Error: " . $e->getMessage());
+                    }
                 }
             }
 

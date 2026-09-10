@@ -642,6 +642,14 @@ if ($_POST["MM_update"] == 'Add_lab_request') {
                     $stmt->bindValue(':paystatus', $zero, PDO::PARAM_STR);
                     $stmt->bindValue(':process_claim', $zero, PDO::PARAM_STR);
                     $stmt->execute();
+
+                    // External LIS Dispatch
+                    try {
+                        require_once(__DIR__ . '/../inc/lis/LisService.php');
+                        LisService::dispatchOrderIfMapped($db, $lab_reqno, $patient, $test_sn, $test_name, $_POST["request_note"] ?? '');
+                    } catch (Exception $e) {
+                        error_log("LIS Dispatch Error: " . $e->getMessage());
+                    }
                 }
             }
         }
