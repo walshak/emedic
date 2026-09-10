@@ -3,6 +3,11 @@ include("../inc/session.php");
 include("../Connections/Conn.php");
 include("../inc/credit_current_balance.php");
 
+if (isset($_REQUEST['ajax_action']) && isset($_GET['lis_settings'])) {
+    include("lis_settings.php");
+    exit;
+}
+
 // Initialize error status variables to suppress notices on pages that don't set them
 if (!isset($error_status)) $error_status = null;
 if (!isset($error_msg)) $error_msg = '';
@@ -425,6 +430,8 @@ if (
 				} elseif (isset($_GET['claims']) or isset($_GET['view_claims'])) {
 
 					include("claims_setup.php");
+				} elseif (isset($_GET['lis_settings'])) {
+					include("lis_settings.php");
 				} elseif (isset($_GET['printout'])) {
 					include("claims_printout.php");
 				} elseif (isset($_GET['cptclaim'])) {
