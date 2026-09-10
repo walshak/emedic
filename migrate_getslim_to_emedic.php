@@ -633,22 +633,22 @@ try {
         
         $symptoms = trim($g_sess['symptoms']);
         if (!empty($symptoms) && strtolower($symptoms) !== 'null') {
-            $clinical_note_html .= "<p><h3>Symptoms:</h3><br>" . nl2br(htmlspecialchars($symptoms)) . "</p>";
+            $clinical_note_html .= "<p><h3>Symptoms:</h3><br>" . nl2br($symptoms) . "</p>";
         }
         
         $treatment = trim($g_sess['treatment']);
         if (!empty($treatment) && strtolower($treatment) !== 'null') {
-            $clinical_note_html .= "<p><h3>Treatment:</h3><br>" . nl2br(htmlspecialchars($treatment)) . "</p>";
+            $clinical_note_html .= "<p><h3>Treatment:</h3><br>" . nl2br($treatment) . "</p>";
         }
         
         $investigations = trim($g_sess['investigations']);
         if (!empty($investigations) && strtolower($investigations) !== 'null') {
-            $clinical_note_html .= "<p><h3>Investigations:</h3><br>" . nl2br(htmlspecialchars($investigations)) . "</p>";
+            $clinical_note_html .= "<p><h3>Investigations:</h3><br>" . nl2br($investigations) . "</p>";
         }
         
         $notes = trim($g_sess['notes']);
         if (!empty($notes) && strtolower($notes) !== 'null') {
-            $clinical_note_html .= "<p><h3>Notes:</h3><br>" . nl2br(htmlspecialchars($notes)) . "</p>";
+            $clinical_note_html .= "<p><h3>Notes:</h3><br>" . nl2br($notes) . "</p>";
         }
 
         if (!empty($clinical_note_html)) {
@@ -660,7 +660,7 @@ try {
 
         $diagnosis = trim($g_sess['diagnosis']);
         if (!empty($diagnosis) && strtolower($diagnosis) !== 'null') {
-            $diagnosis_html = "<div width='100%'><i><strong>Diagnosis: </strong></i><br> " . htmlspecialchars($diagnosis) . " <br></div>";
+            $diagnosis_html = "<div width='100%'><i><strong>Diagnosis: </strong></i><br> " . $diagnosis . " <br></div>";
             $insert_diag = $db_target->prepare("INSERT INTO notes (app_no, hospital_no, notes, tag, notes_type, prepared_by, created_by, date_entry, status) 
                                                 VALUES (?, ?, ?, 'DR', 'D', ?, ?, ?, '1')");
             $insert_diag->execute([$new_appt_no, $hosp_no, $diagnosis_html, $doc_name, $doc_id, $datetime]);

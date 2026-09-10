@@ -263,7 +263,7 @@ class AIDictationKit {
 
     async polishNote() {
         if (!this.formatButton) return;
-        
+
         if (!this.lastFocusedInput) {
             alert('Please click inside a text box to select the note you want to polish.');
             return;
@@ -521,7 +521,7 @@ function initAIToolkit() {
     const toolbar = document.getElementById('ai-toolbar');
     const preview = document.getElementById('ai-dictate-preview');
     const overlay = document.getElementById('ai-summary-overlay');
-    
+
     if (toolbar && toolbar.parentElement !== document.body) document.body.appendChild(toolbar);
     if (preview && preview.parentElement !== document.body) document.body.appendChild(preview);
     if (overlay && overlay.parentElement !== document.body) document.body.appendChild(overlay);
@@ -529,7 +529,7 @@ function initAIToolkit() {
     if (!window.aiDictationKit) {
         window.aiDictationKit = new AIDictationKit();
     }
-    
+
     if (!window.aiPatientSummary) {
         const voiceEnabled = overlay ? (overlay.dataset.voiceEnabled !== '0') : true;
         window.aiPatientSummary = new AIPatientSummary({
