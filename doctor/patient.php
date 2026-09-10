@@ -2326,15 +2326,15 @@ $doctor_no = $_SESSION['id'];
 
 
 		function check_adm_note_clr() {
-			note_color.style.color = 'black';
-			///document.getElementById("note_color").innerHTML='CONSULTATION'; 
-
-			var button_title = document.getElementById("button_title").value;
-			document.getElementById("note_color").innerHTML = button_title; //'CONSULTATION';		
+			var noteColorElem = document.getElementById("note_color");
+			if (noteColorElem) noteColorElem.style.color = 'black';
+			var buttonTitleElem = document.getElementById("button_title");
+			if (buttonTitleElem && noteColorElem) {
+				noteColorElem.innerHTML = buttonTitleElem.value;
+			}
 		}
 
 		function check_adm_note(appointment_number, hospital_no, adm_status) {
-			/// let note_color;
 			$.ajax({
 				url: "fetch_set.php",
 				method: "POST",
@@ -2346,24 +2346,24 @@ $doctor_no = $_SESSION['id'];
 					var jsonn = JSON.parse(data);
 
 					if (adm_status != 3) {
+						var noteColorElem = document.getElementById("note_color");
+						var buttonTitleElem = document.getElementById("button_title");
 
 						if (jsonn["status"] == 0) {
-
-							//document.getElementById("add_lab_id").disabled=true; 	
-							//document.getElementById("add_rad_id").disabled=true;	
-							//document.getElementById("represcribe-btn").disabled=true;	
 							toastr.error('Enter CONSULTATION NOTES & SAVED before you continue ...', 'Empty Notes!', {
 								timeOut: 5000
 							});
-							note_color.style.color = 'red';
-							document.getElementById("note_color").innerHTML = '<strong>[ Add Consultation Notes ]</strong>';
+							if (noteColorElem) {
+								noteColorElem.style.color = 'red';
+								noteColorElem.innerHTML = '<strong>[ Add Consultation Notes ]</strong>';
+							}
 						} else {
-							//document.getElementById("add_lab_id").disabled=false; 	
-							//document.getElementById("add_rad_id").disabled=false;
-							note_color.style.color = 'black';
-
-							var button_title = document.getElementById("button_title").value;
-							document.getElementById("note_color").innerHTML = button_title; //'CONSULTATION';						
+							if (noteColorElem) {
+								noteColorElem.style.color = 'black';
+								if (buttonTitleElem) {
+									noteColorElem.innerHTML = buttonTitleElem.value;
+								}
+							}
 						}
 
 					}

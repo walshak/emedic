@@ -275,9 +275,11 @@
             success: function(response) {
                 $("#_progress_notes_hx").html(response);
 
-                $('html, body').animate({
-                    scrollTop: $('#_progress_notes_hx').offset().top - 100
-                }, 500);
+                if ($('#_progress_notes_hx').length > 0 && $('#_progress_notes_hx').offset()) {
+                    $('html, body').animate({
+                        scrollTop: $('#_progress_notes_hx').offset().top - 100
+                    }, 500);
+                }
 
                 toastr.clear();
             },
@@ -305,9 +307,11 @@
 
                 $("#_progress_notes_hx").html(response);
 
-                $('html, body').animate({
-                    scrollTop: $('#_progress_notes_hx').offset().top - 100
-                }, 500);
+                if ($('#_progress_notes_hx').length > 0 && $('#_progress_notes_hx').offset()) {
+                    $('html, body').animate({
+                        scrollTop: $('#_progress_notes_hx').offset().top - 100
+                    }, 500);
+                }
 
                 toastr.clear();
             },

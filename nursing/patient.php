@@ -1509,9 +1509,11 @@ WHERE (adm_status=3 OR adm_status=0) AND hospital_no = ? order by sn DESC LIMIT 
 
 					$("#_progress_notes_hx").html(response);
 
-					$('html, body').animate({
-						scrollTop: $('#_progress_notes_hx').offset().top - 100
-					}, 500);
+					if ($('#_progress_notes_hx').length > 0 && $('#_progress_notes_hx').offset()) {
+						$('html, body').animate({
+							scrollTop: $('#_progress_notes_hx').offset().top - 100
+						}, 500);
+					}
 
 				},
 				error: function(err) {
