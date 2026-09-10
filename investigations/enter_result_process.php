@@ -826,10 +826,7 @@ if (isset($_POST['load_table_items'])) {
 							<tr>
 								<td><?php echo $n; ?></td>
 								<td>
-									<?php if (empty($bill)): ?>
-
-										<input type="checkbox" value="<?php echo htmlspecialchars($labrequest_no); ?>" name="inv_bill_2[]" onchange="toggle_check()">
-									<?php endif; ?>
+									<input type="checkbox" value="<?php echo htmlspecialchars($labrequest_no); ?>" data-labrequest-no="<?php echo htmlspecialchars($labrequest_no); ?>" name="inv_bill_2[]" onchange="toggle_check()">
 								</td>
 								<td><?php echo $rq_date . '<br>' . $rslt_date; ?></td>
 								<td><b>LB<?php echo htmlspecialchars($bill); ?></b></td>
@@ -889,15 +886,18 @@ if (isset($_POST['load_table_items'])) {
 											<?php
 											if ($lisOrder) {
 												$lStatus = $lisOrder['status'];
+												$clinosOrderId = htmlspecialchars($lisOrder['clinos_order_id'] ?? '');
+												$idBadge = !empty($clinosOrderId) ? '<small style="display:block; margin-top:2px; font-weight:bold; color:#1ab394;"><i class="fa fa-hashtag"></i> Order ID: ' . $clinosOrderId . '</small>' : '';
+
 												if ($lStatus === 'sent') {
-													echo '<span class="label label-primary" title="Order dispatched to External LIS"><i class="fa fa-paper-plane"></i> LIS Sent</span>';
+													echo '<span class="label label-primary" title="Order dispatched to External LIS (ID: ' . $clinosOrderId . ')"><i class="fa fa-paper-plane"></i> LIS Sent</span>' . $idBadge;
 												} elseif (in_array($lStatus, ['validated', 'result_received', 'processed'])) {
-													echo '<span class="label label-success" title="Result synced from LIS"><i class="fa fa-check-circle"></i> LIS Synced</span>';
+													echo '<span class="label label-success" title="Result synced from LIS (ID: ' . $clinosOrderId . ')"><i class="fa fa-check-circle"></i> LIS Synced</span>' . $idBadge;
 												} elseif ($lStatus === 'failed') {
 													$err = htmlspecialchars($lisOrder['error_log'] ?? 'Dispatch failed');
-													echo "<span class=\"label label-danger\" title=\"$err\"><i class=\"fa fa-warning\"></i> LIS Failed</span>";
+													echo "<span class=\"label label-danger\" title=\"$err\"><i class=\"fa fa-warning\"></i> LIS Failed</span>" . $idBadge;
 												} else {
-													echo '<span class="label label-warning"><i class="fa fa-clock-o"></i> LIS: ' . ucfirst($lStatus) . '</span>';
+													echo '<span class="label label-warning"><i class="fa fa-clock-o"></i> LIS: ' . ucfirst($lStatus) . '</span>' . $idBadge;
 												}
 											} else {
 												echo '<span class="label label-warning" title="Mapped to External LIS, awaiting dispatch/poll"><i class="fa fa-clock-o"></i> LIS Pending</span>';
@@ -906,7 +906,7 @@ if (isset($_POST['load_table_items'])) {
 											<div style="margin-top:4px;">
 												<button type="button" class="btn btn-xs btn-outline btn-info" onclick="retryLisDispatch('<?= htmlspecialchars($labrequest_no); ?>', '<?= htmlspecialchars($test_id); ?>', '<?= htmlspecialchars(addslashes($test_name)); ?>', '<?= htmlspecialchars($hosp_no); ?>')" title="Send / Retry External LIS Dispatch"><i class="fa fa-refresh"></i> Send/Retry LIS</button>
 												<?php if (!empty($lisOrder['clinos_order_id'])): ?>
-													<a href="lis_label_print.php?order_id=<?= urlencode($lisOrder['clinos_order_id']); ?>" target="_blank" class="btn btn-xs btn-default" title="Print Barcode Specimen Tube Label"><i class="fa fa-barcode"></i> Label</a>
+													<button type="button" class="btn btn-xs btn-default" onclick="openSpecimenModal('<?= htmlspecialchars($lisOrder['clinos_order_id']); ?>')" title="Print Barcode Specimen Tube Label"><i class="fa fa-barcode"></i> Label</button>
 												<?php endif; ?>
 											</div>
 										</div>
@@ -917,10 +917,10 @@ if (isset($_POST['load_table_items'])) {
 									// Rule 1: External LIS results should NOT have Edit
 									$is_lis_managed = ($lisEnabled && !empty($canonicalCode) && $lisOrder && in_array($lisOrder['status'], ['sent', 'validated', 'result_received', 'processed']));
 
-									$is_section_authorized = empty($_SESSION['section']) 
-										|| strtoupper($section) === strtoupper($_SESSION['section']) 
-										|| (isset($_SESSION['rights']) && $_SESSION['rights'] === 'LB') 
-										|| (isset($_SESSION['speciality']) && $_SESSION['speciality'] === 'Administrator') 
+									$is_section_authorized = empty($_SESSION['section'])
+										|| strtoupper($section) === strtoupper($_SESSION['section'])
+										|| (isset($_SESSION['rights']) && $_SESSION['rights'] === 'LB')
+										|| (isset($_SESSION['speciality']) && $_SESSION['speciality'] === 'Administrator')
 										|| (isset($user_type) && $user_type === 'user');
 
 									$exceeded_grace = ($data_capture_status === 'approve' && (int)$day > (int)$grace);
@@ -934,7 +934,7 @@ if (isset($_POST['load_table_items'])) {
 												<?php if ($pay_lock == 1) echo 'disabled'; ?>
 												onClick="show_result_sheet('<?php echo $_detail . '__' . $paystatus . '__' . $cr . '__' . $test_status . '__' . $lab_combo_request_no . '__' . $bill . '__' . $attachment . '__' . $collected_notes; ?>','<?= htmlspecialchars($labrequest_no); ?>')"
 												class="btn btn-<?= $button_color; ?> btn-xs" />
-										<?php endif;
+									<?php endif;
 									endif; ?>
 
 									<?php if (in_array($data_capture_status, ['result', 'approve'])): ?>
@@ -956,6 +956,7 @@ if (isset($_POST['load_table_items'])) {
 										<input
 											type="checkbox"
 											class="inv-checkbox"
+											data-labrequest-no="<?php echo htmlspecialchars($labrequest_no); ?>"
 											value="<?php echo $_detail . '__' . $paystatus . '__' . $cr; ?>"
 											name="inv[]"
 											onchange="updateSelectAll()"
@@ -1006,6 +1007,11 @@ if (isset($_POST['load_table_items'])) {
 				<button type="submit" class="btn btn-success btn-sm" name="generate_bill" disabled>
 					Generate Invoice/Billing Numbering (LB)
 				</button>
+				<?php if ($lisEnabled): ?>
+					<button type="button" class="btn btn-info btn-sm" id="btn_send_lis_batch" onclick="sendSelectedToLis('<?php echo htmlspecialchars($hosp_no); ?>')" disabled style="margin-left: 5px;">
+						<i class="fa fa-paper-plane"></i> Send Selected to LIS
+					</button>
+				<?php endif; ?>
 			</div>
 
 			<?php if (
@@ -1044,11 +1050,19 @@ if (isset($_POST['load_table_items'])) {
 		<script>
 			if (typeof window.retryLisDispatch !== 'function') {
 				window.retryLisDispatch = function(labrequestNo, testId, testName, patientNo) {
-					if (typeof toastr !== 'undefined') toastr.info('Communicating with External LIS...', '', { timeOut: 3000 });
+					if (typeof toastr !== 'undefined') toastr.info('Communicating with External LIS...', '', {
+						timeOut: 3000
+					});
 					$.ajax({
 						url: 'lis_action.php',
 						method: 'POST',
-						data: { action: 'dispatch', labrequest_no: labrequestNo, test_id: testId, test_name: testName, patient_no: patientNo },
+						data: {
+							action: 'dispatch',
+							labrequest_no: labrequestNo,
+							test_id: testId,
+							test_name: testName,
+							patient_no: patientNo
+						},
 						success: function(res) {
 							if (res && res.success) {
 								if (typeof toastr !== 'undefined') toastr.success(res.message, 'LIS Dispatch');
@@ -1074,7 +1088,9 @@ if (isset($_POST['load_table_items'])) {
 					$.ajax({
 						url: 'lis_action.php',
 						method: 'POST',
-						data: { action: 'poll' },
+						data: {
+							action: 'poll'
+						},
 						success: function(res) {
 							$btn.html(originalHtml).prop('disabled', false);
 							if (res && res.success) {
@@ -1090,6 +1106,192 @@ if (isset($_POST['load_table_items'])) {
 						error: function() {
 							$btn.html(originalHtml).prop('disabled', false);
 							if (typeof toastr !== 'undefined') toastr.error('Failed to sync with LIS.', 'Network Error');
+						}
+					});
+				};
+			}
+
+			if (typeof window.sendSelectedToLis !== 'function') {
+				window.sendSelectedToLis = function(patientNo) {
+					var selectedReqs = [];
+					$('input[name="inv_bill_2[]"]:checked, input[name="inv[]"]:checked, .inv-checkbox:checked').each(function() {
+						var reqNo = $(this).attr('data-labrequest-no') || $(this).val();
+						if (reqNo && reqNo.trim() !== '') {
+							if (reqNo.indexOf('__') !== -1) {
+								var parts = reqNo.split('__');
+								if (parts[2]) reqNo = parts[2];
+							}
+							reqNo = reqNo.trim();
+							if (reqNo !== '' && selectedReqs.indexOf(reqNo) === -1) {
+								selectedReqs.push(reqNo);
+							}
+						}
+					});
+
+					if (selectedReqs.length === 0) {
+						if (typeof toastr !== 'undefined') toastr.warning('Please select at least one investigation using the checkboxes on the left.', 'No Selection');
+						else alert('Please select at least one investigation using the checkboxes on the left.');
+						return;
+					}
+
+					var $btn = $('#btn_send_lis_batch');
+					var originalHtml = $btn.html();
+					$btn.html('<i class="fa fa-spin fa-spinner"></i> Sending to LIS...').prop('disabled', true);
+
+					$.ajax({
+						url: 'lis_action.php',
+						method: 'POST',
+						data: {
+							action: 'dispatch_batch',
+							patient_no: patientNo,
+							labrequest_nos: selectedReqs
+						},
+						dataType: 'json',
+						success: function(res) {
+							$btn.html(originalHtml).prop('disabled', false);
+							if (res && res.success) {
+								if (typeof toastr !== 'undefined') toastr.success(res.message, 'LIS Batch Sent');
+								else alert(res.message);
+								if (typeof load_table === 'function') load_table();
+							} else {
+								var err = (res && res.error) ? res.error : 'Dispatch failed';
+								if (typeof toastr !== 'undefined') toastr.error(err, 'LIS Error');
+								else alert('LIS Error: ' + err);
+							}
+						},
+						error: function(xhr, status, err) {
+							$btn.html(originalHtml).prop('disabled', false);
+							if (typeof toastr !== 'undefined') toastr.error('Failed to communicate with LIS service.', 'Network Error');
+							else alert('Network Error: Failed to communicate with LIS service.');
+						}
+					});
+				};
+			}
+		</script>
+
+		<!-- Specimen Tube Labels Modal -->
+		<div class="modal fade" id="lisSpecimenModal" tabindex="-1" role="dialog" aria-labelledby="lisSpecimenModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg" role="document">
+				<div class="modal-content">
+					<div class="modal-header" style="background-color: #1ab394; color: white;">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white; opacity: 1;">
+							<span aria-hidden="true">&times;</span>
+						</button>
+						<button type="button" class="btn btn-sm btn-warning pull-right" onclick="printAllSpecimenLabels()" style="margin-right: 15px; font-weight: bold;">
+							<i class="fa fa-print"></i> Print All Labels
+						</button>
+						<h4 class="modal-title" id="lisSpecimenModalLabel">
+							<i class="fa fa-flask"></i> Specimen Tube Labels for Order <span id="specimenModalOrderId" style="font-weight: bold;"></span>
+						</h4>
+					</div>
+					<div class="modal-body">
+						<div id="specimenModalLoading" class="text-center" style="padding: 30px;">
+							<i class="fa fa-spinner fa-spin fa-3x fa-fw text-navy"></i>
+							<p style="margin-top: 10px; font-weight: 500;">Loading specimen tube details from LIS...</p>
+						</div>
+						<div id="specimenModalError" class="alert alert-danger" style="display: none;"></div>
+						<div id="specimenModalContent" style="display: none;">
+							<div class="alert alert-info" style="font-size: 13px;">
+								<i class="fa fa-info-circle"></i> ClinOS intelligently grouped requested tests into physical specimen collection tubes. Click <strong>Print Label</strong> on a tube card or <strong>Print All Labels</strong> above.
+							</div>
+							<div id="specimenTubesContainer" class="row"></div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-primary" onclick="printAllSpecimenLabels()"><i class="fa fa-print"></i> Print All Labels</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			if (typeof window.openSpecimenModal !== 'function') {
+				window.currentSpecimenOrderId = null;
+				window.currentOrderSpecimens = [];
+
+				window.printAllSpecimenLabels = function() {
+					if (window.currentOrderSpecimens && window.currentOrderSpecimens.length > 0) {
+						$.each(window.currentOrderSpecimens, function(idx, spec) {
+							var barcode = spec.barcode || window.currentSpecimenOrderId;
+							var printUrl = 'lis_label_print.php?order_id=' + encodeURIComponent(window.currentSpecimenOrderId) + '&barcode=' + encodeURIComponent(barcode);
+							window.open(printUrl, '_blank');
+						});
+					} else if (window.currentSpecimenOrderId) {
+						var printUrl = 'lis_label_print.php?order_id=' + encodeURIComponent(window.currentSpecimenOrderId);
+						window.open(printUrl, '_blank');
+					}
+				};
+
+				window.openSpecimenModal = function(orderId) {
+					window.currentSpecimenOrderId = orderId;
+					window.currentOrderSpecimens = [];
+
+					if (typeof toastr !== 'undefined') toastr.info('Fetching specimen label details...', '', { timeOut: 1500 });
+
+					$.ajax({
+						url: 'lis_action.php',
+						method: 'GET',
+						data: { action: 'get_specimens', order_id: orderId },
+						dataType: 'json',
+						success: function(res) {
+							if (res && res.success && res.specimens && res.specimens.length > 0) {
+								window.currentOrderSpecimens = res.specimens;
+
+								// Rule: If only 1 specimen tube, open print directly and skip modal
+								if (res.specimens.length === 1) {
+									var singleBarcode = res.specimens[0].barcode || orderId;
+									var printUrl = 'lis_label_print.php?order_id=' + encodeURIComponent(orderId) + '&barcode=' + encodeURIComponent(singleBarcode);
+									window.open(printUrl, '_blank');
+									return;
+								}
+
+								// Multiple specimens: populate and show modal
+								$('#specimenModalOrderId').text(orderId);
+								$('#specimenModalLoading').hide();
+								$('#specimenModalError').hide().text('');
+
+								var html = '';
+								$.each(res.specimens, function(idx, spec) {
+									var specKeyClean = (spec.specimen_key || 'UNKNOWN').replace(/_/g, ' ');
+									var testsList = '';
+									if (spec.tests) {
+										testsList = Array.isArray(spec.tests) ? spec.tests.join(', ') : spec.tests;
+									} else if (spec.assigned_tests) {
+										testsList = Array.isArray(spec.assigned_tests) ? spec.assigned_tests.join(', ') : spec.assigned_tests;
+									} else {
+										testsList = 'General Tests';
+									}
+									var barcode = spec.barcode || orderId;
+
+									html += '<div class="col-md-6" style="margin-bottom: 15px;">';
+									html += '  <div class="panel panel-default" style="border-top: 3px solid #1ab394; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">';
+									html += '    <div class="panel-heading" style="background: #f8f9fa;">';
+									html += '      <h4 style="margin: 0; color: #2f4050; font-weight: 600;"><i class="fa fa-vial text-navy"></i> ' + specKeyClean + '</h4>';
+									html += '    </div>';
+									html += '    <div class="panel-body">';
+									html += '      <p style="margin-bottom: 5px;"><strong>Barcode:</strong> <span class="label label-primary" style="font-size: 12px; font-family: monospace;">' + barcode + '</span></p>';
+									html += '      <p style="margin-bottom: 5px;"><strong>Status:</strong> <span class="label label-info">' + (spec.status || 'COLLECTED').toUpperCase() + '</span></p>';
+									html += '      <p style="margin-bottom: 10px;"><strong>Assigned Tests:</strong><br><small class="text-muted">' + testsList + '</small></p>';
+									html += '      <a href="lis_label_print.php?order_id=' + encodeURIComponent(orderId) + '&barcode=' + encodeURIComponent(barcode) + '" target="_blank" class="btn btn-sm btn-primary btn-block"><i class="fa fa-print"></i> Print Label (' + barcode + ')</a>';
+									html += '    </div>';
+									html += '  </div>';
+									html += '</div>';
+								});
+
+								$('#specimenTubesContainer').html(html);
+								$('#specimenModalContent').show();
+								$('#lisSpecimenModal').modal('show');
+							} else {
+								// Fallback if no specimens array returned: open default label print directly
+								var printUrl = 'lis_label_print.php?order_id=' + encodeURIComponent(orderId);
+								window.open(printUrl, '_blank');
+							}
+						},
+						error: function() {
+							// On error, fallback to direct order label print
+							var printUrl = 'lis_label_print.php?order_id=' + encodeURIComponent(orderId);
+							window.open(printUrl, '_blank');
 						}
 					});
 				};
@@ -1189,9 +1391,20 @@ if (isset($_POST['mgt_notes'])) {
 		$stmt->execute();
 		$row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-		$speciality_approver = $row['speciality'];
-		$fullname_approver   = $row['fullname'];
-		$EmployeeCode        = $row['EmployeeCode'];
+		// Exception for Super Admin (admin_users id = 1) if not found in invsti_users
+		if (!$row) {
+			$sql_sa = "SELECT 'Laboratory Specialist' AS speciality, fullname, EmployeeCode 
+            FROM admin_users 
+            WHERE (username = :username OR id = 1) AND id = 1";
+			$stmt_sa = $db->prepare($sql_sa);
+			$stmt_sa->bindValue(':username', $username);
+			$stmt_sa->execute();
+			$row = $stmt_sa->fetch(PDO::FETCH_ASSOC);
+		}
+
+		$speciality_approver = $row['speciality'] ?? '';
+		$fullname_approver   = $row['fullname'] ?? '';
+		$EmployeeCode        = $row['EmployeeCode'] ?? '';
 
 		// Step 2: Fallback if speciality is empty – fetch from hremp using EmployeeCode
 		if (trim($speciality_approver) === '' && $EmployeeCode) {
@@ -1199,8 +1412,8 @@ if (isset($_POST['mgt_notes'])) {
 			$stmt = $db->prepare($sql);
 			$stmt->bindValue(':EmployeeCode', $EmployeeCode);
 			$stmt->execute();
-			$row = $stmt->fetch(PDO::FETCH_ASSOC);
-			$speciality_approver = $row['Designation'];
+			$row_hr = $stmt->fetch(PDO::FETCH_ASSOC);
+			$speciality_approver = $row_hr['Designation'] ?? 'Laboratory Scientist';
 		}
 
 		$speciality_approver = $speciality_approver ? htmlspecialchars($speciality_approver) : null;

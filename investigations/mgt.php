@@ -997,17 +997,16 @@ if (isset($_GET['url'])) {
             });
 
             function toggle_check() {
-                // Get all checkboxes with name inv_bill_2[]
-                var checkboxes = document.querySelectorAll('input[name="inv_bill_2[]"]');
+                var checkboxes = document.querySelectorAll('input[name="inv_bill_2[]"], input[name="inv[]"], .inv-checkbox');
                 var button = document.querySelector('button[name="generate_bill"]');
+                var lisBtn = document.getElementById('btn_send_lis_batch');
 
-                // Check if any checkbox is checked
                 var anyChecked = Array.prototype.some.call(checkboxes, function(chk) {
                     return chk.checked;
                 });
 
-                // Enable button if any checked, else disable
-                button.disabled = !anyChecked;
+                if (button) button.disabled = !anyChecked;
+                if (lisBtn) lisBtn.disabled = !anyChecked;
             }
 
             function toggle_check_2() {
@@ -1306,12 +1305,12 @@ if (isset($_GET['url'])) {
         <script>
             /* Toggle ALL row checkboxes */
             function toggleAllInv(source) {
-                var checkboxes = document.querySelectorAll('.inv-checkbox');
+                var checkboxes = document.querySelectorAll('input[name="inv_bill_2[]"], input[name="inv[]"], .inv-checkbox');
                 checkboxes.forEach(function(chk) {
                     chk.checked = source.checked;
                 });
 
-                toggleActionButton();
+                toggle_check();
             }
 
             /* Update header checkbox when rows are clicked */

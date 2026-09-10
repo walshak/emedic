@@ -29,16 +29,8 @@ try {
         exit;
     }
 
-    // Execute auto-dispatching for pending mapped lab orders
-    $autoDispatchRes = LisService::autoDispatchPendingOrders($db);
-
     // Execute result ingestion
     $res = LisService::syncResults($db);
-
-    $res['auto_dispatched'] = $autoDispatchRes['dispatched_count'] ?? 0;
-    if (!empty($autoDispatchRes['errors'])) {
-        $res['dispatch_errors'] = $autoDispatchRes['errors'];
-    }
 
     echo json_encode($res);
 

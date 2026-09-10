@@ -32,6 +32,20 @@ try {
     $driver = LisDriverFactory::getDriver($db);
     $labelHtml = $driver->getLabelContent($order['clinos_label_url']);
 
+    $barcode = $_GET['barcode'] ?? null;
+    if (!empty($barcode) && $barcode !== 'all' && !empty($order['clinos_specimens_json'])) {
+        $specimens = json_decode($order['clinos_specimens_json'], true);
+        if (is_array($specimens)) {
+            foreach ($specimens as $sp) {
+                $targetBarcode = $sp['barcode'] ?? ($sp['sample_id'] ?? '');
+                if ($targetBarcode === $barcode) {
+                    $labelHtml = preg_replace('/<div class="barcode-digits">.*?<\/div>/s', '<div class="barcode-digits">' . htmlspecialchars($targetBarcode) . '</div>', $labelHtml);
+                    break;
+                }
+            }
+        }
+    }
+
     // Wrap label content with print trigger if not already included
     if (strpos($labelHtml, '<script>') === false) {
         $labelHtml .= '<script>window.onload = function() { window.print(); };</script>';

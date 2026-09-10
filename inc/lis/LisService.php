@@ -34,6 +34,304 @@ class LisService {
     }
 
     /**
+     * Dispatch a batch of selected lab orders as a single LIS order
+     */
+    public static function dispatchBatchOrders(PDO $db, array $labrequestNos, string $patientNo, string $notes = ''): array {
+        if (!LisDriverFactory::isLisEnabled($db)) {
+            return ['success' => false, 'error' => 'LIS Integration is currently disabled.'];
+        }
+
+        if (empty($labrequestNos)) {
+            return ['success' => false, 'error' => 'No lab requests selected for dispatch.'];
+        }
+
+        $labrequestNos = array_values(array_filter(array_map('trim', $labrequestNos)));
+        if (empty($labrequestNos)) {
+            return ['success' => false, 'error' => 'No valid lab request numbers provided.'];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($labrequestNos), '?'));
+        $stmt = $db->prepare("SELECT labrequest_no, patient, test_id, test_name, request_note FROM lab_manage WHERE labrequest_no IN ($placeholders)");
+        $stmt->execute($labrequestNos);
+        $labRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($labRows)) {
+            return ['success' => false, 'error' => 'Selected lab requests not found in database.'];
+        }
+
+        $orderedTests = [];
+        $mappedRequestNos = [];
+
+        foreach ($labRows as $row) {
+            $reqNo = $row['labrequest_no'];
+            $testId = $row['test_id'];
+            $testName = $row['test_name'];
+
+            $canonicalCode = self::getMappedCanonicalCode($db, $testId, $testName);
+            if ($canonicalCode) {
+                $orderedTests[] = $canonicalCode;
+                $mappedRequestNos[] = $reqNo;
+            }
+        }
+
+        if (empty($orderedTests)) {
+            return ['success' => false, 'error' => 'None of the selected tests are mapped to External LIS.'];
+        }
+
+        $orderedTests = array_values(array_unique($orderedTests));
+        $primaryOrderNo = $labrequestNos[0];
+
+        if (empty($patientNo) && !empty($labRows[0]['patient'])) {
+            $patientNo = $labRows[0]['patient'];
+        }
+
+        $pStmt = $db->prepare("SELECT surname, fname, oname, gender, dob, phone, email FROM enrollee WHERE hospital_no = :patient LIMIT 1");
+        $pStmt->execute([':patient' => $patientNo]);
+        $patient = $pStmt->fetch(PDO::FETCH_ASSOC);
+
+        $fullname = $patient ? trim(($patient['surname'] ?? '') . ' ' . ($patient['fname'] ?? '') . ' ' . ($patient['oname'] ?? '')) : 'Patient ' . $patientNo;
+        $sex = strtoupper(substr($patient['gender'] ?? 'U', 0, 1));
+        if ($sex !== 'M' && $sex !== 'F') {
+            $sex = 'U';
+        }
+        $dob = !empty($patient['dob']) && $patient['dob'] !== '0000-00-00' ? $patient['dob'] : null;
+        $phone = !empty($patient['phone']) ? $patient['phone'] : null;
+        $email = !empty($patient['email']) ? $patient['email'] : null;
+
+        $orderPayload = [
+            'external_order_id' => $primaryOrderNo,
+            'external_patient_id' => $patientNo,
+            'patient_name' => $fullname,
+            'sex' => $sex,
+            'ordered_tests' => $orderedTests,
+            'notes' => !empty($notes) ? $notes : 'Requested from EMR'
+        ];
+
+        if ($dob) $orderPayload['date_of_birth'] = $dob;
+        if ($phone) $orderPayload['phone_number'] = $phone;
+        if ($email) $orderPayload['email'] = $email;
+
+        try {
+            $driver = LisDriverFactory::getDriver($db);
+            $response = $driver->createOrder($orderPayload);
+
+            $orderId = $response['order_id'] ?? null;
+            $orderUid = $response['order_uid'] ?? null;
+            $labelUrl = $response['label_url'] ?? null;
+            $specimensJson = isset($response['specimens']) ? json_encode($response['specimens']) : null;
+            $alreadyExisted = !empty($response['already_existed']);
+
+            $config = LisDriverFactory::getConfig($db);
+            $provider = $config['provider_driver'] ?? 'clinos';
+
+            $insStmt = $db->prepare("INSERT INTO lis_orders 
+                (labrequest_no, external_order_id, lis_provider, clinos_order_id, clinos_order_uid, clinos_label_url, clinos_specimens_json, status, error_log)
+                VALUES 
+                (:labrequest_no, :external_order_id, :lis_provider, :clinos_order_id, :clinos_order_uid, :clinos_label_url, :clinos_specimens_json, 'sent', NULL)
+                ON DUPLICATE KEY UPDATE 
+                clinos_order_id = VALUES(clinos_order_id),
+                clinos_order_uid = VALUES(clinos_order_uid),
+                clinos_label_url = VALUES(clinos_label_url),
+                clinos_specimens_json = VALUES(clinos_specimens_json),
+                status = 'sent',
+                error_log = NULL");
+
+            foreach ($mappedRequestNos as $reqNo) {
+                $insStmt->execute([
+                    ':labrequest_no' => $reqNo,
+                    ':external_order_id' => $primaryOrderNo,
+                    ':lis_provider' => $provider,
+                    ':clinos_order_id' => $orderId,
+                    ':clinos_order_uid' => $orderUid,
+                    ':clinos_label_url' => $labelUrl,
+                    ':clinos_specimens_json' => $specimensJson
+                ]);
+            }
+
+            $msg = $alreadyExisted
+                ? "Order already exists on External LIS. Synced " . count($mappedRequestNos) . " test(s) (Order ID: {$orderId})"
+                : "Successfully dispatched " . count($mappedRequestNos) . " test(s) to External LIS (Order ID: {$orderId})";
+
+            return [
+                'success' => true,
+                'already_existed' => $alreadyExisted,
+                'message' => $msg,
+                'dispatched_count' => count($mappedRequestNos),
+                'response' => $response,
+                'clinos_order_id' => $orderId,
+                'clinos_order_uid' => $orderUid,
+                'clinos_label_url' => $labelUrl
+            ];
+
+        } catch (Exception $e) {
+            $extracted = self::extractOrderDetailsFromError($e->getMessage());
+
+            if ($extracted && !empty($extracted['order_id'])) {
+                $orderId = $extracted['order_id'];
+                $orderUid = $extracted['order_uid'] ?? null;
+                $labelUrl = $extracted['label_url'] ?? null;
+
+                $config = LisDriverFactory::getConfig($db);
+                $provider = $config['provider_driver'] ?? 'clinos';
+
+                $insStmt = $db->prepare("INSERT INTO lis_orders 
+                    (labrequest_no, external_order_id, lis_provider, clinos_order_id, clinos_order_uid, clinos_label_url, status, error_log)
+                    VALUES 
+                    (:labrequest_no, :external_order_id, :lis_provider, :clinos_order_id, :clinos_order_uid, :clinos_label_url, 'sent', NULL)
+                    ON DUPLICATE KEY UPDATE 
+                    clinos_order_id = VALUES(clinos_order_id),
+                    clinos_order_uid = VALUES(clinos_order_uid),
+                    clinos_label_url = VALUES(clinos_label_url),
+                    status = 'sent',
+                    error_log = NULL");
+
+                foreach ($mappedRequestNos as $reqNo) {
+                    $insStmt->execute([
+                        ':labrequest_no' => $reqNo,
+                        ':external_order_id' => $primaryOrderNo,
+                        ':lis_provider' => $provider,
+                        ':clinos_order_id' => $orderId,
+                        ':clinos_order_uid' => $orderUid,
+                        ':clinos_label_url' => $labelUrl
+                    ]);
+                }
+
+                return [
+                    'success' => true,
+                    'already_existed' => true,
+                    'message' => "Order already exists on External LIS. Synced " . count($mappedRequestNos) . " test(s) (Order ID: {$orderId})",
+                    'dispatched_count' => count($mappedRequestNos),
+                    'clinos_order_id' => $orderId,
+                    'clinos_order_uid' => $orderUid,
+                    'clinos_label_url' => $labelUrl
+                ];
+            }
+
+            $errStmt = $db->prepare("INSERT INTO lis_orders 
+                (labrequest_no, external_order_id, lis_provider, status, error_log) 
+                VALUES (:labrequest_no, :external_order_id, 'clinos', 'failed', :error_log)
+                ON DUPLICATE KEY UPDATE status = 'failed', error_log = VALUES(error_log)");
+
+            foreach ($mappedRequestNos as $reqNo) {
+                $errStmt->execute([
+                    ':labrequest_no' => $reqNo,
+                    ':external_order_id' => $primaryOrderNo,
+                    ':error_log' => $e->getMessage()
+                ]);
+            }
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get specimen tube details and assigned tests for a dispatched LIS order
+     */
+    public static function getSpecimensForOrder(PDO $db, string $identifier): array {
+        if (!LisDriverFactory::isLisEnabled($db)) {
+            return ['success' => false, 'error' => 'LIS Integration is currently disabled.'];
+        }
+
+        $stmt = $db->prepare("SELECT * FROM lis_orders WHERE clinos_order_id = :id1 OR labrequest_no = :id2 OR external_order_id = :id3 LIMIT 1");
+        $stmt->execute([
+            ':id1' => $identifier,
+            ':id2' => $identifier,
+            ':id3' => $identifier
+        ]);
+        $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$order) {
+            return ['success' => false, 'error' => 'LIS order not found for identifier: ' . $identifier];
+        }
+
+        $clinosOrderId = $order['clinos_order_id'] ?? $order['external_order_id'];
+        $clinosOrderUid = $order['clinos_order_uid'] ?? '';
+        $labelUrl = $order['clinos_label_url'] ?? '';
+        $extOrderId = $order['external_order_id'] ?? $order['labrequest_no'];
+
+        $specimensRaw = json_decode($order['clinos_specimens_json'] ?? '[]', true);
+        if (!is_array($specimensRaw)) {
+            $specimensRaw = [];
+        }
+
+        $labStmt = $db->prepare("SELECT l.labrequest_no, l.test_id, l.test_name, m.canonical_code, m.lis_provider 
+                                 FROM lab_manage l 
+                                 LEFT JOIN lis_test_mappings m ON (m.lab_scan_id = l.test_id OR LOWER(TRIM(m.emr_test_name)) = LOWER(TRIM(l.test_name))) AND m.is_active = 1
+                                 WHERE l.labrequest_no IN (
+                                     SELECT labrequest_no FROM lis_orders WHERE clinos_order_id = :cid OR external_order_id = :eid
+                                 ) OR l.labrequest_no = :lno");
+        $labStmt->execute([
+            ':cid' => $clinosOrderId,
+            ':eid' => $extOrderId,
+            ':lno' => $extOrderId
+        ]);
+        $labItems = $labStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $specimenTestMap = [];
+        foreach ($labItems as $item) {
+            $testName = $item['test_name'];
+            $canonical = strtoupper($item['canonical_code'] ?? '');
+
+            if (in_array($canonical, ['ALBUMIN_SERUM', 'LIVER_FUNCTION_TEST', 'FLP', 'EUC', 'LFT', 'CRP', 'AMYLASE_URINE', 'AMA', 'CA19_9', 'CEA', 'CREATININE_SERUM', 'CALCIUM'])) {
+                $specimenTestMap['SERUM_PLASMA'][] = $testName;
+            } elseif (in_array($canonical, ['BLOOD_GROUP', 'FBC', 'GENOTYPE', 'HAEMOGLOBIN_GENOTYPE', 'PCV', 'ESR', 'MALARIA_PARASITE'])) {
+                $specimenTestMap['WHOLE_BLOOD'][] = $testName;
+            } elseif (in_array($canonical, ['URINALYSIS', 'URINE_MCS'])) {
+                $specimenTestMap['URINE'][] = $testName;
+            } else {
+                $specimenTestMap['DEFAULT'][] = $testName;
+            }
+        }
+
+        $formattedSpecimens = [];
+
+        if (!empty($specimensRaw)) {
+            foreach ($specimensRaw as $sp) {
+                $spKey = strtoupper($sp['specimen_key'] ?? ($sp['specimen_type'] ?? 'DEFAULT'));
+                $barcode = $sp['barcode'] ?? ($sp['sample_id'] ?? '');
+                $status = $sp['status'] ?? 'EXPECTED';
+
+                $assignedTests = $specimenTestMap[$spKey] ?? ($specimenTestMap['DEFAULT'] ?? []);
+                if (empty($assignedTests) && !empty($labItems)) {
+                    $assignedTests = array_column($labItems, 'test_name');
+                }
+                $assignedTests = array_values(array_unique($assignedTests));
+
+                $formattedSpecimens[] = [
+                    'id' => $sp['id'] ?? '',
+                    'specimen_key' => $spKey,
+                    'barcode' => $barcode,
+                    'sample_id' => $sp['sample_id'] ?? $barcode,
+                    'status' => $status,
+                    'collection_status' => ($status === 'COLLECTED' || $status === 'RECEIVED') ? 'COLLECTED' : 'NOT COLLECTED',
+                    'tests' => !empty($assignedTests) ? implode(', ', $assignedTests) : 'Assigned Tests'
+                ];
+            }
+        } else {
+            $formattedSpecimens[] = [
+                'id' => '1',
+                'specimen_key' => 'SPECIMEN TUBE',
+                'barcode' => $clinosOrderId,
+                'sample_id' => $clinosOrderId,
+                'status' => 'EXPECTED',
+                'collection_status' => 'NOT COLLECTED',
+                'tests' => implode(', ', array_column($labItems, 'test_name')) ?: 'Ordered Tests'
+            ];
+        }
+
+        return [
+            'success' => true,
+            'clinos_order_id' => $clinosOrderId,
+            'clinos_order_uid' => $clinosOrderUid,
+            'clinos_label_url' => $labelUrl,
+            'specimens' => $formattedSpecimens
+        ];
+    }
+
+    /**
      * Dispatch lab order to LIS if enabled and test is mapped
      */
     public static function dispatchOrderIfMapped(PDO $db, string $labrequestNo, string $patientNo, $testId, string $testName, string $notes = ''): ?array {

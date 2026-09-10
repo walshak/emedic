@@ -233,16 +233,8 @@ if (!empty($lab_results_sub)) {
                 <?php if (!empty($investigation_['approved_by'])): ?>
                     <b>Approved By:</b> <?php echo htmlspecialchars($investigation_['approved_by']); ?><br>
                 <?php endif; ?>
-                <?php if (!empty($investigation_['attachment'])): 
-                    $att_ext = strtolower(pathinfo($investigation_['attachment'], PATHINFO_EXTENSION) ?: $investigation_['attachment']);
-                    $is_img = in_array($att_ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-                ?>
+                <?php if (!empty($investigation_['attachment'])): ?>
                     <b>Attachment:</b> <i class="fa fa-paperclip"></i> <a href="uploads/<?php echo htmlspecialchars($req_no . '.' . $investigation_['attachment']); ?>" target="_blank">View/Download File (.<?php echo htmlspecialchars($investigation_['attachment']); ?>)</a><br>
-                    <?php if ($is_img): ?>
-                        <div style="margin-top: 5px; margin-bottom: 5px;">
-                            <img src="uploads/<?php echo htmlspecialchars($req_no . '.' . $investigation_['attachment']); ?>" alt="Attached Image" style="max-width: 100%; max-height: 250px; border: 1px solid #ccc; border-radius: 4px; padding: 2px;">
-                        </div>
-                    <?php endif; ?>
                 <?php endif; ?>
                 <?php if (!empty($investigation_['result_comment'])): ?>
                     <b>Comment:</b> <?php echo htmlspecialchars($investigation_['result_comment']); ?>

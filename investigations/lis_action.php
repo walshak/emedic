@@ -41,6 +41,50 @@ if ($action === 'dispatch' || $action === 'retry') {
     exit;
 }
 
+if ($action === 'dispatch_batch') {
+    $patient_no = trim($_POST['patient_no'] ?? '');
+    $labrequest_nos_raw = $_POST['labrequest_nos'] ?? [];
+    $request_note = trim($_POST['request_note'] ?? '');
+
+    if (is_string($labrequest_nos_raw)) {
+        $labrequest_nos = array_filter(array_map('trim', explode(',', $labrequest_nos_raw)));
+    } else {
+        $labrequest_nos = (array)$labrequest_nos_raw;
+    }
+
+    if (empty($labrequest_nos)) {
+        echo json_encode(['success' => false, 'error' => 'Please select at least one investigation to send to LIS.']);
+        exit;
+    }
+
+    $res = LisService::dispatchBatchOrders($db, $labrequest_nos, $patient_no, $request_note);
+
+    if ($res['success']) {
+        echo json_encode([
+            'success' => true,
+            'message' => $res['message'],
+            'dispatched_count' => $res['dispatched_count'] ?? count($labrequest_nos),
+            'clinos_order_id' => $res['clinos_order_id'] ?? null,
+            'label_url' => $res['clinos_label_url'] ?? null
+        ]);
+    } else {
+        echo json_encode(['success' => false, 'error' => $res['error'] ?? 'Batch dispatch failed.']);
+    }
+    exit;
+}
+
+if ($action === 'get_specimens') {
+    $identifier = trim($_POST['order_id'] ?? ($_GET['order_id'] ?? ($_POST['labrequest_no'] ?? ($_GET['labrequest_no'] ?? ''))));
+    if (empty($identifier)) {
+        echo json_encode(['success' => false, 'error' => 'Missing order ID or request number']);
+        exit;
+    }
+
+    $res = LisService::getSpecimensForOrder($db, $identifier);
+    echo json_encode($res);
+    exit;
+}
+
 if ($action === 'poll' || $action === 'sync') {
     $res = LisService::syncResults($db);
     echo json_encode([

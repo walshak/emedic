@@ -60,22 +60,28 @@ mysql -u [db_user] -p[db_pass] [db_name] < migration_2026_09_10_lis_notification
 - [`migration_2026_09_10_lis_notifications_seen.sql`](file:///home/mrapollos/Documents/work/emedic/migration_2026_09_10_lis_notifications_seen.sql) — LIS notification tracking SQL script.
 
 ### Modified Files (EMR Integration Hooks & UI Safeguards)
-- [`investigations/mgt.php`](file:///home/mrapollos/Documents/work/emedic/investigations/mgt.php) — Added non-blocking auto-sync trigger, notification alerts, sound triggers, and guarded "Sync LIS Results" button.
-- [`investigations/enter_result_process.php`](file:///home/mrapollos/Documents/work/emedic/investigations/enter_result_process.php) — Added LIS badges, status indicators, retry dispatch button, barcode label print link, and guarded all LIS UI elements with `$lisEnabled`.
+- [`investigations/mgt.php`](file:///home/mrapollos/Documents/work/emedic/investigations/mgt.php) — Added non-blocking auto-sync trigger, notification alerts, sound triggers, dynamic LIS batch button activation handler (`toggle_check()`), and guarded "Sync LIS Results" button.
+- [`investigations/enter_result_process.php`](file:///home/mrapollos/Documents/work/emedic/investigations/enter_result_process.php) — Added LIS badges with Order IDs (`LIS Sent (#ORD-...)`), batch dispatch function `sendSelectedToLis()`, multi-specimen tube selection modal (`#lisSpecimenModal`), direct print auto-bypass for single tubes, and "Print All Labels" multi-window trigger.
 - [`investigations/fetch_lab_count.php`](file:///home/mrapollos/Documents/work/emedic/investigations/fetch_lab_count.php) — Ultra-fast non-blocking local DB query endpoint returning unseen LIS result counts.
 - [`investigations/fetch_lab_list.php`](file:///home/mrapollos/Documents/work/emedic/investigations/fetch_lab_list.php) — Tabbed modal UI (`Pending Queue`, `New LIS Results`, `LIS Order Status`) with "Mark All as Seen" capability.
-- [`investigations/insert.php`](file:///home/mrapollos/Documents/work/emedic/investigations/insert.php) — Auto-dispatches mapped orders when placed by lab personnel.
-- [`doctor/controllers/_saveInvestigation.php`](file:///home/mrapollos/Documents/work/emedic/doctor/controllers/_saveInvestigation.php) — Auto-dispatches mapped orders when placed by doctors.
+- [`investigations/insert.php`](file:///home/mrapollos/Documents/work/emedic/investigations/insert.php) — Updated manual lab requisition creation (auto-dispatch removed in favor of manual batch dispatch).
+- [`doctor/controllers/_saveInvestigation.php`](file:///home/mrapollos/Documents/work/emedic/doctor/controllers/_saveInvestigation.php) — Prescribes lab investigations without auto-dispatching to LIS.
 - [`investigations/javascripts_setup.php`](file:///home/mrapollos/Documents/work/emedic/investigations/javascripts_setup.php) — Global JS functions for LIS sync, dispatch retry, and modal tab handlers.
 
 ---
 
-## 4. Performance & Reliability Guarantees
+## 4. Manual Batch Dispatch & Multi-Specimen Tube Barcoding Workflow
 
-1. **Non-Blocking Page Load**: Database queries for LIS status and notifications are ultra-fast local indexed reads. Network requests to External LIS are performed asynchronously in the background.
-2. **cURL Timeout Safeguards**: ClinOS driver configures `CURLOPT_CONNECTTIMEOUT = 10s` and `CURLOPT_TIMEOUT = 30s` to prevent network slowness or outages from hanging web requests.
-3. **Graceful Fault Tolerance**: External API errors are caught and recorded in `lis_orders.error_log` without rolling back or bricking core EMR transactions.
-4. **Conditional UI Safeguard**: When LIS integration is disabled (`is_enabled = 0`), zero LIS DB queries execute, and all LIS buttons, status badges, barcode label links, and modal tabs are completely hidden from the UI.
+1. **Manual Batch Dispatch**:
+   - Lab scientists check the desired lab investigations in the Investigation Management modal (`mgt.php` / `enter_result_process.php`).
+   - The **"Send Selected to LIS"** button dynamically activates (`disabled = false`).
+   - Clicking **"Send Selected to LIS"** sends all selected tests as a unified ClinOS order payload, returning a single ClinOS Order ID (e.g. `ORD-20260910-0012`).
+
+2. **Smart Specimen Tube Label Printing**:
+   - ClinOS intelligently maps requested tests to physical collection tubes (e.g., `SERUM_PLASMA` for Albumin/LFT and `WHOLE_BLOOD` for Blood Group).
+   - Clicking the **"Label"** button on an investigation row checks the specimen count:
+     - **Single Tube**: Bypasses the modal and opens the label print window directly.
+     - **Multiple Tubes**: Opens the `#lisSpecimenModal` presenting cards for each specimen tube, assigned tests, tube barcodes, and a **"Print All Labels"** action.
 
 ---
 
@@ -85,7 +91,10 @@ mysql -u [db_user] -p[db_pass] [db_name] < migration_2026_09_10_lis_notification
 - [ ] Configure API keys and Base URL in Admin LIS Settings (`admin/lis_settings.php`).
 - [ ] Map active local lab test items (`lab_scan`) to LIS canonical codes.
 - [ ] Toggle `Enable LIS Integration` = `1`.
-- [ ] Place a test lab request and verify auto-dispatch or manual retry button.
+- [ ] Place lab requests, select items via checkboxes, and verify dynamic activation of **"Send Selected to LIS"**.
+- [ ] Dispatch a batch order and verify display of `LIS Sent (#<order_id>)` badges.
+- [ ] Click "Label" button on a dispatched order:
+  - If single tube: Verify print window opens directly with barcode.
+  - If multiple tubes: Verify `#lisSpecimenModal` opens with individual tube cards and "Print All Labels" button.
 - [ ] Click "Sync LIS Results" or wait for auto-sync polling to verify result ingestion, item notes extraction, notification audio trigger, and badge updates.
-- [ ] Click "Print Barcode Label" on a dispatched order to verify specimen tube label print output.
 - [ ] Toggle `Enable LIS Integration` = `0` in Admin Settings and verify that all LIS UI buttons and badges cleanly disappear from `mgt.php` and `enter_result_process.php`.
