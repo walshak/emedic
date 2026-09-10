@@ -1177,9 +1177,6 @@ if (isset($_POST['load_table_items'])) {
 						<button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white; opacity: 1;">
 							<span aria-hidden="true">&times;</span>
 						</button>
-						<button type="button" class="btn btn-sm btn-warning pull-right" onclick="printAllSpecimenLabels()" style="margin-right: 15px; font-weight: bold;">
-							<i class="fa fa-print"></i> Print All Labels
-						</button>
 						<h4 class="modal-title" id="lisSpecimenModalLabel">
 							<i class="fa fa-flask"></i> Specimen Tube Labels for Order <span id="specimenModalOrderId" style="font-weight: bold;"></span>
 						</h4>
@@ -1192,7 +1189,7 @@ if (isset($_POST['load_table_items'])) {
 						<div id="specimenModalError" class="alert alert-danger" style="display: none;"></div>
 						<div id="specimenModalContent" style="display: none;">
 							<div class="alert alert-info" style="font-size: 13px;">
-								<i class="fa fa-info-circle"></i> ClinOS intelligently grouped requested tests into physical specimen collection tubes. Click <strong>Print Label</strong> on a tube card or <strong>Print All Labels</strong> above.
+								<i class="fa fa-info-circle"></i> ClinOS intelligently grouped requested tests into physical specimen collection tubes. Click <strong>Print Label</strong> on a tube card or <strong>Print All Labels</strong> below.
 							</div>
 							<div id="specimenTubesContainer" class="row"></div>
 						</div>
@@ -1215,7 +1212,9 @@ if (isset($_POST['load_table_items'])) {
 						$.each(window.currentOrderSpecimens, function(idx, spec) {
 							var barcode = spec.barcode || window.currentSpecimenOrderId;
 							var printUrl = 'lis_label_print.php?order_id=' + encodeURIComponent(window.currentSpecimenOrderId) + '&barcode=' + encodeURIComponent(barcode);
-							window.open(printUrl, '_blank');
+							setTimeout(function() {
+								window.open(printUrl, '_blank');
+							}, idx * 250);
 						});
 					} else if (window.currentSpecimenOrderId) {
 						var printUrl = 'lis_label_print.php?order_id=' + encodeURIComponent(window.currentSpecimenOrderId);
