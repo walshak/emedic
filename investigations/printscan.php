@@ -1,5 +1,8 @@
 <?php include("../Connections/Conn.php");
 session_start();
+if (!defined('staff_p')) {
+    define('staff_p', '../uploads/staff/');
+}
 ?>
 
 <?php
@@ -85,7 +88,7 @@ if ($stmt->rowCount() > 0) {
 
 if (isset($_GET["i"])) {
     $sms = "i";
-    $stmtx = $db->prepare("SELECT phone, insurance, gender, nationality, addr, dob FROM enrollee WHERE hospital_no = :hosp_no");
+    $stmtx = $db->prepare("SELECT phone, insurance, gender, nationality, addr, dob, email FROM enrollee WHERE hospital_no = :hosp_no");
     $stmtx->bindParam(':hosp_no', $hosp_no, PDO::PARAM_STR);
     $stmtx->execute();
 
@@ -97,6 +100,7 @@ if (isset($_GET["i"])) {
         $insurance = $roww2['insurance'];
         $phone = $roww2['phone'];
         $birthDate = $roww2['dob'];
+        $email = $roww2['email'] ?? '';
     } else {
         var_dump($hosp_no);
         die('hdhdh');
@@ -213,6 +217,22 @@ $age = $diff->format('%y');
                             return '#' . $r . $g . $b;
                         }
                         ?>
+                        <?php
+                        $h_theme_color = '';
+                        if (!empty($_SESSION['h_color_code_hex'])) {
+                            $h_theme_color = $_SESSION['h_color_code_hex'];
+                        } elseif (isset($db)) {
+                            $h_stmt = $db->query("SELECT color_code_hex FROM hospital_details LIMIT 1");
+                            if ($h_stmt && $h_row = $h_stmt->fetch(PDO::FETCH_ASSOC)) {
+                                if (!empty($h_row['color_code_hex'])) {
+                                    $h_theme_color = $h_row['color_code_hex'];
+                                }
+                            }
+                        }
+                        if (empty($h_theme_color)) {
+                            $h_theme_color = '#1ab394';
+                        }
+                        ?>
                         <div class="ibox-content p-xl">
                             <!-- Header with logo and hospital info -->
                             <div class="row">
@@ -222,8 +242,8 @@ $age = $diff->format('%y');
                                             <img alt="hospital logo" src="../img/logo.png" style="max-height: 80px;">
                                         </td>
                                         <td width="50%">
-                                            <div class="hospital-info pull-right" style="border-left: 3px solid <?php echo $_SESSION['h_color_code_hex'] ?>; padding-left: 15px;">
-                                                <h3 style="margin-bottom: 5px; color: <?php echo $_SESSION['h_color_code_hex'] ?>;"><?php echo $_SESSION['h_name'] ?></h3>
+                                            <div class="hospital-info pull-right" style="border-left: 3px solid <?php echo $h_theme_color; ?>; padding-left: 15px;">
+                                                <h3 style="margin-bottom: 5px; color: <?php echo $h_theme_color; ?>;"><?php echo $_SESSION['h_name'] ?></h3>
                                                 <div style="color: #777;">
                                                     <?php echo $_SESSION['h_address']; ?><br>
                                                     <?php echo $_SESSION['h_phone']; ?>
@@ -236,58 +256,55 @@ $age = $diff->format('%y');
 
                             <!-- Report Title -->
                             <div align="center" style="margin: 20px 0;">
-                                <h2 style="background-color: <?php echo $_SESSION['h_color_code_hex'] ?>; color: white; padding: 8px 15px; border-radius: 4px;">Radiology Report</h2>
+                                <h2 style="background-color: <?php echo $h_theme_color; ?> !important; color: #ffffff !important; font-weight: bold; padding: 10px 15px; border-radius: 4px; margin: 0; display: inline-block; width: 100%;"><?php echo !empty($roww['section']) ? htmlspecialchars($roww['section']) : 'Investigation'; ?> Report</h2>
                             </div>
 
                             <!-- Patient Information -->
                             <div class="patient-info" style="margin-bottom: 20px;">
-                                <table cellpadding="5" cellspacing="0" class="table table-bordered" style="font-size: 13px; font-family: Arial, Helvetica, sans-serif; width: 100%;">
-                                    <tr style="background-color: <?php echo adjustBrightness($_SESSION['h_color_code_hex'], 0.9); ?>; color:white;">
-                                        <td width="15%"><strong>Patient's Name:</strong></td>
-                                        <td width="40%"><?php echo $roww['patient_name']; ?></td>
-                                        <td width="15%"><strong>Sex:</strong> &nbsp; <?php echo $gender; ?></td>
-                                        <td width="30%"><strong>Age:</strong> &nbsp; <?php echo $age; ?></td>
+                                <table cellpadding="6" cellspacing="0" class="table table-bordered" style="font-size: 13px; font-family: Arial, Helvetica, sans-serif; width: 100%;">
+                                    <tr style="background-color: <?php echo $h_theme_color; ?> !important; color: #ffffff !important; font-weight: bold;">
+                                        <td width="15%" style="color: #ffffff !important; padding: 8px;"><strong>Patient Name:</strong></td>
+                                        <td width="40%" style="color: #ffffff !important; padding: 8px;"><?php echo htmlspecialchars($roww['patient_name'] ?? ''); ?></td>
+                                        <td width="15%" style="color: #ffffff !important; padding: 8px;"><strong>Sex:</strong> &nbsp; <?php echo htmlspecialchars($gender ?? ''); ?></td>
+                                        <td width="30%" style="color: #ffffff !important; padding: 8px;"><strong>Age:</strong> &nbsp; <?php echo htmlspecialchars($age ?? ''); ?></td>
                                     </tr>
                                     <tr>
-                                        <td><strong>Patient No:</strong></td>
-                                        <td><?php echo $roww['patient']; ?></td>
-
-                                        <td colspan="2"><strong>Requesting Physician:&nbsp;</strong><?php echo ($roww['requesting_physician']) ? $roww['requesting_physician'] : $roww['request_by'];
-                                                                                                    ?></td>
+                                        <td style="padding: 8px;"><strong>Patient No:</strong></td>
+                                        <td style="padding: 8px;"><?php echo htmlspecialchars($roww['patient'] ?? ''); ?></td>
+                                        <td colspan="2" style="padding: 8px;"><strong>Requesting Physician:&nbsp;</strong><?php echo htmlspecialchars(($roww['requesting_physician'] ?? '') ?: ($roww['request_by'] ?? '')); ?></td>
                                     </tr>
                                     <tr>
-                                        <td><strong>Address/ Phone:</strong></td>
-                                        <td colspan="3"><?php echo $addr; ?> / <?php echo $phone; ?></td>
+                                        <td style="padding: 8px;"><strong>Address / Phone:</strong></td>
+                                        <td colspan="3" style="padding: 8px;"><?php echo htmlspecialchars($addr ?? ''); ?> / <?php echo htmlspecialchars($phone ?? ''); ?></td>
                                     </tr>
                                 </table>
 
-                                <table cellpadding="5" cellspacing="0" class="table table-bordered" style="font-size: 13px; font-family: Arial, Helvetica, sans-serif; width: 100%; margin-top: 10px;">
-                                    <tr style="background-color: <?php echo adjustBrightness($_SESSION['h_color_code_hex'], 0.9); ?>; color:white;">
-                                        <td><strong>Investigation Requested:</strong> &nbsp; <?php echo $roww['test_name']; ?></td>
-                                        <td><strong>Requested Date:</strong> &nbsp;<?php echo date('d-m-Y', strtotime($roww['request_date'])); ?></td>
-                                        <td><strong>Result Date:</strong> &nbsp;<?php echo date('d-m-Y', strtotime($roww['result_date'])); ?></td>
+                                <table cellpadding="6" cellspacing="0" class="table table-bordered" style="font-size: 13px; font-family: Arial, Helvetica, sans-serif; width: 100%; margin-top: 10px;">
+                                    <tr style="background-color: <?php echo $h_theme_color; ?> !important; color: #ffffff !important; font-weight: bold;">
+                                        <td style="color: #ffffff !important; padding: 8px;"><strong>Investigation Requested:</strong> &nbsp; <?php echo htmlspecialchars($roww['test_name'] ?? ''); ?></td>
+                                        <td style="color: #ffffff !important; padding: 8px;"><strong>Requested Date:</strong> &nbsp;<?php echo !empty($roww['request_date']) ? date('d-m-Y', strtotime($roww['request_date'])) : '-'; ?></td>
+                                        <td style="color: #ffffff !important; padding: 8px;"><strong>Result Date:</strong> &nbsp;<?php echo !empty($roww['result_date']) ? date('d-m-Y', strtotime($roww['result_date'])) : '-'; ?></td>
                                     </tr>
                                 </table>
                             </div>
 
-                            <hr style="border-top: 1px solid <?php echo $_SESSION['h_color_code_hex'] ?>;">
+                            <hr style="border-top: 1px solid <?php echo $h_theme_color; ?>;">
 
                             <!-- Test Results Section -->
                             <?php
-
                             if (isset($_GET['old'])) {
                                 $lab_no = $roww['labrequest_no'];
-                                $stmtx = $db->query("SELECT * FROM lab_result_old WHERE lab_no='$lab_no'");
+                                $stmtx = $db->prepare("SELECT * FROM lab_result_old WHERE lab_no = :lab_no ORDER BY sn ASC");
+                                $stmtx->execute([':lab_no' => $lab_no]);
                                 if ($stmtx->rowCount() > 0) {
                                     while ($roww2 = $stmtx->fetch(PDO::FETCH_ASSOC)) {
                                         $result_note = $roww2['field_value'];
                                         $result_date = $roww2['result_date'];
                                         $entered_by = $roww2['entered_by'];
                             ?>
-                                        <div class="test-result" style="margin-bottom: 20px; border: 1px solid <?php echo $_SESSION['h_color_code_hex'] ?>; border-radius: 4px; padding: 15px;">
-                                            <div style="color: <?php echo adjustBrightness($_SESSION['h_color_code_hex'], 0.7); ?>; border-left: 4px solid <?php echo $_SESSION['h_color_code_hex'] ?>; padding: 10px; margin-bottom: 15px;">
+                                        <div class="test-result" style="margin-bottom: 20px; border: 1px solid <?php echo $h_theme_color; ?>; border-radius: 4px; padding: 15px;">
+                                            <div style="color: red; border-left: 4px solid red; padding: 10px; margin-bottom: 15px;">
                                                 <h2 style="color:red;">Previous Reports EDITED (NOT TO BE USED)</h2>
-
                                             </div>
                                             <div style="padding: 10px;">
                                                 <?php echo $result_note; ?><br>
@@ -301,23 +318,247 @@ $age = $diff->format('%y');
                                 }
                             } else {
                                 $lab_no = $roww['labrequest_no'];
-                                $stmtx = $db->query("SELECT * FROM lab_result WHERE lab_no='$lab_no'");
-                                if ($stmtx->rowCount() > 0) {
-                                    $roww2 = $stmtx->fetch(PDO::FETCH_ASSOC);
-                                    $result_note = $roww2['field_value'];
+
+                                // Query lab_result
+                                $stmt_res = $db->prepare("SELECT * FROM lab_result WHERE lab_no = :lab_no ORDER BY sn ASC");
+                                $stmt_res->execute([':lab_no' => $lab_no]);
+                                $lab_results = $stmt_res->fetchAll(PDO::FETCH_ASSOC);
+
+                                // Query lab_scan_input_results
+                                $stmt_inp = $db->prepare("SELECT * FROM lab_scan_input_results WHERE lab_request_no = :lab_no ORDER BY sn ASC");
+                                $stmt_inp->execute([':lab_no' => $lab_no]);
+                                $input_results = $stmt_inp->fetchAll(PDO::FETCH_ASSOC);
+
+                                // Query lab_scan_fields for test template info
+                                $field_type = '';
+                                if (!empty($roww['test_id'])) {
+                                    $stmt_fld = $db->prepare("SELECT field_type FROM lab_scan_fields WHERE test_no = :test_no LIMIT 1");
+                                    $stmt_fld->execute([':test_no' => $roww['test_id']]);
+                                    if ($f_row = $stmt_fld->fetch(PDO::FETCH_ASSOC)) {
+                                        $field_type = $f_row['field_type'];
+                                    }
+                                }
+
+                                $is_html_report = false;
+                                $report_html_content = '';
+
+                                if (!empty($lab_results)) {
+                                    $single_row = (count($lab_results) === 1);
+                                    $first_val = $lab_results[0]['field_value'] ?? '';
+                                    $first_name = trim($lab_results[0]['field_name'] ?? '');
+                                    $first_ref = trim($lab_results[0]['field_ref'] ?? '');
+                                    $has_html = ($first_val !== strip_tags($first_val));
+
+                                    if ($single_row && ($has_html || (empty($first_name) && empty($first_ref)))) {
+                                        $is_html_report = true;
+                                        $report_html_content = $first_val;
+                                    }
+                                } elseif (empty($input_results)) {
+                                    $raw_note = trim($roww['result_note'] ?? '');
+                                    if (!empty($raw_note) && $raw_note !== strip_tags($raw_note)) {
+                                        $is_html_report = true;
+                                        $report_html_content = $raw_note;
+                                    }
                                 }
                                 ?>
 
-                                <div class="test-result" style="margin-bottom: 20px; border: 1px solid <?php echo $_SESSION['h_color_code_hex'] ?>; border-radius: 4px; padding: 15px;">
-                                    <div style="color: <?php echo adjustBrightness($_SESSION['h_color_code_hex'], 0.7); ?>; border-left: 4px solid <?php echo $_SESSION['h_color_code_hex'] ?>; padding: 10px; margin-bottom: 15px;">
-                                        <!-- <strong>Radiology Findings:</strong> -->
-                                    </div>
-                                    <div style="padding: 10px;">
-                                        <?php echo $result_note; ?>
-                                    </div>
+                                <div class="test-result-container" style="margin-bottom: 20px;">
+                                    <?php if ($is_html_report): ?>
+                                        <style>
+                                            .native-html-report table {
+                                                width: 100% !important;
+                                                max-width: 100% !important;
+                                                float: none !important;
+                                                margin-left: 0 !important;
+                                                margin-right: 0 !important;
+                                                margin-bottom: 15px !important;
+                                                border-collapse: collapse !important;
+                                                table-layout: auto !important;
+                                            }
+                                            .native-html-report table td, .native-html-report table th {
+                                                border: 1px solid #ccc !important;
+                                                padding: 8px 12px !important;
+                                                word-wrap: break-word !important;
+                                            }
+                                            .native-html-report table tr:first-child td, .native-html-report table tr:first-child th {
+                                                background-color: <?php echo $h_theme_color; ?> !important;
+                                                color: #ffffff !important;
+                                                font-weight: bold !important;
+                                            }
+                                            .native-html-report table tr:first-child p, .native-html-report table tr:first-child span {
+                                                color: #ffffff !important;
+                                            }
+                                            .native-html-report::after {
+                                                content: "";
+                                                display: block;
+                                                clear: both;
+                                            }
+                                        </style>
+                                        <div class="native-html-report" style="padding: 15px; border: 1px solid #ddd; border-radius: 4px; background: #fff; font-size: 14px; line-height: 1.6; color: #222; overflow: hidden; clear: both;">
+                                            <?php echo $report_html_content; ?>
+                                        </div>
+                                    <?php elseif (!empty($lab_results)): ?>
+                                        <table class="table table-bordered table-striped" style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px; font-family: Arial, Helvetica, sans-serif;">
+                                             <thead>
+                                                <tr style="background-color: <?php echo $h_theme_color; ?> !important; color: #ffffff !important;">
+                                                    <th width="35%" style="background-color: <?php echo $h_theme_color; ?> !important; color: #ffffff !important; padding: 10px; border: 1px solid #1a242f; font-size: 13px; font-weight: bold;">Test Parameter / Component</th>
+                                                    <th width="25%" style="background-color: <?php echo $h_theme_color; ?> !important; color: #ffffff !important; padding: 10px; border: 1px solid #1a242f; font-size: 13px; font-weight: bold;">Result Value</th>
+                                                    <th width="25%" style="background-color: <?php echo $h_theme_color; ?> !important; color: #ffffff !important; padding: 10px; border: 1px solid #1a242f; font-size: 13px; font-weight: bold;">Reference Range</th>
+                                                    <th width="15%" style="background-color: <?php echo $h_theme_color; ?> !important; color: #ffffff !important; padding: 10px; border: 1px solid #1a242f; font-size: 13px; font-weight: bold; text-align: center;">Flag / Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($lab_results as $res_row): 
+                                                    $fname = !empty($res_row['field_name']) ? $res_row['field_name'] : $roww['test_name'];
+                                                    $fval = htmlspecialchars($res_row['field_value'] ?? '');
+                                                    $fref = htmlspecialchars($res_row['field_ref'] ?? '');
+                                                    $comment = trim($res_row['comment'] ?? '');
+
+                                                    $flag_badge = '-';
+                                                    if (!empty($comment)) {
+                                                        if (preg_match('/\b(H|High)\b/i', $comment)) {
+                                                            $flag_badge = '<span style="background-color:#ed5565; color:white; padding: 2px 8px; border-radius: 3px; font-weight: bold; font-size: 11px;">High</span>';
+                                                        } elseif (preg_match('/\b(L|Low)\b/i', $comment)) {
+                                                            $flag_badge = '<span style="background-color:#f8ac59; color:white; padding: 2px 8px; border-radius: 3px; font-weight: bold; font-size: 11px;">Low</span>';
+                                                        } elseif (preg_match('/\b(N|Normal)\b/i', $comment)) {
+                                                            $flag_badge = '<span style="background-color:#1ab394; color:white; padding: 2px 8px; border-radius: 3px; font-weight: bold; font-size: 11px;">Normal</span>';
+                                                        } else {
+                                                            $flag_badge = '<span style="background-color:#23c6c8; color:white; padding: 2px 8px; border-radius: 3px; font-size: 11px;">' . htmlspecialchars($comment) . '</span>';
+                                                        }
+                                                    }
+                                                ?>
+                                                    <tr>
+                                                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #222;"><?php echo htmlspecialchars($fname); ?></td>
+                                                        <td style="padding: 8px; border: 1px solid #ddd; color: #222;"><?php echo $fval !== '' ? $fval : '-'; ?></td>
+                                                        <td style="padding: 8px; border: 1px solid #ddd; color: #222;"><?php echo $fref !== '' ? $fref : '-'; ?></td>
+                                                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;"><?php echo $flag_badge; ?></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+
+                                    <?php elseif (!empty($input_results)): ?>
+                                        <table class="table table-bordered table-striped" style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px; font-family: Arial, Helvetica, sans-serif;">
+                                             <thead>
+                                                <tr style="background-color: <?php echo $h_theme_color; ?> !important; color: #ffffff !important;">
+                                                    <th width="40%" style="background-color: <?php echo $h_theme_color; ?> !important; color: #ffffff !important; padding: 10px; border: 1px solid #1a242f; font-weight: bold;">Test Parameter</th>
+                                                    <th width="30%" style="background-color: <?php echo $h_theme_color; ?> !important; color: #ffffff !important; padding: 10px; border: 1px solid #1a242f; font-weight: bold;">Result Value</th>
+                                                    <th width="30%" style="background-color: <?php echo $h_theme_color; ?> !important; color: #ffffff !important; padding: 10px; border: 1px solid #1a242f; font-weight: bold;">Expected Value / Reference</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($input_results as $inp_row): ?>
+                                                    <tr>
+                                                        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #222;"><?php echo htmlspecialchars($inp_row['value_title']); ?></td>
+                                                        <td style="padding: 8px; border: 1px solid #ddd; color: #222;"><?php echo htmlspecialchars($inp_row['result']); ?></td>
+                                                        <td style="padding: 8px; border: 1px solid #ddd; color: #222;"><?php echo htmlspecialchars($inp_row['value_ref'] ?? '-'); ?></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+
+                                    <?php else: 
+                                        $raw_note = trim($roww['result_note'] ?? '');
+                                        if (!empty($raw_note)):
+                                            $lines = array_filter(array_map('trim', explode("\n", $raw_note)));
+                                            $parsed_rows = [];
+                                            $is_structured = true;
+                                            foreach ($lines as $line) {
+                                                if (preg_match('/^([^:]+):\s*([^(]+?)(?:\s*\(Ref:\s*([^)]+)\))?(?:\s*\[([^\]]+)\])?$/i', $line, $m)) {
+                                                    $parsed_rows[] = [
+                                                        'name' => trim($m[1]),
+                                                        'value' => trim($m[2]),
+                                                        'ref' => isset($m[3]) ? trim($m[3]) : '',
+                                                        'flag' => isset($m[4]) ? trim($m[4]) : ''
+                                                    ];
+                                                } else {
+                                                    $is_structured = false;
+                                                    break;
+                                                }
+                                            }
+                                            if ($is_structured && !empty($parsed_rows)): ?>
+                                                <table class="table table-bordered table-striped" style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px; font-family: Arial, Helvetica, sans-serif;">
+                                                     <thead>
+                                                        <tr style="background-color: <?php echo $h_theme_color; ?> !important; color: #ffffff !important;">
+                                                            <th width="35%" style="background-color: <?php echo $h_theme_color; ?> !important; color: #ffffff !important; padding: 10px; border: 1px solid #1a242f; font-weight: bold;">Test Parameter</th>
+                                                            <th width="25%" style="background-color: <?php echo $h_theme_color; ?> !important; color: #ffffff !important; padding: 10px; border: 1px solid #1a242f; font-weight: bold;">Result Value</th>
+                                                            <th width="25%" style="background-color: <?php echo $h_theme_color; ?> !important; color: #ffffff !important; padding: 10px; border: 1px solid #1a242f; font-weight: bold;">Reference Range</th>
+                                                            <th width="15%" style="background-color: <?php echo $h_theme_color; ?> !important; color: #ffffff !important; padding: 10px; border: 1px solid #1a242f; font-weight: bold; text-align: center;">Flag / Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php foreach ($parsed_rows as $p_row): 
+                                                            $flag_badge = '-';
+                                                            if (!empty($p_row['flag'])) {
+                                                                if (preg_match('/\b(H|High)\b/i', $p_row['flag'])) {
+                                                                    $flag_badge = '<span style="background-color:#ed5565; color:white; padding: 2px 8px; border-radius: 3px; font-weight: bold; font-size: 11px;">High</span>';
+                                                                } elseif (preg_match('/\b(L|Low)\b/i', $p_row['flag'])) {
+                                                                    $flag_badge = '<span style="background-color:#f8ac59; color:white; padding: 2px 8px; border-radius: 3px; font-weight: bold; font-size: 11px;">Low</span>';
+                                                                } else {
+                                                                    $flag_badge = '<span style="background-color:#1ab394; color:white; padding: 2px 8px; border-radius: 3px; font-weight: bold; font-size: 11px;">' . htmlspecialchars($p_row['flag']) . '</span>';
+                                                                }
+                                                            }
+                                                        ?>
+                                                            <tr>
+                                                                <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #222;"><?php echo htmlspecialchars($p_row['name']); ?></td>
+                                                                <td style="padding: 8px; border: 1px solid #ddd; color: #222;"><?php echo htmlspecialchars($p_row['value']); ?></td>
+                                                                <td style="padding: 8px; border: 1px solid #ddd; color: #222;"><?php echo !empty($p_row['ref']) ? htmlspecialchars($p_row['ref']) : '-'; ?></td>
+                                                                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;"><?php echo $flag_badge; ?></td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
+                                            <?php else: ?>
+                                                <div style="border: 1px solid <?php echo $h_theme_color; ?>; border-radius: 4px; padding: 15px; background-color: #f9f9f9; font-size: 14px; line-height: 1.6; color: #222;">
+                                                    <?php echo nl2br(htmlspecialchars($raw_note)); ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            <div class="alert alert-warning">No result recorded yet for this investigation.</div>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
                                 </div>
 
-                                <hr style="border-top: 1px solid <?php echo $_SESSION['h_color_code_hex'] ?>;">
+                                <?php 
+                                $show_outcome = !empty($roww['abnormal_results']);
+                                $show_comment = !empty($roww['result_comment']);
+                                $show_attachment = !empty($roww['attachment']);
+
+                                if ($show_outcome || $show_comment || $show_attachment): 
+                                ?>
+                                    <div style="clear: both; display: block; overflow: hidden; margin-top: 20px; margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 4px; background-color: #f9f9f9; font-size: 13px; font-family: Arial, Helvetica, sans-serif;">
+                                        <?php if ($show_outcome): ?>
+                                            <div style="margin-bottom: 5px;">
+                                                <strong>Result Outcome:</strong> 
+                                                <span style="display: inline-block; padding: 2px 8px; border-radius: 3px; font-weight: bold; color: white; background-color: <?php echo (in_array(strtolower($roww['abnormal_results']), ['high', 'abnormal', 'critical']) ? '#ed5565' : (strtolower($roww['abnormal_results']) == 'low' ? '#f8ac59' : '#1ab394')); ?>;">
+                                                    <?php echo htmlspecialchars($roww['abnormal_results']); ?>
+                                                </span>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <?php if ($show_comment): ?>
+                                            <div style="margin-bottom: 5px;">
+                                                <strong>Comment / Notes:</strong> <?php echo nl2br(htmlspecialchars($roww['result_comment'])); ?>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <?php if ($show_attachment): 
+                                            $att_ext = strtolower(pathinfo($roww['attachment'], PATHINFO_EXTENSION) ?: $roww['attachment']);
+                                            $is_img = in_array($att_ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                        ?>
+                                            <div>
+                                                <strong>Attachment:</strong> <i class="fa fa-paperclip"></i> <a href="uploads/<?php echo htmlspecialchars($roww['labrequest_no'] . '.' . $roww['attachment']); ?>" target="_blank" style="color: #1ab394; font-weight: bold;">View/Download Attached Document (.<?php echo htmlspecialchars($roww['attachment']); ?>)</a>
+                                                <?php if ($is_img): ?>
+                                                    <div style="margin-top: 10px;">
+                                                        <img src="uploads/<?php echo htmlspecialchars($roww['labrequest_no'] . '.' . $roww['attachment']); ?>" alt="Attachment Preview" style="max-width: 100%; max-height: 450px; border: 1px solid #ddd; border-radius: 4px; padding: 4px;">
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+
+                                <hr style="border-top: 1px solid <?php echo $h_theme_color; ?>;">
 
                                 <!-- Signature Section -->
                                 <div style="margin-top: 30px; clear: both;">
@@ -391,9 +632,9 @@ $age = $diff->format('%y');
             <div class="modal-content animated bounceInRight">
                 <div class="modal-body" id="modal_body">
                     <div id="">
-                        <input type="hidden" id="test_to_send" name="test_to_send" value="<?php echo implode(',', $test_req_ids) ?>">
+                        <input type="hidden" id="test_to_send" name="test_to_send" value="<?php echo is_array($test_req_ids ?? null) ? implode(',', $test_req_ids) : htmlspecialchars($labrequest_no ?? ''); ?>">
                         <label><strong>Enter eMail Address: </strong></label>
-                        <input type="text" maxlength="150" name="result_email_address" id="result_email_address" class="form-control" value="<?= $email; ?>" required>
+                        <input type="text" maxlength="150" name="result_email_address" id="result_email_address" class="form-control" value="<?= htmlspecialchars($email ?? ''); ?>" required>
                         <br>
                         
                         <label>

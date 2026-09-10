@@ -227,7 +227,7 @@ if (!empty($_GET['labrequest_no'])) {
                                     $stmt3 = $db->query("SELECT sn FROM lab_manage WHERE labrequest_no='$labrequest_no' $depart_part");
                                     if ($stmt3->rowCount() > 0) {
 
-                                        $stmt3 = $db->query("SELECT * FROM lab_result WHERE lab_no='$labrequest_no' and test_no='$test_id'");
+                                        $stmt3 = $db->query("SELECT * FROM lab_result WHERE lab_no='$labrequest_no'");
                                         $rowxx = $stmt3->fetch(PDO::FETCH_ASSOC);
                                         $comment = $rowxx['comment'];
                                         $notes = $rowxx['notes'];

@@ -1,7 +1,9 @@
 <?php
 session_start();
 require_once('../Connections/Conn.php');
+require_once(__DIR__ . '/../inc/lis/LisService.php');
 include("../inc/credit_current_balance.php");
+$lisEnabled = LisDriverFactory::isLisEnabled($db);
 
 $result_comment = null;
 $result_type = null;
@@ -37,9 +39,9 @@ if (isset($_POST['show_result_only'])) {
 
 	echo '<h2>TEST NAME: ' . $test_name . '</h2>';
 
-	$investigation_hx_stmt = $db->prepare("SELECT data_capture_status,labrequest_no,entered_by, request_by, result_comment, request_date, 
-	result_note,result_date, entered_by, approved_by, lab_combos FROM lab_manage 
-		  WHERE patient = ? AND test_id = ? AND data_capture_status = 'approve' and labrequest_no=?  ORDER BY request_date DESC LIMIT 30");
+	$investigation_hx_stmt = $db->prepare("SELECT data_capture_status, labrequest_no, entered_by, request_by, result_comment, request_date, 
+	result_note, result_date, approved_by, lab_combos, abnormal_results, attachment FROM lab_manage 
+		  WHERE patient = ? AND test_id = ? AND labrequest_no = ? ORDER BY request_date DESC LIMIT 30");
 	$investigation_hx_stmt->execute(array($hospital_no, $test_id, $labrequest_no));
 	$investigation_  = $investigation_hx_stmt->fetch(PDO::FETCH_ASSOC); ?>
 	<div class="row">
@@ -568,8 +570,11 @@ if (isset($_POST['load_table_items'])) {
 	?>
 
 		<form method="post" action="printlab.php" id="" name="">
-			<div align="center">
-				<h3 style="color:blue; ">INVESTIGATION(S)</h3>
+			<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+				<h3 style="color:blue; margin:0;">INVESTIGATION(S)</h3>
+				<?php if ($lisEnabled): ?>
+					<button type="button" class="btn btn-sm btn-info" onclick="pollLisModal(this)"><i class="fa fa-refresh"></i> Sync LIS Results</button>
+				<?php endif; ?>
 			</div>
 			<table class="table table-striped table-bordered table-hover dataTables-example">
 				<thead>
@@ -640,6 +645,32 @@ if (isset($_POST['load_table_items'])) {
 						}
 					}
 
+					require_once(__DIR__ . '/../inc/lis/LisService.php');
+					$lisEnabled = LisDriverFactory::isLisEnabled($db);
+					$lis_orders_map = [];
+					$lis_mappings_map = [];
+
+					if ($lisEnabled) {
+						if (!empty($labrequest_nos)) {
+							$placeholders = implode(',', array_fill(0, count($labrequest_nos), '?'));
+							$stmtLis = $db->prepare("SELECT labrequest_no, clinos_order_id, clinos_order_uid, clinos_label_url, status, error_log FROM lis_orders WHERE labrequest_no IN ($placeholders)");
+							$stmtLis->execute($labrequest_nos);
+							while ($row = $stmtLis->fetch(PDO::FETCH_ASSOC)) {
+								$lis_orders_map[$row['labrequest_no']] = $row;
+							}
+						}
+
+						$stmtMap = $db->query("SELECT lab_scan_id, emr_test_name, canonical_code FROM lis_test_mappings WHERE is_active = 1");
+						while ($row = $stmtMap->fetch(PDO::FETCH_ASSOC)) {
+							if (!empty($row['lab_scan_id'])) {
+								$lis_mappings_map['id_' . $row['lab_scan_id']] = $row['canonical_code'];
+							}
+							if (!empty($row['emr_test_name'])) {
+								$lis_mappings_map['name_' . strtolower(trim($row['emr_test_name']))] = $row['canonical_code'];
+							}
+						}
+					}
+
 					$currentDate = new DateTime();
 					$n = 1;
 					$total_amt = 0;
@@ -674,6 +705,9 @@ if (isset($_POST['load_table_items'])) {
 								$disable_rslt_entry
 							) = array_pad($roww, 18, '');
 
+
+							$canonicalCode = $lis_mappings_map['id_' . $test_id] ?? $lis_mappings_map['name_' . strtolower(trim($test_name))] ?? null;
+							$lisOrder = $lis_orders_map[$labrequest_no] ?? null;
 
 							///echo $data_capture_status_raw;
 
@@ -750,7 +784,7 @@ if (isset($_POST['load_table_items'])) {
 							} else {
 
 
-								$g_total += $pay;
+								$g_total += (float)$pay;
 								///if ($enable_cr_post == 1 || $credit_limit > 0) {
 								if ($credit_limit > 0) {
 									if ($pay <= $credit_limit && $data_capture_status == 'queue') {
@@ -787,7 +821,7 @@ if (isset($_POST['load_table_items'])) {
 							}
 
 							if (!empty($bill)) {
-								$total_amt += $amount;
+								$total_amt += (float)$amount;
 							}					?>
 							<tr>
 								<td><?php echo $n; ?></td>
@@ -808,6 +842,14 @@ if (isset($_POST['load_table_items'])) {
 										'<br><b>(N' . number_format($amount_value) . ')</b><br>';
 
 									echo '<strong>[ ' . ($data_capture_status == 'result' ? 'Approve Pending' : ucfirst($data_capture_status)) . ' ]</strong>';
+
+									if ($lisEnabled) {
+										if ($canonicalCode) {
+											echo '<br><span class="label label-info" style="margin-top:4px; display:inline-block; font-size:10px;" title="Mapped Canonical Code: ' . htmlspecialchars($canonicalCode) . '"><i class="fa fa-plug"></i> LIS: <b>' . htmlspecialchars($canonicalCode) . '</b></span>';
+										} else {
+											echo '<br><span class="label label-default" style="margin-top:4px; display:inline-block; font-size:10px; color:#888;" title="Not mapped to External LIS"><i class="fa fa-home"></i> Local Lab Only</span>';
+										}
+									}
 									?>
 								</td>
 								<td><?php echo htmlspecialchars($request_by) . '<br>' . htmlspecialchars($approved_by); ?></td>
@@ -841,29 +883,66 @@ if (isset($_POST['load_table_items'])) {
 										<?php endif; ?>
 										<strong style="color:#F00"><?= $b_title; ?></strong>
 									<?php endif; ?>
+
+									<?php if ($lisEnabled && $canonicalCode): ?>
+										<div style="margin-top:6px; padding-top:4px; border-top:1px dashed #ccc; font-size:11px;">
+											<?php
+											if ($lisOrder) {
+												$lStatus = $lisOrder['status'];
+												if ($lStatus === 'sent') {
+													echo '<span class="label label-primary" title="Order dispatched to External LIS"><i class="fa fa-paper-plane"></i> LIS Sent</span>';
+												} elseif (in_array($lStatus, ['validated', 'result_received', 'processed'])) {
+													echo '<span class="label label-success" title="Result synced from LIS"><i class="fa fa-check-circle"></i> LIS Synced</span>';
+												} elseif ($lStatus === 'failed') {
+													$err = htmlspecialchars($lisOrder['error_log'] ?? 'Dispatch failed');
+													echo "<span class=\"label label-danger\" title=\"$err\"><i class=\"fa fa-warning\"></i> LIS Failed</span>";
+												} else {
+													echo '<span class="label label-warning"><i class="fa fa-clock-o"></i> LIS: ' . ucfirst($lStatus) . '</span>';
+												}
+											} else {
+												echo '<span class="label label-warning" title="Mapped to External LIS, awaiting dispatch/poll"><i class="fa fa-clock-o"></i> LIS Pending</span>';
+											}
+											?>
+											<div style="margin-top:4px;">
+												<button type="button" class="btn btn-xs btn-outline btn-info" onclick="retryLisDispatch('<?= htmlspecialchars($labrequest_no); ?>', '<?= htmlspecialchars($test_id); ?>', '<?= htmlspecialchars(addslashes($test_name)); ?>', '<?= htmlspecialchars($hosp_no); ?>')" title="Send / Retry External LIS Dispatch"><i class="fa fa-refresh"></i> Send/Retry LIS</button>
+												<?php if (!empty($lisOrder['clinos_order_id'])): ?>
+													<a href="lis_label_print.php?order_id=<?= urlencode($lisOrder['clinos_order_id']); ?>" target="_blank" class="btn btn-xs btn-default" title="Print Barcode Specimen Tube Label"><i class="fa fa-barcode"></i> Label</a>
+												<?php endif; ?>
+											</div>
+										</div>
+									<?php endif; ?>
 								</td>
 								<td>
 									<?php
+									// Rule 1: External LIS results should NOT have Edit
+									$is_lis_managed = ($lisEnabled && !empty($canonicalCode) && $lisOrder && in_array($lisOrder['status'], ['sent', 'validated', 'result_received', 'processed']));
 
-									if ($section == $_SESSION['section']): ?>
-										<input type="button" id="button_<?= $labrequest_no; ?>" value="<?= $button_title; ?>"
-											<?php if ($pay_lock == 1) echo 'disabled';
-											?>
-											onClick="show_result_sheet('<?php echo $_detail . '__' . $paystatus . '__' . $cr . '__' . $test_status . '__' . $lab_combo_request_no . '__' . $bill . '__' . $attachment . '__' . $collected_notes; ?>','<?= $labrequest_no; ?>')"
-											class="btn btn-<?= $button_color; ?> btn-xs" />
-									<?php endif; ?>
+									$is_section_authorized = empty($_SESSION['section']) 
+										|| strtoupper($section) === strtoupper($_SESSION['section']) 
+										|| (isset($_SESSION['rights']) && $_SESSION['rights'] === 'LB') 
+										|| (isset($_SESSION['speciality']) && $_SESSION['speciality'] === 'Administrator') 
+										|| (isset($user_type) && $user_type === 'user');
 
-									<?php
-									if (($section == 'Radiology' || $vrlst == 1) && $data_capture_status == 'approve'): ?>
-										&nbsp;|&nbsp;
-										<a href="printscan.php?<?= (strpos($labrequest_no, 'EX') !== false ? 'e=' : 'i=') . htmlspecialchars($labrequest_no); ?>"
-											class="btn btn-primary btn-xs">Print/Email</a>
-									<?php endif; ?>
+									$exceeded_grace = ($data_capture_status === 'approve' && (int)$day > (int)$grace);
 
-									<?php if ($view_status == 'yes' && ($rights == 'LB' || $vrlst == 1)): ?>
+									// Rule 2: Edit must obey grace period calculation ($day <= $grace and $pay_lock == 0)
+									if (!$is_lis_managed && $is_section_authorized):
+										if ($exceeded_grace):
+											echo '<span class="text-danger" style="font-size:11px; font-weight:bold;">[Exceed: ' . (int)$grace . ' days]</span>';
+										else: ?>
+											<input type="button" id="button_<?= htmlspecialchars($labrequest_no); ?>" value="<?= htmlspecialchars($button_title); ?>"
+												<?php if ($pay_lock == 1) echo 'disabled'; ?>
+												onClick="show_result_sheet('<?php echo $_detail . '__' . $paystatus . '__' . $cr . '__' . $test_status . '__' . $lab_combo_request_no . '__' . $bill . '__' . $attachment . '__' . $collected_notes; ?>','<?= htmlspecialchars($labrequest_no); ?>')"
+												class="btn btn-<?= $button_color; ?> btn-xs" />
+										<?php endif;
+									endif; ?>
+
+									<?php if (in_array($data_capture_status, ['result', 'approve'])): ?>
 										<input type="button" value="View"
-											onClick="view_result_only('<?php echo $labrequest_no . '__' . $hosp_no . '__' . $test_id . '__' . $test_name; ?>')"
-											class="btn btn-success btn-xs" />
+											onClick="view_result_only('<?php echo htmlspecialchars($labrequest_no) . '__' . htmlspecialchars($hosp_no) . '__' . htmlspecialchars($test_id) . '__' . htmlspecialchars(addslashes($test_name)); ?>')"
+											class="btn btn-info btn-xs" />
+										<a href="printscan.php?<?= (strpos($labrequest_no, 'EX') !== false ? 'e=' : 'i=') . htmlspecialchars($labrequest_no); ?>"
+											target="_blank" class="btn btn-primary btn-xs">Print/Email</a>
 									<?php endif; ?>
 								</td>
 								<td>
@@ -962,7 +1041,60 @@ if (isset($_POST['load_table_items'])) {
 		<input type="hidden" name="app_no" value="<?php echo $app_no; ?>">
 		</form>
 
-		<!--<button id="submitBtn" onclick="submitCheckboxes()" class="btn btn-success">Invoice/Bill</button> -->
+		<script>
+			if (typeof window.retryLisDispatch !== 'function') {
+				window.retryLisDispatch = function(labrequestNo, testId, testName, patientNo) {
+					if (typeof toastr !== 'undefined') toastr.info('Communicating with External LIS...', '', { timeOut: 3000 });
+					$.ajax({
+						url: 'lis_action.php',
+						method: 'POST',
+						data: { action: 'dispatch', labrequest_no: labrequestNo, test_id: testId, test_name: testName, patient_no: patientNo },
+						success: function(res) {
+							if (res && res.success) {
+								if (typeof toastr !== 'undefined') toastr.success(res.message, 'LIS Dispatch');
+								else alert(res.message);
+								if (typeof load_table === 'function') load_table();
+							} else {
+								var err = (res && res.error) ? res.error : 'Dispatch failed';
+								if (typeof toastr !== 'undefined') toastr.error(err, 'LIS Error');
+								else alert('LIS Error: ' + err);
+							}
+						},
+						error: function() {
+							if (typeof toastr !== 'undefined') toastr.error('Failed to connect to LIS service.', 'Network Error');
+						}
+					});
+				};
+			}
+			if (typeof window.pollLisModal !== 'function') {
+				window.pollLisModal = function(btn) {
+					var $btn = $(btn);
+					var originalHtml = $btn.html();
+					$btn.html('<i class="fa fa-spin fa-spinner"></i> Polling LIS...').prop('disabled', true);
+					$.ajax({
+						url: 'lis_action.php',
+						method: 'POST',
+						data: { action: 'poll' },
+						success: function(res) {
+							$btn.html(originalHtml).prop('disabled', false);
+							if (res && res.success) {
+								if (typeof toastr !== 'undefined') toastr.success(res.message, 'LIS Poll Complete');
+								else alert(res.message);
+								if (typeof load_table === 'function') load_table();
+							} else {
+								var err = (res && res.error) ? res.error : 'Poll failed';
+								if (typeof toastr !== 'undefined') toastr.error(err, 'LIS Poll');
+								else alert('LIS Poll Error: ' + err);
+							}
+						},
+						error: function() {
+							$btn.html(originalHtml).prop('disabled', false);
+							if (typeof toastr !== 'undefined') toastr.error('Failed to sync with LIS.', 'Network Error');
+						}
+					});
+				};
+			}
+		</script>
 	<?php exit;
 }
 
@@ -1164,6 +1296,7 @@ if (isset($_POST['mgt_notes'])) {
 									 collected_specimen = :collected_specimen,
 									 collected_date = :collected_date,
 									 result_note = :result_note,
+									 result_comment = :result_comment,
 									 lab_sci_name = :lab_sci_name,
 									 lab_sci_speciality = :lab_sci_speciality,
 									 entered_by = :entered_by,
@@ -1179,6 +1312,7 @@ if (isset($_POST['mgt_notes'])) {
 				':collected_specimen' => $speciment_taken,
 				':collected_date' => $collected_date,
 				':result_note' => $mgt_notes,
+				':result_comment' => $comment,
 				':lab_sci_name' => $fullname_approver,
 				':lab_sci_speciality' => $speciality_approver,
 				':entered_by' => $entered_by,
@@ -1191,12 +1325,13 @@ if (isset($_POST['mgt_notes'])) {
 			]);
 		} else {
 			$sql = $db->prepare("UPDATE lab_manage 
-								 SET result_note = ?, lab_sci_name = ?, lab_sci_speciality = ?, 
+								 SET result_note = ?, result_comment = ?, lab_sci_name = ?, lab_sci_speciality = ?, 
 									 entered_by = ?, result_date = ?, data_capture_status = ?, 
 									 approved_by = ?, sms_status = 0, result_on_credit = ?, abnormal_results = ? 
 								 WHERE labrequest_no = ?");
 			$sql->execute([
 				$mgt_notes,
+				$comment,
 				$fullname_approver,
 				$speciality_approver,
 				$entered_by,

@@ -307,6 +307,18 @@ function queue($db, $sort_by_dept, $user_type, $old_hospital_no, $patient_fullna
 					while ($row = $dept_stmt->fetch(PDO::FETCH_ASSOC)) {
 						$department_map[$row['hospital_no']] = $row['department'];
 					}
+
+					// Prefetch LIS test mappings
+					$lis_mappings_map = array();
+					$stmtLisMap = $db->query("SELECT lab_scan_id, emr_test_name, canonical_code FROM lis_test_mappings WHERE is_active = 1");
+					while ($lrow = $stmtLisMap->fetch(PDO::FETCH_ASSOC)) {
+						if (!empty($lrow['lab_scan_id'])) {
+							$lis_mappings_map['id_' . $lrow['lab_scan_id']] = $lrow['canonical_code'];
+						}
+						if (!empty($lrow['emr_test_name'])) {
+							$lis_mappings_map['name_' . strtolower(trim($lrow['emr_test_name']))] = $lrow['canonical_code'];
+						}
+					}
 					$nx = 1;
 					while ($roww = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
@@ -439,7 +451,7 @@ function queue($db, $sort_by_dept, $user_type, $old_hospital_no, $patient_fullna
 
 										$detail = implode('----', $detailParts);
 
-										$t_amount = $t_amount + $roww_['amount'];
+										$t_amount = $t_amount + (float)$roww_['amount'];
 										if (!in_array($roww_['abnormal_results'], ['0', '', 'Normal']) && $_SESSION['rights'] === 'LB') {
 											$rlst = "<small style='color:brown;'><i>{$roww_['abnormal_results']}</i></small>";
 										}
@@ -459,7 +471,9 @@ function queue($db, $sort_by_dept, $user_type, $old_hospital_no, $patient_fullna
 										}
 
 										$bill_display = ($roww_['bill'] != '') ? '(LB' . $roww_['bill'] . ')' : '';
-										$test_display = $roww_['test_name'] . '<b>' . $bill_display . ($formatted_pay_date ? ' ' . $formatted_pay_date : '') . '</b>';
+										$is_lis_mapped = isset($lis_mappings_map['id_' . $roww_['test_id']]) || isset($lis_mappings_map['name_' . strtolower(trim($roww_['test_name']))]);
+										$lis_badge = $is_lis_mapped ? ' <span class="label label-info" style="font-size:9px;" title="Mapped to External LIS"><i class="fa fa-plug"></i> LIS</span>' : '';
+										$test_display = $roww_['test_name'] . '<b>' . $bill_display . ($formatted_pay_date ? ' ' . $formatted_pay_date : '') . '</b>' . $lis_badge;
 
 										if ($_SESSION['section'] == 'Laboratory' or $user_type == 'user') {
 

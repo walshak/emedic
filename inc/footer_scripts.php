@@ -721,6 +721,38 @@
 
 
      //walshak 27/6/2023
+
+     // External LIS Non-Cron Application-Level Auto Sync & Manual Trigger
+     window.syncLisResults = function(force) {
+          var syncUrl = (window.location.pathname.indexOf('/investigations/') !== -1) 
+               ? 'lis_poll_sync.php' 
+               : '../investigations/lis_poll_sync.php';
+          if (force) {
+               syncUrl += '?force=1';
+          }
+          $.getJSON(syncUrl, function(res) {
+               if (res && res.status === 'success' && res.items_processed > 0) {
+                    console.log('LIS Sync: Processed ' + res.items_processed + ' new result(s).');
+                    if (force || window.location.href.indexOf('mgt.php') !== -1 || window.location.href.indexOf('fillrslt') !== -1) {
+                         location.reload();
+                    }
+               } else {
+                    console.log('LIS Sync Status:', (res ? res.status : 'ok'), (res ? res.message : ''));
+                    if (force) {
+                         alert('LIS Sync Complete: ' + (res && res.message ? res.message : ((res && res.items_processed ? res.items_processed : 0) + ' new items processed')));
+                    }
+               }
+          }).fail(function(err) {
+               console.log('LIS Sync Error:', err);
+               if (force) alert('Failed to connect to LIS sync service.');
+          });
+     };
+
+     $(document).ready(function() {
+          if (window.location.pathname.indexOf('/investigations/') !== -1) {
+               syncLisResults(false);
+          }
+     });
 </script>
 
 <?php

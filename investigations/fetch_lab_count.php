@@ -1,11 +1,13 @@
 <?php
 session_start();
 include("../Connections/Conn.php");
+require_once __DIR__ . '/../inc/lis/LisService.php';
 
 try {
-
     $section = isset($_SESSION['section']) ? $_SESSION['section'] : '';
+    $username = $_SESSION['uname'] ?? $_SESSION['fullname'] ?? 'system_user';
 
+    // 1. Query pending EMR lab requests (Outpatient vs Inpatient)
     $query = "
         SELECT 
             SUM(
@@ -36,17 +38,36 @@ try {
 
     $stmt = $db->prepare($query);
     $stmt->execute(array($section));
-
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // Safe values (PHP 5 compatible)
     $outpatient = isset($row['outpatient_count']) ? (int)$row['outpatient_count'] : 0;
     $inpatient  = isset($row['inpatient_count']) ? (int)$row['inpatient_count'] : 0;
 
+    // 2. Check LIS Enablement & Fast Local Notification Counts
+    $lisEnabled = LisDriverFactory::isLisEnabled($db);
+    $lisUnseenCount = 0;
+    $lisDispatchedCount = 0;
+
+    if ($lisEnabled) {
+        // Get unseen results count for current user (ultra-fast indexed local DB query)
+        $unseenItems = LisService::getUnseenNotifications($db, $username, 48);
+        $lisUnseenCount = count($unseenItems);
+
+        // Get active in-progress LIS orders count
+        $lisOrdStmt = $db->query("SELECT COUNT(*) AS active_cnt FROM lis_orders WHERE status IN ('sent', 'specimen_received')");
+        if ($lisOrdStmt && $lisOrdRow = $lisOrdStmt->fetch(PDO::FETCH_ASSOC)) {
+            $lisDispatchedCount = (int)($lisOrdRow['active_cnt'] ?? 0);
+        }
+    }
+
     echo json_encode(array(
-        "outpatient" => $outpatient,
-        "inpatient"  => $inpatient,
-        "total"      => $outpatient + $inpatient
+        "outpatient"            => $outpatient,
+        "inpatient"             => $inpatient,
+        "total"                 => $outpatient + $inpatient,
+        "lis_enabled"           => $lisEnabled,
+        "lis_unseen_results"    => $lisUnseenCount,
+        "lis_dispatched_count"  => $lisDispatchedCount,
+        "lis_unseen_total"      => $lisUnseenCount
     ));
 } catch (PDOException $e) {
     echo json_encode(array("error" => $e->getMessage()));

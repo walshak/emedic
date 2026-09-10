@@ -679,4 +679,90 @@
           $('#add_new_combos_form')[0].reset();
           $('#add_new_combos_modal').modal('show');
      });
+
+     // External LIS Non-Cron Application-Level Auto Sync & Manual Trigger
+     if (typeof window.syncLisResults !== 'function') {
+          window.syncLisResults = function(force) {
+               var url = 'lis_poll_sync.php' + (force ? '?force=1' : '');
+               $.getJSON(url, function(res) {
+                    if (res && res.status === 'success' && res.items_processed > 0) {
+                         console.log('LIS Sync: Processed ' + res.items_processed + ' new result(s).');
+                         if (force || window.location.href.indexOf('mgt.php') !== -1 || window.location.href.indexOf('fillrslt') !== -1) {
+                              location.reload();
+                         }
+                    } else {
+                         console.log('LIS Sync Status:', (res ? res.status : 'ok'), (res ? res.message : ''));
+                         if (force) {
+                              alert('LIS Sync Complete: ' + (res && res.message ? res.message : ((res && res.items_processed ? res.items_processed : 0) + ' new items processed')));
+                         }
+                    }
+               }).fail(function(err) {
+                    console.log('LIS Sync Error:', err);
+                    if (force) alert('Failed to connect to LIS sync service.');
+               });
+          };
+     }
+
+     // LIS Dispatch & Retry Modal Action Handlers
+     if (typeof window.retryLisDispatch !== 'function') {
+          window.retryLisDispatch = function(labrequestNo, testId, testName, patientNo) {
+               toastr.info('Communicating with External LIS...', '', { timeOut: 3000 });
+               $.ajax({
+                    url: 'lis_action.php',
+                    method: 'POST',
+                    data: {
+                         action: 'dispatch',
+                         labrequest_no: labrequestNo,
+                         test_id: testId,
+                         test_name: testName,
+                         patient_no: patientNo
+                    },
+                    success: function(res) {
+                         if (res && res.success) {
+                              toastr.success(res.message, 'LIS Dispatch');
+                              if (typeof load_table === 'function') {
+                                   load_table();
+                              } else {
+                                   location.reload();
+                              }
+                         } else {
+                              toastr.error((res && res.error) ? res.error : 'Dispatch failed', 'LIS Error');
+                         }
+                    },
+                    error: function() {
+                         toastr.error('Failed to connect to LIS service.', 'Network Error');
+                    }
+               });
+          };
+     }
+
+     if (typeof window.pollLisModal !== 'function') {
+          window.pollLisModal = function(btn) {
+               var $btn = $(btn);
+               var originalHtml = $btn.html();
+               $btn.html('<i class="fa fa-spin fa-spinner"></i> Polling LIS...').prop('disabled', true);
+               $.ajax({
+                    url: 'lis_action.php',
+                    method: 'POST',
+                    data: { action: 'poll' },
+                    success: function(res) {
+                         $btn.html(originalHtml).prop('disabled', false);
+                         if (res && res.success) {
+                              toastr.success(res.message, 'LIS Poll Complete');
+                              if (typeof load_table === 'function') {
+                                   load_table();
+                              } else {
+                                   location.reload();
+                              }
+                         } else {
+                              toastr.error((res && res.error) ? res.error : 'Poll failed', 'LIS Poll');
+                         }
+                    },
+                    error: function() {
+                         $btn.html(originalHtml).prop('disabled', false);
+                         toastr.error('Failed to sync with LIS.', 'Network Error');
+                    }
+               });
+          };
+     }
 </script>

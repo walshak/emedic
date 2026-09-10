@@ -2,6 +2,8 @@
 include("../inc/session.php");
 include("../Connections/Conn.php");
 include('../doctor/objects.php');
+require_once(__DIR__ . '/../inc/lis/LisDriverFactory.php');
+$lisEnabled = LisDriverFactory::isLisEnabled($db);
 ///include("../inc/credit_current_balance.php");
 if ($_SESSION['Designation'] == 'Radiologist') {
     $_SESSION['section'] = 'Radiology';
@@ -356,6 +358,10 @@ if (isset($_GET['url'])) {
                                 <td>🏥 Inpatients</td>
                                 <td><strong id="lab_inpatient">0</strong></td>
                             </tr>
+                            <tr id="lis_result_row" style="display:none;">
+                                <td>📥 LIS Results</td>
+                                <td><strong id="lab_lis_unseen" class="text-danger">0</strong></td>
+                            </tr>
                         </table>
 
                     </div>
@@ -427,6 +433,11 @@ if (isset($_GET['url'])) {
                             <div class="ibox-content">
 
                                 <div class="panel-options">
+                                    <?php if ($lisEnabled): ?>
+                                        <button type="button" class="btn btn-sm btn-info pull-right" style="margin-top: 5px;" onclick="syncLisResults(true)">
+                                            <i class="fa fa-refresh"></i> Sync LIS Results
+                                        </button>
+                                    <?php endif; ?>
                                     <ul class="nav nav-tabs">
                                         <li class="<?php echo $queue; ?>"><a data-toggle="tab" href="#queue" style="font-size: 15px; color: black;"><i class="fa fa-angle-double-down"></i>Patients Investigation List</a></li>
                                         <li class="<?php echo $cancelrequest; ?>"><a data-toggle="tab" href="#cancelrequest" style="font-size: 15px; color: black;" onClick="adm_records()"><i class="fa fa-bed"></i>Patient On-Admission</a></li>
@@ -518,9 +529,13 @@ if (isset($_GET['url'])) {
                                                                         </option>
                                                                     </select>
 
-                                                                    <script>
-                                                                        $('#search_for_patient').select2();
-                                                                    </script>
+                                                                     <script>
+                                                                        $(document).ready(function() {
+                                                                            if (typeof $.fn.select2 !== 'undefined') {
+                                                                                $('#search_for_patient').select2();
+                                                                            }
+                                                                        });
+                                                                     </script>
                                                                 </td>
                                                                 <td width="25%">
                                                                     <label for="reg_input_no" class="">+ Advanced Filter (Optional)</label><br>
@@ -1154,21 +1169,23 @@ if (isset($_GET['url'])) {
                 var oTable = $('#editable').dataTable();
 
                 /* Apply the jEditable handlers to the table */
-                oTable.$('td').editable('../example_ajax.php', {
-                    "callback": function(sValue, y) {
-                        var aPos = oTable.fnGetPosition(this);
-                        oTable.fnUpdate(sValue, aPos[0], aPos[1]);
-                    },
-                    "submitdata": function(value, settings) {
-                        return {
-                            "row_id": this.parentNode.getAttribute('id'),
-                            "column": oTable.fnGetPosition(this)[2]
-                        };
-                    },
+                if (typeof $.fn.editable !== 'undefined') {
+                    oTable.$('td').editable('../example_ajax.php', {
+                        "callback": function(sValue, y) {
+                            var aPos = oTable.fnGetPosition(this);
+                            oTable.fnUpdate(sValue, aPos[0], aPos[1]);
+                        },
+                        "submitdata": function(value, settings) {
+                            return {
+                                "row_id": this.parentNode.getAttribute('id'),
+                                "column": oTable.fnGetPosition(this)[2]
+                            };
+                        },
 
-                    "width": "90%",
-                    "height": "100%"
-                });
+                        "width": "90%",
+                        "height": "100%"
+                    });
+                }
 
 
             });
@@ -1191,40 +1208,32 @@ if (isset($_GET['url'])) {
             });
 
             $(document).ready(function() {
-                $("#cCustomer").select2({
-                    ajax: {
-                        url: "fetch_labtest.php",
-                        dataType: 'json',
-                        delay: 250,
-                        data: function(params) {
-                            return {
-                                q: params.term, // search term
-                                page: params.page
-                            };
+                if (typeof $.fn.select2 !== 'undefined') {
+                    $("#cCustomer").select2({
+                        ajax: {
+                            url: "fetch_labtest.php",
+                            dataType: 'json',
+                            delay: 250,
+                            data: function(params) {
+                                return {
+                                    q: params.term, // search term
+                                    page: params.page
+                                };
+                            },
+                            processResults: function(data, page) {
+                                return {
+                                    results: data.items
+                                };
+                            },
+                            cache: true
                         },
-                        processResults: function(data, page) {
-                            // parse the results into the format expected by Select2.
-                            // since we are using custom formatting functions we do not need to
-                            // alter the remote JSON data
-                            return {
-                                results: data.items
-                            };
+                        escapeMarkup: function(markup) {
+                            return markup;
                         },
-                        cache: true
-                    },
-                    escapeMarkup: function(markup) {
-                        return markup;
-                    }, // let our custom formatter work
-                    minimumInputLength: 1,
-                    //templateResult: formatRepo, // omitted for brevity, see the source of this page
-                    //templateSelection: formatRepoSelection // omitted for brevity, see the source of this page
-                });
+                        minimumInputLength: 1
+                    });
+                }
             });
-
-
-
-            pay_now<?php echo $sn_; ?>
-
 
             function payNow(sale_sn, target, hospital_no) {
 
@@ -1345,37 +1354,34 @@ if (isset($_GET['url'])) {
             var prevIn = localStorage.getItem('lab_inpatient') ?
                 parseInt(localStorage.getItem('lab_inpatient')) : 0;
 
+            var prevLisUnseen = localStorage.getItem('lis_unseen_total') ?
+                parseInt(localStorage.getItem('lis_unseen_total')) : 0;
 
             function checkLab() {
-
-
-                ////alert();
-
-
                 $.ajax({
                     url: 'fetch_lab_count.php',
                     method: 'GET',
                     dataType: 'json',
                     success: function(data) {
-
                         let outpatient = parseInt(data.outpatient) || 0;
                         let inpatient = parseInt(data.inpatient) || 0;
+                        let lisUnseen = parseInt(data.lis_unseen_results) || 0;
+                        let totalAlerts = outpatient + inpatient + lisUnseen;
 
-                        let total = outpatient + inpatient;
-
-
-
-
-                        if (total > 0) {
-
+                        if (totalAlerts > 0) {
                             $('#labAlertBox').fadeIn();
-
                             $('#lab_outpatient').text(outpatient);
                             $('#lab_inpatient').text(inpatient);
 
-                            // 🔊 SOUND TRIGGER
-                            if (outpatient > prevOut || inpatient > prevIn) {
+                            if (data.lis_enabled && lisUnseen > 0) {
+                                $('#lis_result_row').show();
+                                $('#lab_lis_unseen').text(lisUnseen);
+                            } else {
+                                $('#lis_result_row').hide();
+                            }
 
+                            // 🔊 SOUND TRIGGER for new requests or new unseen LIS results
+                            if (outpatient > prevOut || inpatient > prevIn || lisUnseen > prevLisUnseen) {
                                 let sound = new Audio('../sounds/notification.wav');
                                 sound.play().catch(() => {});
 
@@ -1393,11 +1399,17 @@ if (isset($_GET['url'])) {
                             $('#labAlertBox').fadeOut();
                         }
 
+                        if (data.lis_enabled && typeof syncLisResults === 'function') {
+                            syncLisResults(false);
+                        }
+
                         prevOut = outpatient;
                         prevIn = inpatient;
+                        prevLisUnseen = lisUnseen;
 
                         localStorage.setItem('lab_outpatient', outpatient);
                         localStorage.setItem('lab_inpatient', inpatient);
+                        localStorage.setItem('lis_unseen_total', lisUnseen);
                     }
                 });
             }
@@ -1420,6 +1432,76 @@ if (isset($_GET['url'])) {
 
             setInterval(checkLab, 10000);
             checkLab();
+        </script>
+
+        <script>
+            window.retryLisDispatch = function(labrequestNo, testId, testName, patientNo) {
+                if (typeof toastr !== 'undefined') {
+                    toastr.info('Communicating with External LIS...', '', { timeOut: 3000 });
+                }
+                $.ajax({
+                    url: 'lis_action.php',
+                    method: 'POST',
+                    data: {
+                        action: 'dispatch',
+                        labrequest_no: labrequestNo,
+                        test_id: testId,
+                        test_name: testName,
+                        patient_no: patientNo
+                    },
+                    success: function(res) {
+                        if (res && res.success) {
+                            if (typeof toastr !== 'undefined') toastr.success(res.message, 'LIS Dispatch');
+                            else alert(res.message);
+                            if (typeof load_table === 'function') {
+                                load_table();
+                            } else {
+                                location.reload();
+                            }
+                        } else {
+                            var err = (res && res.error) ? res.error : 'Dispatch failed';
+                            if (typeof toastr !== 'undefined') toastr.error(err, 'LIS Error');
+                            else alert('LIS Error: ' + err);
+                        }
+                    },
+                    error: function() {
+                        if (typeof toastr !== 'undefined') toastr.error('Failed to connect to LIS service.', 'Network Error');
+                        else alert('Network Error: Failed to connect to LIS service.');
+                    }
+                });
+            };
+
+            window.pollLisModal = function(btn) {
+                var $btn = $(btn);
+                var originalHtml = $btn.html();
+                $btn.html('<i class="fa fa-spin fa-spinner"></i> Polling LIS...').prop('disabled', true);
+                $.ajax({
+                    url: 'lis_action.php',
+                    method: 'POST',
+                    data: { action: 'poll' },
+                    success: function(res) {
+                        $btn.html(originalHtml).prop('disabled', false);
+                        if (res && res.success) {
+                            if (typeof toastr !== 'undefined') toastr.success(res.message, 'LIS Poll Complete');
+                            else alert(res.message);
+                            if (typeof load_table === 'function') {
+                                load_table();
+                            } else {
+                                location.reload();
+                            }
+                        } else {
+                            var err = (res && res.error) ? res.error : 'Poll failed';
+                            if (typeof toastr !== 'undefined') toastr.error(err, 'LIS Poll');
+                            else alert('LIS Poll Error: ' + err);
+                        }
+                    },
+                    error: function() {
+                        $btn.html(originalHtml).prop('disabled', false);
+                        if (typeof toastr !== 'undefined') toastr.error('Failed to sync with LIS.', 'Network Error');
+                        else alert('Network Error: Failed to sync with LIS.');
+                    }
+                });
+            };
         </script>
 </body>
 

@@ -348,10 +348,12 @@ if (isset($_POST["enter_results_id"])) {
 	///000001____000005____1----WIDAL TEST----IN----151----Laboratory----2024-07-03 20:45:17----LB0377131651000005----Super Admin--------1----Not Specified------------queue----0------------000001----,________SANI ABUBAKAR ____new____IN____________________new____
 	////echo $app_no .'____' . $hosp_no .'____' .$list_tests_sn.'____' .$list_tests.'____' .$patient_name.'____new____' .$type_patient;
 
+	$app_no = $pp[0];
 	$hosp_no = $pp[1];
 	$details = $pp[2];
 	$patient_name = $pp[4];
-	$type_patient = $pp[6]; ?>
+	$type_patient = $pp[6];
+	$data_capture_status = ''; ?>
 
 	<form id="move_top">
 
@@ -646,6 +648,48 @@ if (isset($_POST["enter_results_id"])) {
 
 	}
 
+	function uploadFile() {
+		var formData = new FormData();
+		var fileInput = document.getElementById('file_upload');
+		var labRequestNo = document.getElementById('labrequest_no').value;
+
+		if (!fileInput || fileInput.files.length === 0) {
+			alert("Please select a file to upload.");
+			return;
+		}
+		if (!labRequestNo) {
+			alert("Lab request number is missing.");
+			return;
+		}
+
+		formData.append('file', fileInput.files[0]);
+		formData.append('labrequest_no', labRequestNo);
+
+		$.ajax({
+			url: 'upload_file.php',
+			type: 'POST',
+			data: formData,
+			contentType: false,
+			processData: false,
+			success: function(response) {
+				var res = typeof response === 'string' ? JSON.parse(response) : response;
+				if (res.status === "success") {
+					alert(res.message);
+					var ext = fileInput.files[0].name.split('.').pop();
+					var fileUrl = 'uploads/' + labRequestNo + '.' + ext;
+					$("#att_display").show();
+					$("#upload_status").hide();
+					$("#att_display").html('<i class="fa fa-paperclip"></i> <a href="' + fileUrl + '" target="_blank">Download/View</a> &nbsp; : &nbsp; <i class="fa fa-trash" style="cursor:pointer;" onclick="if(confirm(\'Are you sure you want to delete this item?\')) { window.location.href=\'mgt.php?hosp_no=\' + (document.getElementById(\'hosp_no\') ? document.getElementById(\'hosp_no\').value : \'\') + \'&delRQ=\' + labRequestNo; }"> Delete</i>');
+				} else {
+					alert(res.message || "File upload failed.");
+				}
+			},
+			error: function(xhr, status, error) {
+				alert("An error occurred while uploading the file: " + error);
+			}
+		});
+	}
+
 	function save_results() {
 
 		var test_id = document.getElementById('test_id').value
@@ -662,6 +706,25 @@ if (isset($_POST["enter_results_id"])) {
 		var isApproved = document.getElementById('approve_result').checked;
 		var main_fullname_approver = document.getElementById('main_fullname_approver').value
 		var result_status = document.getElementById('result_status').value
+
+		// Auto upload attachment if file is selected
+		var fileInput = document.getElementById('file_upload');
+		if (fileInput && fileInput.files && fileInput.files.length > 0 && labrequest_no) {
+			var formData = new FormData();
+			formData.append('file', fileInput.files[0]);
+			formData.append('labrequest_no', labrequest_no);
+			$.ajax({
+				url: 'upload_file.php',
+				type: 'POST',
+				data: formData,
+				contentType: false,
+				processData: false,
+				async: false,
+				success: function(resp) {
+					console.log('Attachment auto-uploaded on result save:', resp);
+				}
+			});
+		}
 
 		if (session_status === 'Laboratory') {
 			var speciment_taken = document.getElementById('speciment_taken').value

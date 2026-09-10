@@ -320,11 +320,10 @@ if (isset($_POST['display_result_print'])) {
                                             l.collected_specimen
                                         FROM lab_result r
                                         LEFT JOIN lab_manage l ON l.labrequest_no = r.lab_no
-                                        WHERE r.lab_no = :lab_no AND r.test_no = :test_no
+                                        WHERE r.lab_no = :lab_no
                                     ");
                                         $stmt3->execute([
-                                            ':lab_no' => $labrequest_no,
-                                            ':test_no' => $test_id
+                                            ':lab_no' => $labrequest_no
                                         ]);
 
                                         $rowxx = $stmt3->fetch(PDO::FETCH_ASSOC);
@@ -406,7 +405,7 @@ if (isset($_POST['display_result_print'])) {
             <div class="modal-content animated bounceInRight">
                 <div class="modal-body" id="modal_body">
                     <div id="">
-                        <input type="hidden" id="test_to_send" name="test_to_send" value="<?php echo implode(',', $test_req_ids) ?>">
+                        <input type="hidden" id="test_to_send" name="test_to_send" value="<?php echo is_array($test_req_ids ?? null) ? implode(',', $test_req_ids) : htmlspecialchars($labrequest_no ?? ''); ?>">
                         <label><strong>Enter eMail Address: </strong></label>
                         <input type="text" maxlength="150" name="result_email_address" id="result_email_address" class="form-control" value="<?= $email; ?>" required>
                         <br>
